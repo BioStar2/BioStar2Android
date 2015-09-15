@@ -10,12 +10,6 @@ BioStar 2 API
  - [**BioStar 2 API Document**] (https://api.biostar2.com/v1/docs/) 
 
 
-Support or Contact
------
-
- - [biostar2@suprema.co.kr] 
- - [isbaek@suprema.co.kr] 
-
 ScreenShot
 -----
 ![alt tag](https://lh3.googleusercontent.com/nG7tbEIHSGPW-2J8cpgFFjBmc47ZD2unfm7ikjbAlnuRUz8nMYRnA9s8oz2l_2AXnPM=h900)
