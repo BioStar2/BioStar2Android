@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="biostar2sdk-1.0.3">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/BioStar2Client/build/intermediates/exploded-aar/com.supremainc.biostar2/biostar2sdk/1.0.3/res" />
+      <root url="jar://$PROJECT_DIR$/BioStar2Client/build/intermediates/exploded-aar/com.supremainc.biostar2/biostar2sdk/1.0.3/jars/classes.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

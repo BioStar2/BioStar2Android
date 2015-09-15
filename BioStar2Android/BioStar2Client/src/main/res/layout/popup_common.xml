@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?><!-- <~SCREEN NAME)> {Popup} </~SCREEN NAME> -->
+<LinearLayout
+    android:id="@+id/main_container"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <!--
+         <LinearLayout
+        android:layout_width="298dp"
+        android:layout_height="54dp"
+        android:layout_gravity="center"
+        android:background="@drawable/shape_popup_top"
+        android:gravity="right|center_vertical"
+        android:orientation="horizontal" >
+    -->
+
+    <LinearLayout
+        android:layout_width="298dp"
+        android:layout_height="54dp"
+        android:layout_gravity="center"
+        android:background="@color/actionbar_bg"
+        android:gravity="right|center_vertical"
+        android:orientation="horizontal">
+
+        <com.supremainc.biostar2.widget.StyledTextView
+            android:id="@+id/title_text"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:textColor="@color/white"
+            android:textSize="16dp"
+            app:typeface="roboto_bold.ttf"/>
+
+        <!--
+        <LinearLayout
+            android:id="@+id/close"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="right|center_vertical"
+            android:orientation="horizontal" >
+
+            <ImageView
+                android:layout_width="22.4dp"
+                android:layout_height="22.4dp"
+                android:layout_marginLeft="5.6dp"
+                android:layout_marginRight="15.8dp"
+                android:contentDescription="@string/image"
+                android:scaleType="fitXY"
+                android:src="@drawable/selector_btn_close" /> 
+        </LinearLayout>
+        -->
+    </LinearLayout>
+
+    <!--
+        <LinearLayout
+        android:layout_width="298dp"
+        android:layout_height="wrap_content"
+        android:background="@drawable/shape_popup_bottom"
+        android:orientation="vertical" >
+    -->
+
+    <LinearLayout
+        android:layout_width="298dp"
+        android:layout_height="wrap_content"
+        android:background="@color/white"
+        android:orientation="vertical">
+
+        <ScrollView
+            android:id="@+id/scroll"
+            android:layout_width="match_parent"
+            android:layout_height="220.8dp"
+            android:layout_marginLeft="18dp"
+            android:layout_marginRight="18dp"
+            android:fadingEdge="none"
+            android:fillViewport="true">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <ImageView
+                    android:id="@+id/type"
+                    android:layout_width="90dp"
+                    android:layout_height="90dp"
+                    android:layout_gravity="center"
+                    android:layout_marginBottom="22dp"
+                    android:layout_marginTop="27dp"
+                    android:contentDescription="@string/image"
+                    android:gravity="center"
+                    android:scaleType="fitXY"
+                    android:src="@drawable/popup_check_ic"/>
+
+                <com.supremainc.biostar2.widget.StyledTextView
+                    android:id="@+id/content"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginLeft="18dp"
+                    android:layout_marginRight="18dp"
+                    android:gravity="center"
+                    android:text=""
+                    android:textColor="@color/select_text"
+                    android:textSize="16dp"
+                    app:typeface="roboto_bold.ttf"/>
+            </LinearLayout>
+        </ScrollView>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginLeft="9dp"
+            android:layout_marginRight="9dp"
+            android:orientation="horizontal">
+
+            <com.supremainc.biostar2.widget.StyledTextView
+                android:id="@+id/negative"
+                android:layout_width="0dp"
+                android:layout_height="45dp"
+                android:layout_marginBottom="9dp"
+                android:layout_marginTop="9dp"
+                android:layout_weight="1"
+                android:background="@drawable/selector_btn_negative"
+                android:gravity="center"
+                android:singleLine="true"
+                android:text="@string/cancel"
+                android:textColor="@color/white"
+                android:textSize="16dp"
+                app:typeface="roboto_bold.ttf"/>
+
+            <LinearLayout
+                android:id="@+id/devider"
+                android:layout_width="8dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:orientation="vertical"/>
+
+            <com.supremainc.biostar2.widget.StyledTextView
+                android:id="@+id/positive"
+                android:layout_width="0dp"
+                android:layout_height="45dp"
+                android:layout_marginBottom="9dp"
+                android:layout_marginTop="9dp"
+                android:layout_weight="1"
+                android:background="@drawable/selector_btn_round_ok"
+                android:gravity="center"
+                android:singleLine="true"
+                android:text="@string/ok"
+                android:textColor="@color/white"
+                android:textSize="16dp"
+                app:typeface="roboto_bold.ttf"/>
+        </LinearLayout>
+    </LinearLayout>
+
+</LinearLayout>

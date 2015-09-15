@@ -1,0 +1,21 @@
+<com.supremainc.biostar2.widget.SwitchView xmlns:android="http://schemas.android.com/apk/res/android"
+                                           android:layout_width="0dp"
+                                           android:layout_height="wrap_content"
+                                           android:layout_gravity="center|right"
+                                           android:layout_weight="1"
+                                           android:gravity="center|right"
+                                           android:orientation="vertical"
+                                           android:paddingLeft="18dp"
+                                           android:paddingRight="18dp">
+
+    <ImageView
+        android:id="@+id/switch_onoff"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center|right"
+        android:contentDescription="@string/image"
+        android:gravity="center|right"
+        android:scaleType="fitXY"
+        android:src="@drawable/list_btn_off"/>
+
+</com.supremainc.biostar2.widget.SwitchView>

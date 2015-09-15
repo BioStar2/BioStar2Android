@@ -1,0 +1,197 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <color name="cancel">#999999</color>
+    <!-- Module Name:shape_rounded_cancel_nor.xml -->
+
+    <color name="main_bg">#312d2e</color>
+    <!-- Module Name:shape_rounded_ok_nor.xml -->
+    <!-- Module Name:fragment_main.xml -->
+
+    <color name="main">#aca9a1</color>
+    <!-- Module Name:selector_color_white_yellow.xml -->
+
+    <color name="user_total">#505050</color>
+    <!-- Module Name:fragment_alarm.xml -->
+    <!-- Module Name:fragment_door.xml -->
+    <!-- Module Name:fragment_prefernce.xml -->
+    <!-- Module Name:fragment_user_inquiry.xml -->
+    <!-- Module Name:fragment_user_modify.xml -->
+    <!-- Module Name:view_sub_toolbar.xml -->
+
+    <color name="red">#ff2d55</color>
+    <!-- Module Name:layer_btn_fab.xml -->
+
+    <color name="white">#ffffffff</color>
+    <!-- Module Name:selector_color_gray_white.xml -->
+    <!-- Module Name:selector_list_default_mode.xml -->
+    <!-- Module Name:selector_list_select_mode.xml -->
+    <!-- Module Name:shape_popup_bottom.xml -->
+    <!-- Module Name:activity_login.xml -->
+    <!-- Module Name:fragment_alarm.xml -->
+    <!-- Module Name:fragment_door.xml -->
+    <!-- Module Name:fragment_list.xml -->
+    <!-- Module Name:fragment_list_swpiy.xml -->
+    <!-- Module Name:fragment_main.xml -->
+    <!-- Module Name:fragment_monitor.xml -->
+    <!-- Module Name:fragment_prefernce.xml -->
+    <!-- Module Name:fragment_user_inquiry.xml -->
+    <!-- Module Name:fragment_user_modify.xml -->
+    <!-- Module Name:popup_card.xml -->
+    <!-- Module Name:popup_common.xml -->
+    <!-- Module Name:popup_select.xml -->
+    <!-- Module Name:popup_toast.xml -->
+    <!-- Module Name:view_custom_actionbar_title.xml -->
+    <!-- Module Name:view_drawlayer_menu.xml -->
+    <!-- Module Name:view_filter.xml -->
+    <!-- Module Name:view_refresh.xml -->
+
+    <color name="transparent50">#7f000000</color>
+    <!-- Module Name:popup_toast.xml -->
+
+    <color name="drawer_item_press">#362c2f</color>
+    <!-- Module Name:selector_back_side_menu1.xml -->
+    <!-- Module Name:selector_back_side_menu2.xml -->
+    <!-- Module Name:selector_back_side_menu3.xml -->
+    <!-- Module Name:selector_back_side_menu4.xml -->
+
+    <color name="door_summary">#dcdcdc</color>
+    <!-- Module Name:fragment_alarm.xml -->
+    <!-- Module Name:fragment_door.xml -->
+    <!-- Module Name:fragment_prefernce.xml -->
+
+    <color name="login_id">#999999</color>
+    <!-- Module Name:activity_login.xml -->
+
+    <color name="content_text">#c3c3c3</color>
+    <!-- Module Name:fragment_user_inquiry.xml -->
+    <!-- Module Name:UserModifyFragment.java -->
+
+    <color name="transparent50_white">#7fffffff</color>
+    <!-- Module Name:fragment_user_inquiry.xml -->
+    <!-- Module Name:fragment_user_modify.xml -->
+
+    <color name="drawer_user">#4c3d40</color>
+    <!-- Module Name:view_drawlayer_menu.xml -->
+
+    <color name="transparent80">#cc000000</color>
+    <!-- Module Name:view_filter.xml -->
+
+    <color name="list_devider">#cfcecd</color>
+    <!-- Module Name:fragment_alarm.xml -->
+    <!-- Module Name:fragment_door.xml -->
+    <!-- Module Name:fragment_prefernce.xml -->
+    <!-- Module Name:fragment_user_inquiry.xml -->
+    <!-- Module Name:fragment_user_modify.xml -->
+    <!-- Module Name:list_item.xml -->
+    <!-- Module Name:list_item_door.xml -->
+    <!-- Module Name:list_item_monitor.xml -->
+    <!-- Module Name:list_item_user.xml -->
+    <!-- Module Name:view_filter.xml -->
+
+    <color name="gray_10">#ffb2b2b2</color>
+    <!-- Module Name:selector_list_gray.xml -->
+
+    <color name="subtext">#787878</color>
+    <!-- Module Name:fragment_user_modify.xml -->
+    <!-- Module Name:view_filter.xml -->
+
+    <color name="gray_11">#ff9b9196</color>
+    <!-- Module Name:view_drawlayer_menu.xml -->
+
+    <color name="main_press">#ffd38b</color>
+    <!-- Module Name:selector_color_white_yellow.xml -->
+
+    <color name="select_text">#222222</color>
+    <!-- Module Name:fragment_alarm.xml -->
+    <!-- Module Name:fragment_door.xml -->
+    <!-- Module Name:fragment_prefernce.xml -->
+    <!-- Module Name:fragment_user_inquiry.xml -->
+    <!-- Module Name:fragment_user_modify.xml -->
+    <!-- Module Name:list_item.xml -->
+    <!-- Module Name:list_item_door.xml -->
+    <!-- Module Name:list_item_monitor.xml -->
+    <!-- Module Name:list_item_user.xml -->
+    <!-- Module Name:popup_common.xml -->
+    <!-- Module Name:view_filter.xml -->
+
+    <color name="black1">#787878</color>
+    <!-- Module Name:list_item_monitor.xml -->
+
+    <color name="drawer_top">#594b4f</color>
+    <!-- Module Name:view_drawlayer_menu.xml -->
+
+    <color name="login">#8b43a3</color>
+    <!-- Module Name:activity_login.xml -->
+
+    <color name="transparent">#00000000</color>
+    <!-- Module Name:selector_color_transparent.xml -->
+    <!-- Module Name:selector_list_selected.xml -->
+    <!-- Module Name:selector_list_select_mode.xml -->
+    <!-- Module Name:shape_circle.xml -->
+    <!-- Module Name:fragment_user_modify.xml -->
+    <!-- Module Name:popup_wait.xml -->
+    <!-- Module Name:view_info_window.xml -->
+    <!-- Module Name:UserInquriyFragment.java -->
+    <!-- Module Name:SearchViewEx.java -->
+    <!-- Module Name:ProgressBarCircular.java -->
+
+    <color name="black4">#ff312d2d</color>
+    <!-- Module Name:view_drawlayer_menu.xml -->
+
+    <color name="drawer_info_30">#4cd5c4c9</color>
+    <!-- Module Name:view_drawlayer_menu.xml -->
+
+    <color name="drawer_info">#d5c4c9</color>
+    <!-- Module Name:view_drawlayer_menu.xml -->
+
+    <color name="ivory">#fffafafa</color>
+    <!-- Module Name:view_sub_toolbar.xml -->
+
+    <color name="actionbar_bg">#594b4f</color>
+    <!-- Module Name:shape_popup_top.xml -->
+    <!-- Module Name:fragment_alarm.xml -->
+    <!-- Module Name:fragment_door.xml -->
+    <!-- Module Name:fragment_prefernce.xml -->
+    <!-- Module Name:list_item_door.xml -->
+    <!-- Module Name:list_item_user.xml -->
+    <!-- Module Name:popup_common.xml -->
+    <!-- Module Name:popup_select.xml -->
+    <!-- Module Name:ActionbarTitle.java -->
+
+    <color name="drawer_devider">#393234</color>
+    <!-- Module Name:view_drawlayer_menu.xml -->
+
+    <color name="gray_2">#ff8c8c8c</color>
+    <color name="gray_12">#ff6c6c6c</color>
+    <!-- Module Name:list_item_monitor.xml -->
+
+    <color name="gray_1">#ff777676</color>
+    <!-- Module Name:selector_color_gray_white.xml -->
+
+    <color name="black">#ff000000</color>
+    <!-- Module Name:shape_cursor_black.xml -->
+    <!-- Module Name:view_info_window.xml -->
+
+    <color name="gray_6">#ff8f8f8f</color>
+    <!-- Module Name:view_register_item.xml -->
+
+    <color name="devider_login">#dfdede</color>
+    <!-- Module Name:activity_login.xml -->
+
+    <color name="wine_1">#ffe16f78</color>
+    <!-- Module Name:view_register_item.xml -->
+
+    <color name="popup_card2">#666666</color>
+    <!-- Module Name:popup_card.xml -->
+
+    <color name="ok_press">#f7ce86</color>
+    <!-- Module Name:selector_list_default_mode.xml -->
+    <!-- Module Name:selector_list_selected.xml -->
+    <!-- Module Name:shape_rounded_ok_pre.xml -->
+
+    <color name="popup_card1">#52b2b8</color>
+    <!-- Module Name:popup_card.xml -->
+
+
+</resources>

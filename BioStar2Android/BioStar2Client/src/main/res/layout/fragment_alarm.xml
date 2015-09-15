@@ -1,0 +1,296 @@
+<!-- <~SCREEN NAME)> {Alarm_Detail} </~SCREEN NAME> -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:androidfont="http://schemas.android.com/apk/res-auto"
+              android:layout_width="fill_parent"
+              android:layout_height="fill_parent"
+              android:background="@color/white"
+              android:gravity="center|top"
+              android:orientation="vertical">
+
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="?attr/actionBarSize"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center_vertical|left"
+        android:background="@color/door_summary"
+        android:gravity="center_vertical|left"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="top|center"
+            android:gravity="top|center"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="top|left"
+                android:layout_marginLeft="31dp"
+                android:layout_marginRight="9dp"
+                android:layout_marginTop="26dp"
+                android:layout_weight="1"
+                android:gravity="top|left"
+                android:orientation="vertical">
+
+                <com.supremainc.biostar2.widget.StyledTextView
+                    android:id="@+id/title_name"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="2dp"
+                    android:ellipsize="end"
+                    android:gravity="left|top"
+                    android:singleLine="true"
+                    android:textColor="@color/user_total"
+                    android:textSize="16dp"
+                    androidfont:typeface="roboto_bold.ttf"/>
+
+                <com.supremainc.biostar2.widget.StyledTextView
+                    android:id="@+id/title_content"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="12dp"
+                    android:ellipsize="end"
+                    android:gravity="left|top"
+                    android:maxLines="2"
+                    android:textColor="@color/user_total"
+                    android:textSize="14dp"
+                    androidfont:typeface="roboto_bold.ttf"/>
+
+                <LinearLayout
+                    android:id="@+id/go_view"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="bottom|center|left"
+                    android:layout_marginBottom="9dp"
+                    android:layout_marginTop="9dp"
+                    android:gravity="bottom|center|left"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginRight="9dp"
+                        android:contentDescription="@string/image"
+                        android:gravity="left|center"
+                        android:scaleType="fitXY"
+                        android:src="@drawable/selector_btn_viewlog"/>
+
+                    <com.supremainc.biostar2.widget.StyledTextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="left|center"
+                        android:ellipsize="end"
+                        android:gravity="left|center"
+                        android:text="@string/view_log"
+                        android:textColor="@color/actionbar_bg"
+                        android:textSize="14dp"
+                        androidfont:typeface="roboto_regular.ttf"/>
+                </LinearLayout>
+            </LinearLayout>
+
+            <ImageView
+                android:id="@+id/icon"
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:layout_marginBottom="18dp"
+                android:layout_marginRight="27dp"
+                android:layout_marginTop="26dp"
+                android:contentDescription="@string/image"
+                android:scaleType="fitXY"
+                android:src="@drawable/monitoring_ic6"/>
+        </LinearLayout>
+
+        <com.supremainc.biostar2.widget.StyledTextView
+            android:id="@+id/door_control"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginBottom="18dp"
+            android:layout_marginLeft="18dp"
+            android:layout_marginRight="18dp"
+            android:layout_marginTop="9dp"
+            android:background="@drawable/selector_btn_round_ok"
+            android:ellipsize="end"
+            android:gravity="center"
+            android:text="@string/door_control"
+            android:textColor="@color/white"
+            android:textSize="16dp"
+            androidfont:typeface="roboto_bold.ttf"/>
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@color/white"
+        android:fadingEdge="none"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <!--  -->
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="54dp"
+                android:gravity="left"
+                android:orientation="horizontal">
+
+                <com.supremainc.biostar2.widget.StyledTextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_marginLeft="18dp"
+                    android:layout_marginRight="18dp"
+                    android:ellipsize="end"
+                    android:gravity="left|center"
+                    android:maxLines="2"
+                    android:text="@string/notification_time"
+                    android:textColor="@color/select_text"
+                    android:textSize="16dp"
+                    androidfont:typeface="roboto_bold.ttf"/>
+
+                <com.supremainc.biostar2.widget.StyledTextView
+                    android:id="@+id/notification_time"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginRight="18dp"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:gravity="right|center"
+                    android:maxLines="2"
+                    android:textColor="@color/actionbar_bg"
+                    android:textSize="14dp"
+                    androidfont:typeface="roboto_medium.ttf"/>
+            </LinearLayout>
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="0.8dp"
+                android:background="@color/list_devider"/>
+            <!-- door open request -->
+
+            <LinearLayout
+                android:id="@+id/door_open_request"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="left"
+                android:orientation="vertical">
+
+                <!--  -->
+                <LinearLayout
+                    android:id="@+id/go_user"
+                    android:layout_width="match_parent"
+                    android:layout_height="54dp"
+                    android:gravity="left"
+                    android:orientation="horizontal">
+
+                    <com.supremainc.biostar2.widget.StyledTextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="18dp"
+                        android:layout_marginRight="18dp"
+                        android:ellipsize="end"
+                        android:gravity="left|center"
+                        android:maxLines="2"
+                        android:text="@string/user"
+                        android:textColor="@color/select_text"
+                        android:textSize="16dp"
+                        androidfont:typeface="roboto_bold.ttf"/>
+
+                    <com.supremainc.biostar2.widget.StyledTextView
+                        android:id="@+id/user"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="18dp"
+                        android:layout_weight="1"
+                        android:ellipsize="end"
+                        android:gravity="right|center"
+                        android:maxLines="2"
+                        android:textColor="@color/actionbar_bg"
+                        android:textSize="14dp"
+                        androidfont:typeface="roboto_medium.ttf"/>
+
+                    <ImageView
+                        android:id="@+id/user_link"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:layout_marginRight="18dp"
+                        android:contentDescription="@string/image"
+                        android:gravity="center"
+                        android:scaleType="fitXY"
+                        android:src="@drawable/arrow_01"/>
+                </LinearLayout>
+
+                <FrameLayout
+                    android:id="@+id/go_user_devider"
+                    android:layout_width="match_parent"
+                    android:layout_height="0.8dp"
+                    android:background="@color/list_devider"/>
+                <!--  -->
+
+                <LinearLayout
+                    android:id="@+id/go_telephone"
+                    android:layout_width="match_parent"
+                    android:layout_height="54dp"
+                    android:gravity="left"
+                    android:orientation="horizontal">
+
+                    <com.supremainc.biostar2.widget.StyledTextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_marginLeft="18dp"
+                        android:layout_marginRight="18dp"
+                        android:ellipsize="end"
+                        android:gravity="left|center"
+                        android:maxLines="2"
+                        android:text="@string/telephone"
+                        android:textColor="@color/select_text"
+                        android:textSize="16dp"
+                        androidfont:typeface="roboto_bold.ttf"/>
+
+                    <com.supremainc.biostar2.widget.StyledTextView
+                        android:id="@+id/telephone"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="18dp"
+                        android:layout_weight="1"
+                        android:ellipsize="end"
+                        android:gravity="right|center"
+                        android:maxLines="2"
+                        android:textColor="@color/actionbar_bg"
+                        android:textSize="14dp"
+                        androidfont:typeface="roboto_medium.ttf"/>
+
+                    <ImageView
+                        android:id="@+id/telephone_link"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:layout_marginRight="18dp"
+                        android:contentDescription="@string/image"
+                        android:gravity="center"
+                        android:scaleType="fitXY"
+                        android:src="@drawable/arrow_01"
+                        android:visibility="gone"/>
+                </LinearLayout>
+
+                <FrameLayout
+                    android:id="@+id/go_telephone_devider"
+                    android:layout_width="match_parent"
+                    android:layout_height="0.8dp"
+                    android:background="@color/list_devider"/>
+                <!--  -->
+            </LinearLayout>
+        </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>

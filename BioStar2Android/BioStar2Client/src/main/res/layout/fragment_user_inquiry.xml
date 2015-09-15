@@ -1,0 +1,741 @@
+<!-- <~SCREEN NAME)> {User_Inquriy} </~SCREEN NAME> -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:androidfont="http://schemas.android.com/apk/res-auto"
+              android:layout_width="fill_parent"
+              android:layout_height="fill_parent"
+              android:background="@color/white"
+              android:gravity="center|top"
+              android:orientation="vertical">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/white"
+            android:fadingEdge="none"
+            android:fillViewport="true">
+
+            <LinearLayout
+                android:id="@+id/detail"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="220dp">
+
+                    <ImageView
+                        android:id="@+id/background_img"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_gravity="center"
+                        android:contentDescription="@string/image"
+                        android:scaleType="centerCrop"
+                        android:src="@drawable/background1"/>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:layout_marginBottom="18dp"
+                        android:layout_marginLeft="18dp"
+                        android:layout_marginRight="18dp"
+                        android:layout_marginTop="81dp"
+                        android:orientation="horizontal">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <com.supremainc.biostar2.widget.StyledTextView
+                                android:id="@+id/title_user_name"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="9dp"
+                                android:layout_marginRight="12dp"
+                                android:ellipsize="end"
+                                android:gravity="left|center"
+                                android:singleLine="true"
+                                android:text="@string/name"
+                                android:textColor="@color/white"
+                                android:textSize="18dp"
+                                androidfont:typeface="roboto_bold.ttf"/>
+
+                            <com.supremainc.biostar2.widget.StyledTextView
+                                android:id="@+id/title_user_id"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_marginBottom="9dp"
+                                android:layout_marginRight="12dp"
+                                android:ellipsize="end"
+                                android:gravity="left|center"
+                                android:maxLines="2"
+                                android:text="@string/user_id"
+                                android:textColor="@color/white"
+                                android:textSize="14dp"
+                                androidfont:typeface="roboto_regular.ttf"/>
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal">
+
+                                <com.supremainc.biostar2.widget.StyledTextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginRight="4.5dp"
+                                    android:ellipsize="end"
+                                    android:gravity="left|center"
+                                    android:text="@string/fingerprint"
+                                    android:textColor="@color/transparent50_white"
+                                    android:textSize="12dp"
+                                    androidfont:typeface="roboto_regular.ttf"/>
+
+                                <com.supremainc.biostar2.widget.StyledTextView
+                                    android:id="@+id/title_finger_count"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginRight="9dp"
+                                    android:ellipsize="end"
+                                    android:gravity="left|center"
+                                    android:text="0"
+                                    android:textColor="@color/white"
+                                    android:textSize="12dp"
+                                    androidfont:typeface="roboto_regular.ttf"/>
+
+                                <FrameLayout
+                                    android:layout_width="0.8dp"
+                                    android:layout_height="13.5dp"
+                                    android:layout_marginRight="9dp"
+                                    android:background="@color/transparent50_white"/>
+
+                                <com.supremainc.biostar2.widget.StyledTextView
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginRight="4.5dp"
+                                    android:ellipsize="end"
+                                    android:gravity="left|center"
+                                    android:text="@string/card"
+                                    android:textColor="@color/transparent50_white"
+                                    android:textSize="12dp"
+                                    androidfont:typeface="roboto_regular.ttf"/>
+
+                                <com.supremainc.biostar2.widget.StyledTextView
+                                    android:id="@+id/title_card_count"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginRight="9dp"
+                                    android:ellipsize="end"
+                                    android:gravity="left|center"
+                                    android:text="0"
+                                    android:textColor="@color/white"
+                                    android:textSize="12dp"
+                                    androidfont:typeface="roboto_regular.ttf"/>
+
+                                <FrameLayout
+                                    android:id="@+id/title_pin_exist_devider"
+                                    android:layout_width="0.8dp"
+                                    android:layout_height="13.5dp"
+                                    android:layout_marginRight="9dp"
+                                    android:background="@color/transparent50_white"/>
+
+                                <com.supremainc.biostar2.widget.StyledTextView
+                                    android:id="@+id/title_pin_exist"
+                                    android:layout_width="wrap_content"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginRight="4.5dp"
+                                    android:ellipsize="end"
+                                    android:gravity="left|center"
+                                    android:text="@string/pin_upper"
+                                    android:textColor="@color/transparent50_white"
+                                    android:textSize="12dp"
+                                    androidfont:typeface="roboto_regular.ttf"/>
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="0dp"
+                                android:layout_weight="1"
+                                android:orientation="horizontal"/>
+
+                            <LinearLayout
+                                android:id="@+id/user_viewlog"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal">
+
+                                <ImageView
+                                    android:layout_width="29dp"
+                                    android:layout_height="29dp"
+                                    android:layout_gravity="left|center"
+                                    android:layout_marginLeft="4dp"
+                                    android:layout_marginRight="6dp"
+                                    android:contentDescription="@string/image"
+                                    android:gravity="left|center"
+                                    android:scaleType="fitXY"
+                                    android:src="@drawable/selector_btn_viewlog_transparent"/>
+
+                                <com.supremainc.biostar2.widget.StyledTextView
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_gravity="left|center"
+                                    android:ellipsize="end"
+                                    android:gravity="left|center"
+                                    android:text="@string/view_log"
+                                    android:textColor="@color/white"
+                                    android:textSize="14dp"
+                                    androidfont:typeface="roboto_regular.ttf"/>
+                            </LinearLayout>
+                        </LinearLayout>
+
+                        <FrameLayout
+                            android:layout_width="108dp"
+                            android:layout_height="108dp"
+                            android:background="@drawable/shape_circle">
+
+                            <ImageView
+                                android:id="@+id/profile_image"
+                                android:layout_width="105.8dp"
+                                android:layout_height="105.8dp"
+                                android:layout_gravity="center"
+                                android:contentDescription="@string/image"
+                                android:gravity="center"
+                                android:scaleType="fitXY"
+                                android:src="@drawable/user_photo_bg"/>
+                        </FrameLayout>
+                    </LinearLayout>
+                </FrameLayout>
+
+                <!--  -->
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="68dp"
+                    android:layout_marginLeft="18dp"
+                    android:layout_marginRight="18dp"
+                    android:gravity="left"
+                    android:orientation="horizontal">
+
+                    <com.supremainc.biostar2.widget.StyledTextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="18dp"
+                        android:ellipsize="end"
+                        android:gravity="left|center"
+                        android:maxLines="2"
+                        android:text="@string/user_id"
+                        android:textColor="@color/select_text"
+                        android:textSize="16dp"
+                        androidfont:typeface="roboto_bold.ttf"/>
+
+                    <com.supremainc.biostar2.widget.StyledTextView
+                        android:id="@+id/user_id"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:ellipsize="end"
+                        android:gravity="right|center"
+                        android:maxLines="2"
+                        android:textColor="@color/content_text"
+                        android:textSize="14dp"
+                        androidfont:typeface="roboto_medium.ttf"/>
+                </LinearLayout>
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="0.8dp"
+                    android:background="@color/list_devider"/>
+                <!--  -->
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="68dp"
+                    android:layout_marginLeft="18dp"
+                    android:layout_marginRight="18dp"
+                    android:gravity="left"
+                    android:orientation="horizontal">
+
+                    <com.supremainc.biostar2.widget.StyledTextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="18dp"
+                        android:ellipsize="end"
+                        android:gravity="left|center"
+                        android:maxLines="2"
+                        android:text="@string/name"
+                        android:textColor="@color/select_text"
+                        android:textSize="16dp"
+                        androidfont:typeface="roboto_bold.ttf"/>
+
+                    <com.supremainc.biostar2.widget.StyledTextView
+                        android:id="@+id/name"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:ellipsize="end"
+                        android:gravity="right|center"
+                        android:maxLines="2"
+                        android:textColor="@color/content_text"
+                        android:textSize="14dp"
+                        androidfont:typeface="roboto_medium.ttf"/>
+                </LinearLayout>
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="0.8dp"
+                    android:background="@color/list_devider"/>
+                <!-- link -->
+
+                <LinearLayout
+                    android:id="@+id/email_go"
+                    android:layout_width="match_parent"
+                    android:layout_height="68dp"
+                    android:gravity="left"
+                    android:orientation="horizontal"
+                    android:paddingLeft="18dp"
+                    android:paddingRight="18dp">
+
+                    <com.supremainc.biostar2.widget.StyledTextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="18dp"
+                        android:ellipsize="end"
+                        android:gravity="left|center"
+                        android:maxLines="2"
+                        android:text="@string/email"
+                        android:textColor="@color/select_text"
+                        android:textSize="16dp"
+                        android:clickable="false"
+                    androidfont:typeface="roboto_bold.ttf"/>
+
+                    <com.supremainc.biostar2.widget.StyledTextView
+                        android:id="@+id/email"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:ellipsize="end"
+                        android:gravity="right|center"
+                        android:maxLines="2"
+                        android:textColor="@color/content_text"
+                        android:textSize="14dp"
+                        androidfont:typeface="roboto_medium.ttf"/>
+
+                    <ImageView
+                        android:id="@+id/email_link"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:layout_marginLeft="18dp"
+                        android:contentDescription="@string/image"
+                        android:gravity="center"
+                        android:scaleType="fitXY"
+                        android:src="@drawable/arrow_01"/>
+                </LinearLayout>
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="0.8dp"
+                    android:background="@color/list_devider"/>
+                <!-- link -->
+
+                <LinearLayout
+                    android:id="@+id/telephone_go"
+                    android:layout_width="match_parent"
+                    android:layout_height="68dp"
+                    android:gravity="left"
+                    android:orientation="horizontal"
+                    android:paddingLeft="18dp"
+                    android:paddingRight="18dp">
+
+                    <com.supremainc.biostar2.widget.StyledTextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="18dp"
+                        android:ellipsize="end"
+                        android:gravity="left|center"
+                        android:maxLines="2"
+                        android:text="@string/telephone"
+                        android:textColor="@color/select_text"
+                        android:textSize="16dp"
+                        androidfont:typeface="roboto_bold.ttf"/>
+
+                    <com.supremainc.biostar2.widget.StyledTextView
+                        android:id="@+id/telephone"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:ellipsize="end"
+                        android:gravity="right|center"
+                        android:maxLines="2"
+                        android:textColor="@color/content_text"
+                        android:textSize="14dp"
+                        androidfont:typeface="roboto_medium.ttf"/>
+
+                    <ImageView
+                        android:id="@+id/telephone_link"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_gravity="center"
+                        android:layout_marginLeft="18dp"
+                        android:contentDescription="@string/image"
+                        android:gravity="center"
+                        android:scaleType="fitXY"
+                        android:src="@drawable/arrow_01"/>
+                </LinearLayout>
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="0.8dp"
+                    android:background="@color/list_devider"/>
+                <!--  -->
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="68dp"
+                    android:layout_marginLeft="18dp"
+                    android:layout_marginRight="18dp"
+                    android:gravity="left"
+                    android:orientation="horizontal">
+
+                    <com.supremainc.biostar2.widget.StyledTextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="18dp"
+                        android:ellipsize="end"
+                        android:gravity="left|center"
+                        android:maxLines="2"
+                        android:text="@string/operator"
+                        android:textColor="@color/select_text"
+                        android:textSize="16dp"
+                        androidfont:typeface="roboto_bold.ttf"/>
+
+                    <com.supremainc.biostar2.widget.StyledTextView
+                        android:id="@+id/operator"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:ellipsize="end"
+                        android:gravity="right|center"
+                        android:maxLines="2"
+                        android:textColor="@color/content_text"
+                        android:textSize="14dp"
+                        androidfont:typeface="roboto_medium.ttf"/>
+                </LinearLayout>
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="0.8dp"
+                    android:background="@color/list_devider"/>
+                <!--  -->
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="68dp"
+                    android:layout_marginLeft="18dp"
+                    android:layout_marginRight="18dp"
+                    android:gravity="left"
+                    android:orientation="horizontal">
+
+                    <com.supremainc.biostar2.widget.StyledTextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="18dp"
+                        android:ellipsize="end"
+                        android:gravity="left|center"
+                        android:maxLines="2"
+                        android:text="@string/group"
+                        android:textColor="@color/select_text"
+                        android:textSize="16dp"
+                        androidfont:typeface="roboto_bold.ttf"/>
+
+                    <com.supremainc.biostar2.widget.StyledTextView
+                        android:id="@+id/group"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:ellipsize="end"
+                        android:gravity="right|center"
+                        android:maxLines="2"
+                        android:textColor="@color/content_text"
+                        android:textSize="14dp"
+                        androidfont:typeface="roboto_medium.ttf"/>
+                </LinearLayout>
+
+                <!-- block -->
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="18dp"
+                    android:background="@color/list_devider"/>
+                <!--  -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="68dp"
+                    android:layout_marginLeft="18dp"
+                    android:layout_marginRight="18dp"
+                    android:gravity="left"
+                    android:orientation="horizontal">
+
+                    <com.supremainc.biostar2.widget.StyledTextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="18dp"
+                        android:ellipsize="end"
+                        android:gravity="left|center"
+                        android:maxLines="2"
+                        android:text="@string/status"
+                        android:textColor="@color/select_text"
+                        android:textSize="16dp"
+                        androidfont:typeface="roboto_bold.ttf"/>
+
+
+                    <com.supremainc.biostar2.widget.StyledTextView
+                        android:id="@+id/status_name"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:ellipsize="end"
+                        android:gravity="right|center"
+                        android:maxLines="2"
+                        android:textColor="@color/content_text"
+                        android:textSize="14dp"
+                        androidfont:typeface="roboto_medium.ttf"/>
+                </LinearLayout>
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="0.8dp"
+                    android:background="@color/list_devider"/>
+                <!--  -->
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="68dp"
+                    android:layout_marginLeft="18dp"
+                    android:layout_marginRight="18dp"
+                    android:gravity="left"
+                    android:orientation="horizontal">
+
+                    <com.supremainc.biostar2.widget.StyledTextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="18dp"
+                        android:ellipsize="end"
+                        android:gravity="left|center"
+                        android:maxLines="2"
+                        android:text="@string/period"
+                        android:textColor="@color/select_text"
+                        android:textSize="16dp"
+                        androidfont:typeface="roboto_bold.ttf"/>
+
+                    <com.supremainc.biostar2.widget.StyledTextView
+                        android:id="@+id/period"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:ellipsize="end"
+                        android:gravity="right|center"
+                        android:maxLines="2"
+                        android:textColor="@color/content_text"
+                        android:textSize="14dp"
+                        androidfont:typeface="roboto_medium.ttf"/>
+                </LinearLayout>
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="0.8dp"
+                    android:background="@color/list_devider"/>
+                <!--  -->
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="68dp"
+                    android:layout_marginLeft="18dp"
+                    android:layout_marginRight="18dp"
+                    android:gravity="left"
+                    android:orientation="horizontal">
+
+                    <com.supremainc.biostar2.widget.StyledTextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="18dp"
+                        android:ellipsize="end"
+                        android:gravity="left|center"
+                        android:maxLines="2"
+                        android:text="@string/access_group"
+                        android:textColor="@color/select_text"
+                        android:textSize="16dp"
+                        androidfont:typeface="roboto_bold.ttf"/>
+
+                    <com.supremainc.biostar2.widget.StyledTextView
+                        android:id="@+id/access_group"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:ellipsize="end"
+                        android:gravity="right|center"
+                        android:maxLines="2"
+                        android:textColor="@color/content_text"
+                        android:textSize="14dp"
+                        androidfont:typeface="roboto_medium.ttf"/>
+                </LinearLayout>
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="0.8dp"
+                    android:background="@color/list_devider"/>
+                <!-- info -->
+
+                <com.supremainc.biostar2.widget.StyledTextView
+                    android:layout_width="match_parent"
+                    android:layout_height="36dp"
+                    android:background="@color/list_devider"
+                    android:ellipsize="end"
+                    android:gravity="left|center"
+                    android:maxLines="2"
+                    android:paddingLeft="18dp"
+                    android:paddingRight="18dp"
+                    android:text="@string/credential"
+                    android:textColor="@color/user_total"
+                    android:textSize="14dp"
+                    androidfont:typeface="roboto_bold.ttf"/>
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="0.8dp"
+                    android:background="@color/list_devider"/>
+                <!--  -->
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="68dp"
+                    android:layout_marginLeft="18dp"
+                    android:layout_marginRight="18dp"
+                    android:gravity="left"
+                    android:orientation="horizontal">
+
+                    <com.supremainc.biostar2.widget.StyledTextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="18dp"
+                        android:ellipsize="end"
+                        android:gravity="left|center"
+                        android:maxLines="2"
+                        android:text="@string/fingerprint"
+                        android:textColor="@color/select_text"
+                        android:textSize="16dp"
+                        androidfont:typeface="roboto_bold.ttf"/>
+
+                    <com.supremainc.biostar2.widget.StyledTextView
+                        android:id="@+id/fingerprint"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:ellipsize="end"
+                        android:gravity="right|center"
+                        android:maxLines="2"
+                        android:textColor="@color/content_text"
+                        android:textSize="14dp"
+                        androidfont:typeface="roboto_medium.ttf"/>
+                </LinearLayout>
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="0.8dp"
+                    android:background="@color/list_devider"/>
+
+                <!--  -->
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="68dp"
+                    android:layout_marginLeft="18dp"
+                    android:layout_marginRight="18dp"
+                    android:gravity="left"
+                    android:orientation="horizontal">
+
+                    <com.supremainc.biostar2.widget.StyledTextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="18dp"
+                        android:ellipsize="end"
+                        android:gravity="left|center"
+                        android:maxLines="2"
+                        android:text="@string/card"
+                        android:textColor="@color/select_text"
+                        android:textSize="16dp"
+                        androidfont:typeface="roboto_bold.ttf"/>
+
+                    <com.supremainc.biostar2.widget.StyledTextView
+                        android:id="@+id/card"
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:ellipsize="end"
+                        android:gravity="right|center"
+                        android:maxLines="2"
+                        android:textColor="@color/content_text"
+                        android:textSize="14dp"
+                        androidfont:typeface="roboto_medium.ttf"/>
+                </LinearLayout>
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="0.8dp"
+                    android:background="@color/list_devider"/>
+
+                <LinearLayout
+                    android:id="@+id/pin"
+                    android:layout_width="match_parent"
+                    android:layout_height="68dp"
+                    android:layout_marginLeft="18dp"
+                    android:layout_marginRight="18dp"
+                    android:gravity="left"
+                    android:orientation="horizontal">
+
+                    <com.supremainc.biostar2.widget.StyledTextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="match_parent"
+                        android:layout_marginRight="18dp"
+                        android:ellipsize="end"
+                        android:gravity="left|center"
+                        android:maxLines="2"
+                        android:text="@string/pin_upper"
+                        android:textColor="@color/select_text"
+                        android:textSize="16dp"
+                        androidfont:typeface="roboto_bold.ttf"/>
+
+
+                    <com.supremainc.biostar2.widget.StyledTextView
+                        android:layout_width="0dp"
+                        android:layout_height="match_parent"
+                        android:layout_weight="1"
+                        android:ellipsize="end"
+                        android:gravity="right|center"
+                        android:maxLines="2"
+                        android:text="@string/password_display"
+                        android:textColor="@color/content_text"
+                        android:textSize="14dp"
+                        androidfont:typeface="roboto_medium.ttf"/>
+                </LinearLayout>
+
+                <FrameLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="0.8dp"
+                    android:background="@color/list_devider"/>
+            </LinearLayout>
+        </ScrollView>
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="?attr/actionBarSize"/>
+    </FrameLayout>
+
+</LinearLayout>

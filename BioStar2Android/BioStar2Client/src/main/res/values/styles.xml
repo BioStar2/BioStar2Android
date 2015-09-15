@@ -1,0 +1,44 @@
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <style name="AppTheme" parent="Theme.AppCompat.NoActionBar">
+
+    </style>
+
+    <style name="Theme.Transparent" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:colorBackgroundCacheHint">@null</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowAnimationStyle">@android:style/Animation</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:backgroundDimEnabled">false</item>
+    </style>
+
+
+    <style name="Theme.Transparent80" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:windowBackground">@color/transparent80</item>
+        <item name="android:colorBackgroundCacheHint">@null</item>
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowAnimationStyle">@android:style/Animation</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowContentOverlay">@null</item>
+        <item name="android:backgroundDimEnabled">true</item>
+    </style>
+
+    <style name="AppBaseTheme" parent="Theme.AppCompat.NoActionBar">
+
+    </style>
+
+    <style name="Theme.CustomSwitch" parent="Theme.AppCompat.NoActionBar">
+        <item name="android:colorForeground">@color/wine_1</item>
+        <item name="colorPrimary">@color/wine_1</item>
+        <item name="colorPrimaryDark">@color/wine_1</item>
+        <item name="colorAccent">@color/wine_1</item>
+        <item name="colorControlActivated">@color/wine_1</item>
+        <item name="colorControlHighlight">@color/wine_1</item>
+        <item name="colorControlNormal">@color/wine_1</item>
+        <!-- <item name="colorSwitchThumbNormal">@color/blue1</item> -->
+        <item name="colorButtonNormal">@color/wine_1</item>
+    </style>
+
+</resources>

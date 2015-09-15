@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <declare-styleable name="StyledTextView">
+        <attr name="typeface" format="string"/>
+    </declare-styleable>
+    <declare-styleable name="StyledTextViewEx">
+        <attr name="theme_color">
+            <!-- the switch moves only on the x-axis(horizontally) -->
+            <enum name="dark" value="1"/>
+            <!-- the switch moves only on the y-axis(vertically) -->
+            <enum name="light" value="2"/>
+        </attr>
+    </declare-styleable>
+
+    <declare-styleable name="SwipyRefreshLayout">
+        <attr name="direction">
+            <enum name="top" value="0"/>
+            <enum name="bottom" value="1"/>
+            <enum name="both" value="2"/>
+        </attr>
+    </declare-styleable>
+</resources>

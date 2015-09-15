@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?><!-- <~SCREEN NAME)> {Popup} </~SCREEN NAME> -->
+<LinearLayout
+    android:id="@+id/main_container"
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <!--
+        <LinearLayout
+        android:layout_width="298dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:background="@drawable/shape_popup_top"
+        android:gravity="right|center_vertical"
+        android:orientation="vertical" >
+    -->
+
+    <LinearLayout
+        android:layout_width="298dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:background="@color/actionbar_bg"
+        android:gravity="right|center_vertical"
+        android:orientation="vertical">
+
+        <com.supremainc.biostar2.widget.StyledTextView
+            android:id="@+id/title_text"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:textColor="@color/white"
+            android:textSize="16dp"
+            app:typeface="roboto_bold.ttf"/>
+
+        <include layout="@layout/view_sub_toolbar"/>
+    </LinearLayout>
+
+    <!--
+         <LinearLayout
+        android:layout_width="298dp"
+        android:layout_height="wrap_content"
+        android:background="@drawable/shape_popup_bottom"
+        android:orientation="vertical" >
+    -->
+
+    <LinearLayout
+        android:layout_width="298dp"
+        android:layout_height="wrap_content"
+        android:background="@color/white"
+        android:orientation="vertical">
+
+        <ListView
+            android:id="@+id/listview"
+            android:layout_width="match_parent"
+            android:layout_height="220.8dp"
+            android:cacheColorHint="#00000000"
+            android:fadeScrollbars="false"
+            android:footerDividersEnabled="false"
+            android:headerDividersEnabled="false"
+            android:listSelector="@android:color/transparent"
+            android:scrollbarDefaultDelayBeforeFade="5000"
+            android:scrollbarSize="4dp"
+            android:scrollbarThumbVertical="@drawable/shape_scrollbar_thumb"
+            android:smoothScrollbar="true"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:orientation="horizontal">
+
+            <com.supremainc.biostar2.widget.StyledTextView
+                android:id="@+id/negative"
+                android:layout_width="0dp"
+                android:layout_height="45dp"
+                android:layout_marginBottom="9dp"
+                android:layout_marginLeft="9dp"
+                android:layout_marginTop="9dp"
+                android:layout_weight="1"
+                android:background="@drawable/selector_btn_negative"
+                android:gravity="center"
+                android:singleLine="true"
+                android:text="@string/cancel"
+                android:textColor="@color/white"
+                android:textSize="16dp"
+                app:typeface="roboto_bold.ttf"/>
+
+            <LinearLayout
+                android:id="@+id/devider"
+                android:layout_width="8dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:orientation="vertical"/>
+
+            <com.supremainc.biostar2.widget.StyledTextView
+                android:id="@+id/positive"
+                android:layout_width="0dp"
+                android:layout_height="45dp"
+                android:layout_marginBottom="9dp"
+                android:layout_marginRight="9dp"
+                android:layout_marginTop="9dp"
+                android:layout_weight="1"
+                android:background="@drawable/selector_btn_round_ok"
+                android:gravity="center"
+                android:singleLine="true"
+                android:text="@string/ok"
+                android:textColor="@color/white"
+                android:textSize="16dp"
+                app:typeface="roboto_bold.ttf"/>
+        </LinearLayout>
+    </LinearLayout>
+
+</LinearLayout>

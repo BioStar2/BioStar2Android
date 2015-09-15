@@ -1,0 +1,37 @@
+apply plugin: 'com.android.library'
+apply plugin: 'com.novoda.bintray-release'
+
+android {
+    compileSdkVersion 22
+    buildToolsVersion "22.0.1"
+    compileOptions.encoding = 'UTF-8'
+    defaultConfig {
+        minSdkVersion 10
+        targetSdkVersion 22
+        versionCode 4
+        versionName "1.0.3"
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+        }
+    }
+}
+
+publish {
+    userOrg = 'biostar2'
+    groupId = 'com.supremainc.biostar2'
+    artifactId = 'biostar2sdk'
+    publishVersion = '1.0.3'
+    desc = 'BioStar2 Android SDK'
+    website = 'https://github.com/BioStar2/BioStar2Android'
+    issueTracker = "${website}/issues"
+    repository = "${website}.git"
+}
+
+dependencies {
+    compile 'com.google.code.gson:gson:1.7.1'
+    compile 'com.squareup.okhttp:okhttp-android-support:2.4.0'
+}
