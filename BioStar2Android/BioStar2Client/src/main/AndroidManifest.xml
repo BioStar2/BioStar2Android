@@ -28,7 +28,7 @@
     <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
     <!--<uses-permission android:name="android.permission.READ_LOGS" /> -->
     <uses-permission android:name="android.permission.GET_TASKS"/>
-    <uses-permission android:name="android.permission.CALL_PHONE"/>
+    <!--<uses-permission android:name="android.permission.CALL_PHONE"/> -->
 
     <!--
   IMPORTANT: Change "com.supremainc.biostar2.permission.C2D_MESSAGE" in the lines below
@@ -48,6 +48,7 @@
         android:authorities="com.supremainc.biostar2.db"
         android:icon="@mipmap/ic_launcher"
         android:installLocation="internalOnly"
+        android:label="@string/app_name"
         android:largeHeap="true"
         android:theme="@style/AppTheme">
 

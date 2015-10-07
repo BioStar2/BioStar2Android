@@ -178,6 +178,12 @@ public class BaseFragment extends Fragment {
         }
         return null;
     }
+    public void onDeny(int requestCode) {
+
+    }
+    public void onAllow(int requestCode) {
+
+    }
 
     public ScreenType getType() {
         return mType;

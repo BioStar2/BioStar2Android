@@ -15,6 +15,7 @@
  */
 package com.supremainc.biostar2.user;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
@@ -23,10 +24,13 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Base64;
 import android.util.Log;
@@ -138,6 +142,11 @@ public class MyProfileFragment extends BaseFragment {
             if (mIsDestroy || !isAdded()) {
                 return;
             }
+            mUserInfo.photo = mBackupPhoto;
+            if (mPhotoStatus == PhotoStatus.DELETE) {
+                mBackupPhoto = null;
+                mUserInfo.photo = null;
+            }
             try {
                 mUserDataProvider.setLoginUserInfo(mUserInfo.clone());
             } catch (Exception e) {
@@ -155,7 +164,7 @@ public class MyProfileFragment extends BaseFragment {
 
         @Override
         public void OnPositive() {
-            mUserDataProvider.modifyUser(TAG, mUserInfo, mModifyUserListener, mModifyUserErrorListener, null);
+            mUserDataProvider.modifyMyProfile(TAG, mUserInfo, mModifyUserListener, mModifyUserErrorListener, null);
         }
     };
     private MyProfileFragmentLayout.MyProfileFragmentLayoutEvent mLayoutEvent = new MyProfileFragmentLayout.MyProfileFragmentLayoutEvent() {
@@ -323,8 +332,31 @@ public class MyProfileFragment extends BaseFragment {
         }
         mScreenControl.addScreen(ScreenType.USER_PERMISSION, bundle);
     }
+    private Runnable mRunRditUserImage = new Runnable() {
+        @Override
+        public void run() {
+            editUserImage();
+        }
+    };
 
+    @Override
+    public void onAllow(int requestCode) {
+        if (mHandler == null) {
+            return;
+        }
+        mHandler.removeCallbacks(mRunRditUserImage);
+        mHandler.postDelayed(mRunRditUserImage, 1000);
+    }
     private void editUserImage() {
+        if (Build.VERSION.SDK_INT >= 23) {
+            if ((ActivityCompat.checkSelfPermission(mContext, Manifest.permission.READ_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) || (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED)) {
+                ActivityCompat.requestPermissions(mContext, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.READ_EXTERNAL_STORAGE},
+                        Setting.REQUEST_EXTERNAL_STORAGE);
+                return;
+            }
+        }
         SelectPopup<SelectCustomData> selectPopup = new SelectPopup<SelectCustomData>(mContext, mPopup);
         ArrayList<SelectCustomData> linkType = new ArrayList<SelectCustomData>();
         linkType.add(new SelectCustomData(getString(R.string.take_picture), TAKE_PICTURE, false));

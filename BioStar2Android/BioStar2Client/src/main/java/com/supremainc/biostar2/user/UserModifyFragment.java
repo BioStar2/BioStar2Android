@@ -15,6 +15,7 @@
  */
 package com.supremainc.biostar2.user;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.DatePickerDialog.OnDateSetListener;
@@ -24,11 +25,14 @@ import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Base64;
 import android.util.Log;
@@ -511,7 +515,34 @@ public class UserModifyFragment extends BaseFragment {
         }, null, getString(R.string.select_user_group), false);
     }
 
+
+    private Runnable mRunRditUserImage = new Runnable() {
+        @Override
+        public void run() {
+            editUserImage();
+        }
+    };
+
+    @Override
+    public void onAllow(int requestCode) {
+        if (mHandler == null) {
+            return;
+        }
+        mHandler.removeCallbacks(mRunRditUserImage);
+        mHandler.postDelayed(mRunRditUserImage,1000);
+    }
+
     private void editUserImage() {
+        if (Build.VERSION.SDK_INT >= 23) {
+            if ((ActivityCompat.checkSelfPermission(mContext, Manifest.permission.READ_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) || (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED)) {
+                ActivityCompat.requestPermissions(mContext, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.READ_EXTERNAL_STORAGE},
+                        Setting.REQUEST_EXTERNAL_STORAGE);
+                return;
+            }
+        }
+
         SelectPopup<SelectCustomData> selectPopup = new SelectPopup<SelectCustomData>(mContext, mPopup);
         ArrayList<SelectCustomData> linkType = new ArrayList<SelectCustomData>();
         linkType.add(new SelectCustomData(getString(R.string.take_picture), TAKE_PICTURE, false));

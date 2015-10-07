@@ -29,6 +29,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.provider.SearchRecentSuggestions;
+import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.LocalBroadcastManager;
@@ -203,7 +204,6 @@ public class HomeActivity extends BaseActivity {
                     mPopup.show(PopupType.CONFIRM, getString(R.string.info), getString(R.string.new_version) + "\n" + content, new OnPopupClickListener() {
                         @Override
                         public void OnNegative() {
-                            // TODO setting에서 업데이트 가능하다는 안내문 출력.
                             PreferenceUtil.putSharedPreference(mContext, Setting.UPDATE_CANCEL_VERSION, clientVersion);
                             mPopup.show(PopupType.CONFIRM, getString(R.string.info), getString(R.string.update_guide), null, null, null);
                         }
@@ -318,6 +318,24 @@ public class HomeActivity extends BaseActivity {
         return false;
     }
 
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        switch (requestCode) {
+            case Setting.REQUEST_EXTERNAL_STORAGE:
+                for (int result:grantResults) {
+                    if (result !=  PackageManager.PERMISSION_GRANTED) {
+                        mFragment.onDeny(requestCode);
+                        return;
+                    }                    
+                }
+				mFragment.onAllow(requestCode);
+                break;
+            default:
+                super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+                break;
+        }
+    }
     public static boolean isRunning() {
         return mIsRunning;
     }
@@ -386,7 +404,7 @@ public class HomeActivity extends BaseActivity {
     private BaseFragment createFragement(ScreenType type, Bundle args) {
         BaseFragment fragemnt = null;
         switch (type) {
-            // 메인화면
+            // 메인?�면
             case MAIN:
                 fragemnt = new MainFragment();
                 break;
@@ -525,7 +543,7 @@ public class HomeActivity extends BaseActivity {
     }
 
     /**
-     * 1 depth menu로 이동. stack을 모두 clear
+     * 1 depth menu�??�동. stack??모두 clear
      *
      * @param type
      * @param args

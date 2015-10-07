@@ -52,7 +52,7 @@ public class Setting {
     public static final boolean IS_CRASH_REPORT = false;
     public static final String UPDATE_CANCEL_VERSION = "update_cancel";
     public static final String UPDATE_CHECK_URL_DEBUG = "https://api.parse.com/1/classes/debugUpdate/qppsRTWyG8";
-
+    public static final int REQUEST_EXTERNAL_STORAGE = 200;
     public static final int USER_PROFILE_IMAGE_SIZE = 400;
     public static final String CRITTERISM = "input your id";
     // IOS (R.string.no_permission)
