@@ -120,7 +120,7 @@ public class MainFragment extends BaseFragment {
             mTimeFormatter = new SimpleDateFormat("hh:mm", mLocale);
         }
         if (mDateFormatter == null || isRefresh) {
-            String userConfig = mCommonDataProvider.getDateFormat(mContext);
+            String userConfig = mCommonDataProvider.getDateFormat();
             if (userConfig != null) {
                 userConfig = userConfig.replaceAll("yyyy/", "");
                 userConfig = userConfig.replaceAll("/yyyy", "");

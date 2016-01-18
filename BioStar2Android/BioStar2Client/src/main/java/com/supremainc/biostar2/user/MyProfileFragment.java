@@ -25,11 +25,14 @@ import android.content.DialogInterface.OnCancelListener;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.content.pm.PermissionGroupInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Base64;
@@ -41,6 +44,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import com.supremainc.biostar2.BuildConfig;
 import com.supremainc.biostar2.R;
@@ -60,7 +64,7 @@ import com.supremainc.biostar2.sdk.datatype.FingerPrintData.ListFingerprintTempl
 import com.supremainc.biostar2.sdk.datatype.PermissionData.CloudRole;
 import com.supremainc.biostar2.sdk.datatype.ResponseStatus;
 import com.supremainc.biostar2.sdk.datatype.UserData.User;
-import com.supremainc.biostar2.sdk.provider.CommonDataProvider.DATE_TYPE;
+import com.supremainc.biostar2.sdk.provider.TimeConvertProvider;
 import com.supremainc.biostar2.sdk.utils.ImageUtil;
 import com.supremainc.biostar2.sdk.volley.Response;
 import com.supremainc.biostar2.sdk.volley.VolleyError;
@@ -157,6 +161,7 @@ public class MyProfileFragment extends BaseFragment {
             mPopup.show(PopupType.CONFIRM, getString(R.string.info), getString(R.string.user_modify_success), mPopupSucess, null, null);
         }
     };
+
     private OnPopupClickListener popupFail = new OnPopupClickListener() {
         @Override
         public void OnNegative() {
@@ -268,20 +273,17 @@ public class MyProfileFragment extends BaseFragment {
     }
 
     private void createUser() {
-        long expireTick = mUserInfo.getExpireDateTick();
-        Calendar cal = Calendar.getInstance();
-        cal.setTimeInMillis(expireTick);
+        Calendar cal = mUserInfo.getTimeCalendar(mTimeConvertProvider, User.UserTimeType.expiry_datetime);
         int year = cal.get(Calendar.YEAR);
         if (year > 2030) {
             cal.set(Calendar.YEAR, 2030);
-            mUserInfo.setExpireDateTick(cal.getTimeInMillis());
+            mUserInfo.setTimeCalendar(mTimeConvertProvider, User.UserTimeType.expiry_datetime, cal);
         }
-        long startTick = mUserInfo.getStartDateTick();
-        cal.setTimeInMillis(startTick);
+        cal = mUserInfo.getTimeCalendar(mTimeConvertProvider, User.UserTimeType.start_datetime);
         year = cal.get(Calendar.YEAR);
         if (year < 2000) {
             cal.set(Calendar.YEAR, 2000);
-            mUserInfo.setStartDateTick(cal.getTimeInMillis());
+            mUserInfo.setTimeCalendar(mTimeConvertProvider, User.UserTimeType.start_datetime, cal);
         }
     }
 
@@ -338,21 +340,67 @@ public class MyProfileFragment extends BaseFragment {
             editUserImage();
         }
     };
+    private Runnable mRunDeny = new Runnable() {
+        @Override
+        public void run() {
+            if (Build.VERSION.SDK_INT >= 23) {
+                String permissionLabel = "";
+                try {
+                    PackageManager pm = mContext.getPackageManager();
+                    PermissionGroupInfo pg = pm.getPermissionGroupInfo(Manifest.permission_group.STORAGE, PackageManager.GET_META_DATA);
+                    permissionLabel = pg.loadLabel(pm).toString();
+                } catch (Exception e) {
+
+                }
+                if (!permissionLabel.isEmpty()) {
+                    permissionLabel = "("+permissionLabel+")";
+
+                }
+                permissionLabel = getString(R.string.guide_feature_permission)+" "+ getString(R.string.allow_permission)+permissionLabel;
+                Snackbar snackbar = Snackbar
+                        .make(mLayout.getRootView(), permissionLabel, Snackbar.LENGTH_LONG)
+                        .setAction(getString(R.string.permission_setting), new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                Intent intent = new Intent();
+                                intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                                intent.setData(Uri.parse("package:" + mContext.getPackageName()));
+                                mContext.startActivity(intent);
+                            }
+                        });
+                //snackbar.setActionTextColor(Color.MAGENTA);
+                View snackbarView = snackbar.getView();
+                TextView textView = (TextView) snackbarView.findViewById(android.support.design.R.id.snackbar_text);
+                textView.setMaxLines(5);
+                snackbar.show();
+            }
+        }
+    };
 
     @Override
     public void onAllow(int requestCode) {
-        if (mHandler == null) {
+        if (mHandler == null || requestCode != Setting.REQUEST_EXTERNAL_STORAGE) {
             return;
         }
         mHandler.removeCallbacks(mRunRditUserImage);
-        mHandler.postDelayed(mRunRditUserImage, 1000);
+        mHandler.postDelayed(mRunRditUserImage,1000);
     }
+    @Override
+    public void onDeny(int requestCode) {
+        if (mHandler == null || requestCode != Setting.REQUEST_EXTERNAL_STORAGE) {
+            return;
+        }
+        mHandler.removeCallbacks(mRunDeny);
+        mHandler.postDelayed(mRunDeny,1000);
+    }
+
+
     private void editUserImage() {
         if (Build.VERSION.SDK_INT >= 23) {
             if ((ActivityCompat.checkSelfPermission(mContext, Manifest.permission.READ_EXTERNAL_STORAGE)
                     != PackageManager.PERMISSION_GRANTED) || (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.WRITE_EXTERNAL_STORAGE)
                     != PackageManager.PERMISSION_GRANTED)) {
-                ActivityCompat.requestPermissions(mContext, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.READ_EXTERNAL_STORAGE},
+                ActivityCompat.requestPermissions(mContext, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE},
                         Setting.REQUEST_EXTERNAL_STORAGE);
                 return;
             }
@@ -380,7 +428,7 @@ public class MyProfileFragment extends BaseFragment {
                         break;
                     }
                     case FROM_GALLERY: {
-                        Intent intent = ImageUtil.getImageActionIntent(Intent.ACTION_PICK, false,Setting.USER_PROFILE_IMAGE_SIZE,Setting.USER_PROFILE_IMAGE_SIZE);
+                        Intent intent = ImageUtil.getImageActionIntent(Intent.ACTION_PICK, false, Setting.USER_PROFILE_IMAGE_SIZE, Setting.USER_PROFILE_IMAGE_SIZE);
                         startActivityForResult(intent, REQ_ACTIVITY_CAMERA_CROP);
                         break;
                     }
@@ -542,7 +590,6 @@ public class MyProfileFragment extends BaseFragment {
 
     @Override
     public void onPause() {
-
         hideIme(mLayout.getUserIDView());
         super.onPause();
     }
@@ -666,9 +713,8 @@ public class MyProfileFragment extends BaseFragment {
                         if (mLayout == null || mContext == null) {
                             return;
                         }
-                        mLayout.setDateStart(mUserInfo.getStartDate(mContext, DATE_TYPE.FORMAT_DATE));
-                        mLayout.setDateEnd(mUserInfo.getExpireDate(mContext, DATE_TYPE.FORMAT_DATE));
-
+                        mLayout.setDateStart(mUserInfo.getTimeFormmat(mTimeConvertProvider, User.UserTimeType.start_datetime, TimeConvertProvider.DATE_TYPE.FORMAT_DATE));
+                        mLayout.setDateEnd(mUserInfo.getTimeFormmat(mTimeConvertProvider, User.UserTimeType.expiry_datetime, TimeConvertProvider.DATE_TYPE.FORMAT_DATE));
                         return;
                     }
 
@@ -798,9 +844,8 @@ public class MyProfileFragment extends BaseFragment {
             mLayout.setStatus(getString(R.string.status) + " " + getString(R.string.inactive));
         }
         mLayout.setStatusSwitch(mUserInfo.isActive());
-
-        mLayout.setDateStart(mUserInfo.getStartDate(mContext, DATE_TYPE.FORMAT_DATE));
-        mLayout.setDateEnd(mUserInfo.getExpireDate(mContext, DATE_TYPE.FORMAT_DATE));
+        mLayout.setDateStart(mUserInfo.getTimeFormmat(mTimeConvertProvider, User.UserTimeType.start_datetime, TimeConvertProvider.DATE_TYPE.FORMAT_DATE));
+        mLayout.setDateEnd(mUserInfo.getTimeFormmat(mTimeConvertProvider, User.UserTimeType.expiry_datetime, TimeConvertProvider.DATE_TYPE.FORMAT_DATE));
         setAccessGroupCount();
         setFingerCount();
         setCardCount();

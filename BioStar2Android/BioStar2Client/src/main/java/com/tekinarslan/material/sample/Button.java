@@ -12,6 +12,7 @@ import android.graphics.Rect;
 import android.graphics.drawable.GradientDrawable;
 import android.graphics.drawable.LayerDrawable;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.util.TypedValue;
 import android.view.MotionEvent;
 import android.widget.RelativeLayout;
@@ -137,6 +138,7 @@ public abstract class Button extends RelativeLayout {
             if ((event.getX() <= getWidth() && event.getX() >= 0) &&
                     (event.getY() <= getHeight() && event.getY() >= 0)) {
                 radius++;
+                invalidate();
             } else {
                 isLastTouch = false;
                 x = -1;

@@ -38,7 +38,6 @@
                 android:scrollbarThumbVertical="@drawable/shape_scrollbar_thumb"
                 android:smoothScrollbar="true"/>
         </com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout>
-
         <com.tekinarslan.material.sample.FloatingActionButton
             android:id="@+id/fabButton"
             android:layout_width="43dp"

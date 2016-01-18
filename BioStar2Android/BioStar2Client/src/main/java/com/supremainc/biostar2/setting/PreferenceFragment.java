@@ -422,10 +422,10 @@ public class PreferenceFragment extends BaseFragment {
 
     private void setView() {
         mLayout.setTimezone(mCommonDataProvider.getTimeZoneName());
-        mLayout.setDateFormat(mCommonDataProvider.getDateFormat(mContext));
-        mLayout.setTimeFormat(mCommonDataProvider.getTimeFormat(mContext));
-        mLayout.setDateFormatName(mCommonDataProvider.getDateFormat(mContext).toLowerCase());
-        mLayout.setTimeFormatName(mCommonDataProvider.getTimeFormat(mContext).toLowerCase());
+        mLayout.setDateFormat(mCommonDataProvider.getDateFormat());
+        mLayout.setTimeFormat(mCommonDataProvider.getTimeFormat());
+        mLayout.setDateFormatName(mCommonDataProvider.getDateFormat().toLowerCase());
+        mLayout.setTimeFormatName(mCommonDataProvider.getTimeFormat().toLowerCase());
         mLayout.setAppVersion(getString(R.string.app_version));
         mLayout.setDateDevider(getString(R.string.date) + " / " + getString(R.string.time) + " " + getString(R.string.format));
         applyPermission();

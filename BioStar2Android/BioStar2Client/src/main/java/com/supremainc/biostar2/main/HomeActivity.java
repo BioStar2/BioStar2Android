@@ -323,6 +323,7 @@ public class HomeActivity extends BaseActivity {
                                            @NonNull int[] grantResults) {
         switch (requestCode) {
             case Setting.REQUEST_EXTERNAL_STORAGE:
+            case Setting.REQUEST_READ_PHONE_STATE:
                 for (int result:grantResults) {
                     if (result !=  PackageManager.PERMISSION_GRANTED) {
                         mFragment.onDeny(requestCode);

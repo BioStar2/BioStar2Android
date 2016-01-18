@@ -15,9 +15,6 @@
  */
 package com.supremainc.biostar2.sdk.datatype;
 
-import android.app.Activity;
-import android.util.Log;
-
 import com.google.gson.annotations.SerializedName;
 import com.supremainc.biostar2.sdk.datatype.AccessGroupData.BaseAccessGroup;
 import com.supremainc.biostar2.sdk.datatype.AccessGroupData.ListAccessGroup;
@@ -26,14 +23,12 @@ import com.supremainc.biostar2.sdk.datatype.FingerPrintData.ListFingerprintTempl
 import com.supremainc.biostar2.sdk.datatype.PermissionData.CloudPermission;
 import com.supremainc.biostar2.sdk.datatype.PermissionData.CloudRole;
 import com.supremainc.biostar2.sdk.datatype.UserGroupData.BaseUserGroup;
-import com.supremainc.biostar2.sdk.provider.CommonDataProvider;
-import com.supremainc.biostar2.sdk.provider.CommonDataProvider.DATE_TYPE;
 import com.supremainc.biostar2.sdk.provider.ConfigDataProvider;
+import com.supremainc.biostar2.sdk.provider.TimeConvertProvider;
 
 import java.io.Serializable;
-import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.Calendar;
 
 public class UserData {
 	public static final String USER_STATUS_ACTIVE = "AC";
@@ -102,6 +97,23 @@ public class UserData {
 		}
 	}
 
+	public static class SimpleUserWithGroup extends BaseUser implements Cloneable, Serializable {
+		public static final String TAG = SimpleUserWithGroup.class.getSimpleName();
+		private static final long serialVersionUID = -1401327780733660839L;
+
+		@SerializedName("user_group")
+		public BaseUserGroup user_group;
+
+		public SimpleUserWithGroup() {
+
+		}
+
+		public SimpleUserWithGroup clone() throws CloneNotSupportedException {
+			SimpleUserWithGroup target = (SimpleUserWithGroup) super.clone();
+			return target;
+		}
+	}
+
 	public static class ListUser extends BaseUser implements Cloneable, Serializable {
 		private static final long serialVersionUID = 4761231297419148580L;
 		public static final String TAG = ListUser.class.getSimpleName();
@@ -153,6 +165,7 @@ public class UserData {
 	public static class User extends ListUser implements Cloneable, Serializable {
 		private static final long serialVersionUID = 8386218558305783948L;
 		public static final String TAG = User.class.getSimpleName();
+		public enum UserTimeType {start_datetime,expiry_datetime};
 		@SerializedName("password")
 		public String password;
 
@@ -266,84 +279,64 @@ public class UserData {
 			this.fingerprint_templates = fingerprint_templates;
 		}
 
-		public String getStartDate(Activity context, DATE_TYPE clientTimetype) {
-			CommonDataProvider commonDataProvider = CommonDataProvider.getInstance(context);
-			return commonDataProvider.convertServerTimeToClientTime(context, clientTimetype, start_datetime, false);
+		public String getTimeType(UserTimeType type) {
+			String src= null;
+			switch (type) {
+				case start_datetime:
+					src = start_datetime;
+					break;
+				case expiry_datetime:
+					src = expiry_datetime;
+					break;
+				default:
+					break;
+			}
+			return src;
 		}
 
-		public String getExpireDate(Activity context, DATE_TYPE clientTimetype) {
-			CommonDataProvider commonDataProvider = CommonDataProvider.getInstance(context);
-			return commonDataProvider.convertServerTimeToClientTime(context, clientTimetype, expiry_datetime, false);
-		}
-
-		public boolean setStartDate(Activity context, DATE_TYPE clientTimetype, String startDate) {
-			CommonDataProvider commonDataProvider = CommonDataProvider.getInstance(context);
-			try {
-				start_datetime = commonDataProvider.convertClientTimeToServerTime(context, clientTimetype, startDate, false);
-			} catch (Exception e) {
-				Log.e(TAG, " " + e.getMessage());
+		public boolean setTimeType(UserTimeType type,String src) {
+			if (src == null || src.isEmpty()) {
 				return false;
+			}
+			switch (type) {
+				case start_datetime:
+					start_datetime = src;
+					break;
+				case expiry_datetime:
+					expiry_datetime = src;
+					break;
+				default:
+					return false;
 			}
 			return true;
 		}
 
-		public boolean setExpireDate(Activity context, DATE_TYPE clientTimetype, String endDate, boolean isFullTime) {
-			CommonDataProvider commonDataProvider = CommonDataProvider.getInstance(context);
-			try {
-				if (isFullTime) {
-					expiry_datetime = commonDataProvider.convertClientTimeToServerTimeDateEnd(context, clientTimetype, endDate, false);
-				} else {
-					expiry_datetime = commonDataProvider.convertClientTimeToServerTime(context, clientTimetype, endDate, false);
-				}
-			} catch (Exception e) {
-				Log.e(TAG, " " + e.getMessage());
-				return false;
+		public Calendar getTimeCalendar(TimeConvertProvider convert,UserTimeType timeType) {
+			return convert.convertServerTimeToCalendar(getTimeType(timeType), false);
+		}
+
+		public boolean setTimeCalendar(TimeConvertProvider convert,UserTimeType timeType,Calendar cal) {
+			switch (timeType) {
+				case expiry_datetime:
+					cal.set(Calendar.HOUR_OF_DAY,23);
+					cal.set(Calendar.MINUTE,59);
+					break;
+				default:
+					break;
 			}
-			return true;
+			return setTimeType(timeType, convert.convertCalendarToServerTime(cal, false));
 		}
 
-		public long getStartDateTick() {
-			return getDateTick(start_datetime);
+		public String getTimeFormmat(TimeConvertProvider convert,UserTimeType timeType,TimeConvertProvider.DATE_TYPE type) {
+			Calendar cal = getTimeCalendar(convert, timeType);
+			return convert.convertCalendarToFormatter(cal, type);
 		}
 
-		public long getExpireDateTick() {
-			return getDateTick(expiry_datetime);
+		public boolean setTimeFormmat(TimeConvertProvider convert,UserTimeType timeType,TimeConvertProvider.DATE_TYPE type,String src) {
+			Calendar cal = convert.convertFormatterToCalendar(src,type);
+			return setTimeCalendar(convert,timeType,cal);
 		}
 
-		public boolean setStartDateTick(long tick) {
-			try {
-				start_datetime = ConfigDataProvider.mServerFormatter.format(new Date(tick));
-			} catch (Exception e) {
-				Log.e(TAG, " " + e.getMessage());
-				return false;
-			}
-			return true;
-		}
-
-		public boolean setExpireDateTick(long tick) {
-			try {
-				expiry_datetime = ConfigDataProvider.mServerFormatter.format(new Date(tick));
-			} catch (Exception e) {
-				Log.e(TAG, " " + e.getMessage());
-				return false;
-			}
-			return true;
-		}
-
-		private long getDateTick(String st) {
-			if (st == null) {
-				return -1;
-			}
-			Date date = null;
-			try {
-				date = ConfigDataProvider.mServerFormatter.parse(st);
-				return date.getTime();
-			} catch (ParseException e) {
-				e.printStackTrace();
-				return -1;
-			}
-
-		}
 
 		@SuppressWarnings("unchecked")
 		public User clone() throws CloneNotSupportedException {

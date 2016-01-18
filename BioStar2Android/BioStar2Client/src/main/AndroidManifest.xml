@@ -1,7 +1,7 @@
 <manifest
     package="com.supremainc.biostar2"
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:versionCode="23"
+    android:versionCode="29"
     android:versionName="@string/app_version">
 
     <uses-sdk
@@ -16,7 +16,7 @@
 
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>  qor
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
     <!--<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" /> -->
@@ -27,9 +27,9 @@
     <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE"/>
     <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
     <!--<uses-permission android:name="android.permission.READ_LOGS" /> -->
-    <uses-permission android:name="android.permission.GET_TASKS"/>
+   <uses-permission android:name="android.permission.GET_TASKS"/>
     <!--<uses-permission android:name="android.permission.CALL_PHONE"/> -->
-
+    <uses-feature android:name="android.hardware.telephony" android:required="false"/>
     <!--
   IMPORTANT: Change "com.supremainc.biostar2.permission.C2D_MESSAGE" in the lines below
   to match your app's package name + ".permission.C2D_MESSAGE".

@@ -188,8 +188,10 @@
 <string name="version_mobile">BioStar 2 Mobile Version</string>
 <string name="view_log">View Log</string>
 <string name="wait">Please Wait</string>
+    <string name="guide_feature_permission">To use this feature, permission is needed.</string>
+    <string name="allow_permission">Please allow permission.</string>
 <string name="image">image</string>
-<string name="app_version">1.0.2</string>
+<string name="app_version">1.0.3</string>
 <string name="wave">~</string>
 <string name="korean_day">요일</string>
 <string name="password_display">********</string>

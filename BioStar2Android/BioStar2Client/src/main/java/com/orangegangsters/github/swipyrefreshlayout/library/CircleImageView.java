@@ -26,6 +26,7 @@ import android.graphics.Shader;
 import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.OvalShape;
 import android.support.v4.view.ViewCompat;
+import android.util.Log;
 import android.view.animation.Animation;
 import android.widget.ImageView;
 

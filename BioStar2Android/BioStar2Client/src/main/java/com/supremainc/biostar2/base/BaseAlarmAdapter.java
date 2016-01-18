@@ -33,7 +33,7 @@ import com.supremainc.biostar2.popup.Popup;
 import com.supremainc.biostar2.sdk.datatype.NotificationData.NotificationType;
 import com.supremainc.biostar2.sdk.datatype.NotificationData.PushNotification;
 import com.supremainc.biostar2.sdk.provider.CommonDataProvider;
-import com.supremainc.biostar2.sdk.provider.CommonDataProvider.DATE_TYPE;
+import com.supremainc.biostar2.sdk.provider.TimeConvertProvider;
 import com.supremainc.biostar2.widget.StyledTextView;
 import com.tekinarslan.material.sample.FloatingActionButton;
 
@@ -42,16 +42,18 @@ public class BaseAlarmAdapter extends BaseListCursorAdapter<PushNotification> {
     protected OnItemsListener mOnItemsListener;
     protected String mQuery;
     protected CommonDataProvider mCommonDataProvider;
+    protected TimeConvertProvider mTimeConvertProvider;
 
     public BaseAlarmAdapter(Activity context, ListView listView, OnItemClickListener itemClickListener, Popup popup, OnItemsListener onItemsListener) {
         super(context, listView, popup);
         listView.setAdapter(this);
         setOnItemClickListener(itemClickListener);
         mOnItemsListener = onItemsListener;
+        mTimeConvertProvider = TimeConvertProvider.getInstance(context);
         if (mOnItemsListener != null) {
             mOnItemsListener.onTotalReceive(getCount());
         }
-        mCommonDataProvider = CommonDataProvider.getInstance();
+        mCommonDataProvider = CommonDataProvider.getInstance(context);
     }
 
     @Override
@@ -136,7 +138,7 @@ public class BaseAlarmAdapter extends BaseListCursorAdapter<PushNotification> {
         if (time == null) {
             vh.mContent.setVisibility(View.GONE);
         } else {
-            String convertTime = mCommonDataProvider.convertServerTimeToClientTime(mContext, DATE_TYPE.FORMAT_SEC, time, true);
+            String convertTime = mTimeConvertProvider.convertCalendarToFormatter(mTimeConvertProvider.convertServerTimeToCalendar(time, true), mTimeConvertProvider.getClientTimeFormat(TimeConvertProvider.DATE_TYPE.FORMAT_DATE_HOUR_MIN_SEC));
             vh.mContent.setText(convertTime);
             vh.mContent.setVisibility(View.VISIBLE);
         }

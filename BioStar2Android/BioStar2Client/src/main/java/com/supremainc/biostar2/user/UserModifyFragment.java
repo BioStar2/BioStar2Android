@@ -26,12 +26,14 @@ import android.content.DialogInterface.OnCancelListener;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.content.pm.PermissionGroupInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.graphics.drawable.Drawable;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Base64;
@@ -44,6 +46,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.DatePicker;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import com.supremainc.biostar2.BuildConfig;
 import com.supremainc.biostar2.R;
@@ -66,13 +69,12 @@ import com.supremainc.biostar2.sdk.datatype.ResponseStatus;
 import com.supremainc.biostar2.sdk.datatype.UserData.User;
 import com.supremainc.biostar2.sdk.datatype.UserGroupData.BaseUserGroup;
 import com.supremainc.biostar2.sdk.datatype.UserGroupData.UserGroup;
-import com.supremainc.biostar2.sdk.provider.CommonDataProvider.DATE_TYPE;
+import com.supremainc.biostar2.sdk.provider.TimeConvertProvider;
 import com.supremainc.biostar2.sdk.utils.ImageUtil;
 import com.supremainc.biostar2.sdk.volley.Response;
 import com.supremainc.biostar2.sdk.volley.VolleyError;
 import com.supremainc.biostar2.util.InvalidChecker;
 import com.supremainc.biostar2.widget.DateTimePicker;
-import com.supremainc.biostar2.widget.OnSingleClickListener;
 import com.supremainc.biostar2.widget.ScreenControl;
 import com.supremainc.biostar2.widget.ScreenControl.ScreenType;
 import com.supremainc.biostar2.widget.SwitchView;
@@ -185,15 +187,17 @@ public class UserModifyFragment extends BaseFragment {
                 return;
             }
             if (Setting.IS_AUTO_CREATE_USER) {
+                mToastPopup.show("create", (String)deliverParam);
                 mHandler.postDelayed(new Runnable() {
                     @Override
                     public void run() {
                         if (mIsDestroy || !isAdded()) {
                             return;
                         }
+                        testName++;
                         testCreateUser();
                     }
-                }, 10);
+                }, 1000);
             } else {
                 mUserInfo.photo = mBackupPhoto;
                 if (mPhotoStatus == PhotoStatus.DELETE) {
@@ -380,8 +384,8 @@ public class UserModifyFragment extends BaseFragment {
             mUserInfo.pin = "";
         }
 
-        mUserInfo.setStartDate(mContext, DATE_TYPE.FORMAT_DATE, mLayout.getDateStart());
-        mUserInfo.setExpireDate(mContext, DATE_TYPE.FORMAT_DATE, mLayout.getDateEnd(), true);
+        mUserInfo.setTimeFormmat(mTimeConvertProvider, User.UserTimeType.start_datetime, TimeConvertProvider.DATE_TYPE.FORMAT_DATE, mLayout.getDateStart());
+        mUserInfo.setTimeFormmat(mTimeConvertProvider, User.UserTimeType.expiry_datetime, TimeConvertProvider.DATE_TYPE.FORMAT_DATE, mLayout.getDateEnd());
 
         switch (mPhotoStatus) {
             case NOT_MODIFY:
@@ -413,36 +417,36 @@ public class UserModifyFragment extends BaseFragment {
             cal.set(Calendar.YEAR, mStartYear);
             cal.set(Calendar.MONTH, mStartMonth);
             cal.set(Calendar.DAY_OF_MONTH, mStartDay);
-            mUserInfo.setStartDateTick(cal.getTimeInMillis());
+            mUserInfo.setTimeCalendar(mTimeConvertProvider, User.UserTimeType.start_datetime, cal);
+
             cal.set(Calendar.YEAR, mEndYear);
             cal.set(Calendar.MONTH, mEndMonth);
             cal.set(Calendar.DAY_OF_MONTH, mEndDay);
-            mUserInfo.setExpireDateTick(cal.getTimeInMillis());
+
+            mUserInfo.setTimeCalendar(mTimeConvertProvider, User.UserTimeType.expiry_datetime, cal);
             if (mInitUserGroup != null) {
                 mUserInfo.user_group = mInitUserGroup;
             }
         } else {
-            long expireTick = mUserInfo.getExpireDateTick();
-            Calendar cal = Calendar.getInstance();
-            // Date date = new Date(expireTick);
-            cal.setTimeInMillis(expireTick);
+
+            Calendar cal = mUserInfo.getTimeCalendar(mTimeConvertProvider, User.UserTimeType.expiry_datetime);
             int year = cal.get(Calendar.YEAR);
             if (year > 2030) {
                 cal.set(Calendar.YEAR, 2030);
-                mUserInfo.setExpireDateTick(cal.getTimeInMillis());
+                mUserInfo.setTimeCalendar(mTimeConvertProvider, User.UserTimeType.expiry_datetime, cal);
             }
+
             mEndYear = cal.get(Calendar.YEAR);
             mEndMonth = cal.get(Calendar.MONTH);
             mEndDay = cal.get(Calendar.DAY_OF_MONTH);
 
-            long startTick = mUserInfo.getStartDateTick();
-            // date = new Date(startTick);
-            cal.setTimeInMillis(startTick);
+            cal = mUserInfo.getTimeCalendar(mTimeConvertProvider, User.UserTimeType.start_datetime);
             year = cal.get(Calendar.YEAR);
             if (year < 2000) {
                 cal.set(Calendar.YEAR, 2000);
-                mUserInfo.setStartDateTick(cal.getTimeInMillis());
+                mUserInfo.setTimeCalendar(mTimeConvertProvider, User.UserTimeType.start_datetime, cal);
             }
+
             mStartYear = cal.get(Calendar.YEAR);
             mStartMonth = cal.get(Calendar.MONTH);
             mStartDay = cal.get(Calendar.DAY_OF_MONTH);
@@ -522,22 +526,67 @@ public class UserModifyFragment extends BaseFragment {
             editUserImage();
         }
     };
+    private Runnable mRunDeny = new Runnable() {
+        @Override
+        public void run() {
+            if (Build.VERSION.SDK_INT >= 23) {
+                String permissionLabel = "";
+                try {
+                    PackageManager pm = mContext.getPackageManager();
+                    PermissionGroupInfo pg = pm.getPermissionGroupInfo(Manifest.permission_group.STORAGE, PackageManager.GET_META_DATA);
+                    permissionLabel = pg.loadLabel(pm).toString();
+                } catch (Exception e) {
+
+                }
+                if (!permissionLabel.isEmpty()) {
+                    permissionLabel = "("+permissionLabel+")";
+
+                }
+                permissionLabel = getString(R.string.guide_feature_permission)+" "+ getString(R.string.allow_permission)+permissionLabel;
+                Snackbar snackbar = Snackbar
+                        .make(mLayout.getRootView(), permissionLabel, Snackbar.LENGTH_LONG)
+                        .setAction(getString(R.string.permission_setting), new View.OnClickListener() {
+                            @Override
+                            public void onClick(View view) {
+                                Intent intent = new Intent();
+                                intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                                intent.setData(Uri.parse("package:" + mContext.getPackageName()));
+                                mContext.startActivity(intent);
+                            }
+                        });
+                //snackbar.setActionTextColor(Color.MAGENTA);
+                View snackbarView = snackbar.getView();
+                TextView textView = (TextView) snackbarView.findViewById(android.support.design.R.id.snackbar_text);
+                textView.setMaxLines(5);
+                snackbar.show();
+            }
+        }
+    };
 
     @Override
     public void onAllow(int requestCode) {
-        if (mHandler == null) {
+        if (mHandler == null || requestCode != Setting.REQUEST_EXTERNAL_STORAGE) {
             return;
         }
         mHandler.removeCallbacks(mRunRditUserImage);
         mHandler.postDelayed(mRunRditUserImage,1000);
     }
+    @Override
+    public void onDeny(int requestCode) {
+        if (mHandler == null || requestCode != Setting.REQUEST_EXTERNAL_STORAGE) {
+            return;
+        }
+        mHandler.removeCallbacks(mRunDeny);
+        mHandler.postDelayed(mRunDeny,1000);
+    }
+
 
     private void editUserImage() {
         if (Build.VERSION.SDK_INT >= 23) {
             if ((ActivityCompat.checkSelfPermission(mContext, Manifest.permission.READ_EXTERNAL_STORAGE)
                     != PackageManager.PERMISSION_GRANTED) || (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.WRITE_EXTERNAL_STORAGE)
                     != PackageManager.PERMISSION_GRANTED)) {
-                ActivityCompat.requestPermissions(mContext, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE,Manifest.permission.READ_EXTERNAL_STORAGE},
+                ActivityCompat.requestPermissions(mContext, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE},
                         Setting.REQUEST_EXTERNAL_STORAGE);
                 return;
             }
@@ -566,7 +615,7 @@ public class UserModifyFragment extends BaseFragment {
                         break;
                     }
                     case FROM_GALLERY: {
-                        Intent intent = ImageUtil.getImageActionIntent(Intent.ACTION_PICK, false,Setting.USER_PROFILE_IMAGE_SIZE,Setting.USER_PROFILE_IMAGE_SIZE);
+                        Intent intent = ImageUtil.getImageActionIntent(Intent.ACTION_PICK, false, Setting.USER_PROFILE_IMAGE_SIZE, Setting.USER_PROFILE_IMAGE_SIZE);
                         startActivityForResult(intent, REQ_ACTIVITY_CAMERA_CROP);
                         break;
                     }
@@ -748,6 +797,10 @@ public class UserModifyFragment extends BaseFragment {
         }
         switch (item.getItemId()) {
             case R.id.action_save:
+                if (Setting.IS_AUTO_CREATE_USER){
+                    testCreateUser();
+                }
+
                 if (mInvalidChecker.isEmptyString(getString(R.string.info), getString(R.string.user_create_empty), mLayout.getUserID())) {
                     return true;
                 }
@@ -852,9 +905,8 @@ public class UserModifyFragment extends BaseFragment {
                         if (mLayout == null || mContext == null) {
                             return;
                         }
-                        mLayout.setDateStart(mUserInfo.getStartDate(mContext, DATE_TYPE.FORMAT_DATE));
-                        mLayout.setDateEnd(mUserInfo.getExpireDate(mContext, DATE_TYPE.FORMAT_DATE));
-
+                        mLayout.setDateStart(mUserInfo.getTimeFormmat(mTimeConvertProvider, User.UserTimeType.start_datetime, TimeConvertProvider.DATE_TYPE.FORMAT_DATE));
+                        mLayout.setDateEnd(mUserInfo.getTimeFormmat(mTimeConvertProvider, User.UserTimeType.expiry_datetime, TimeConvertProvider.DATE_TYPE.FORMAT_DATE));
                         return;
                     }
 
@@ -1038,8 +1090,8 @@ public class UserModifyFragment extends BaseFragment {
             }
         }, mUserInfo.isActive());
         mStatusSwitch.setSwitch(mUserInfo.isActive());
-        mLayout.setDateStart(mUserInfo.getStartDate(mContext, DATE_TYPE.FORMAT_DATE));
-        mLayout.setDateEnd(mUserInfo.getExpireDate(mContext, DATE_TYPE.FORMAT_DATE));
+        mLayout.setDateStart(mUserInfo.getTimeFormmat(mTimeConvertProvider, User.UserTimeType.start_datetime, TimeConvertProvider.DATE_TYPE.FORMAT_DATE));
+        mLayout.setDateEnd(mUserInfo.getTimeFormmat(mTimeConvertProvider, User.UserTimeType.expiry_datetime, TimeConvertProvider.DATE_TYPE.FORMAT_DATE));
         setAccessGroupCount();
         setFingerCount();
         setCardCount();
@@ -1143,26 +1195,39 @@ public class UserModifyFragment extends BaseFragment {
         bundle.putSerializable(User.TAG, bundleItem);
         mScreenControl.addScreen(ScreenType.MONITOR, bundle);
     }
+    int testName = 0;
+//    String[] autoUserId = {"2343321","54543"};
+
 
     private void testCreateUser() {
         if (BuildConfig.DEBUG) {
             if (mIsDestroy || !isAdded()) {
                 return;
             }
-            int testName = Integer.valueOf(mLayout.getUserName());
+
+//            if (testName > autoUserId.length-1) {
+//                return;
+//            }
             testName++;
-            mLayout.setUserName(String.valueOf(testName));
-            mToastPopup.show("create", String.valueOf(testName - 1));
-            StringBuilder sb = new StringBuilder();
-            sb.append("3");
-            for (int i = 0; i < 8; i++) {
-                int number = (int) (Math.random() * 10);
-                sb.append(String.valueOf(number));
+           if (testName > 300) {
+                return;
             }
-            mUserInfo.user_id = sb.toString();
-            mUserInfo.name = String.valueOf(testName);
+
+   //         mUserInfo.user_id = autoUserId[testName];
+            mUserInfo.user_id = "201512"+String.valueOf(testName);
+            mUserInfo.name =  mUserInfo.user_id;
             Log.e(TAG,"userId:"+ mUserInfo.user_id );
             Bitmap bm = null;
+
+            BaseUserGroup userGroup = mUserInfo.user_group;
+            if (userGroup == null) {
+                userGroup = new BaseUserGroup((String) mLayout.getUserGroupID(), mLayout.getUserGroup());
+            } else {
+                userGroup.name = mLayout.getUserGroup();
+                userGroup.id = (String) mLayout.getUserGroupID();
+            }
+            mUserInfo.user_group = userGroup;
+
             int testCount = testName % 21;
             int res =  R.drawable.ic_event_auth_01;
             switch (testCount) {
@@ -1240,12 +1305,115 @@ public class UserModifyFragment extends BaseFragment {
             bm.recycle();
             mUserInfo.login_id = null;
             mUserInfo.email = null;
-            mUserInfo.phone_number = "031-710-2450";
+            mUserInfo.phone_number = null;
             mUserInfo.password = null;
             mLayout.setUserID(mUserInfo.user_id);
-            mUserDataProvider.createUser(TAG, mUserInfo, mCreateUserListener, mCreateUserErrorListener, null);
+            mUserDataProvider.createUser(TAG, mUserInfo, mCreateUserListener, mCreateUserErrorListener, mUserInfo.user_id);
         }
     }
+
+//    private void testCreateUser() {
+//        if (BuildConfig.DEBUG) {
+//            if (mIsDestroy || !isAdded()) {
+//                return;
+//            }
+//            int testName = Integer.valueOf(mLayout.getUserName());
+//            testName++;
+//            mLayout.setUserName(String.valueOf(testName));
+//            mToastPopup.show("create", String.valueOf(testName - 1));
+//            StringBuilder sb = new StringBuilder();
+//            sb.append("3");
+//            for (int i = 0; i < 8; i++) {
+//                int number = (int) (Math.random() * 10);
+//                sb.append(String.valueOf(number));
+//            }
+//            mUserInfo.user_id = sb.toString();
+//            mUserInfo.name = String.valueOf(testName);
+//            Log.e(TAG,"userId:"+ mUserInfo.user_id );
+//            Bitmap bm = null;
+//            int testCount = testName % 21;
+//            int res =  R.drawable.ic_event_auth_01;
+//            switch (testCount) {
+//                case 0:
+//                    res =  R.drawable.ic_event_auth_01;
+//                    break;
+//                case 1:
+//                    res =  R.drawable.ic_event_auth_02;
+//                    break;
+//                case 2:
+//                    res =  R.drawable.ic_event_auth_03;
+//                    break;
+//                case 3:
+//                    res =  R.drawable.ic_event_device_01;
+//                    break;
+//                case 4:
+//                    res =  R.drawable.ic_event_device_02;
+//                    break;
+//                case 5:
+//                    res =  R.drawable.ic_event_device_03;
+//                    break;
+//                case 6:
+//                    res =  R.drawable.ic_event_door_01;
+//                    break;
+//                case 7:
+//                    res =  R.drawable.ic_event_door_02;
+//                    break;
+//                case 8:
+//                    res =  R.drawable.ic_event_door_03;
+//                    break;
+//                case 9:
+//                    res =  R.drawable.ic_event_fire_alarm;
+//                    break;
+//                case 10:
+//                    res =  R.drawable.ic_event_user_02;
+//                    break;
+//                case 11:
+//                    res =  R.drawable.ic_event_user_03;
+//                    break;
+//                case 12:
+//                    res =  R.drawable.ic_event_zone_01;
+//                    break;
+//                case 13:
+//                    res =  R.drawable.ic_event_zone_02;
+//                    break;
+//                case 14:
+//                    res =  R.drawable.ic_event_zone_03;
+//                    break;
+//                case 15:
+//                    res =  R.drawable.ic_quickguide_pre;
+//                    break;
+//                case 16:
+//                    res =  R.drawable.ic_viewlog_2;
+//                    break;
+//                case 17:
+//                    res =  R.drawable.ic_viewlog_2_pre;
+//                    break;
+//                case 18:
+//                    res =  R.drawable.user_fp1;
+//                    break;
+//                case 19:
+//                    res =  R.drawable.user_fp2;
+//                    break;
+//                case 20:
+//                    res =  R.drawable.user_fp3;
+//                    break;
+//                default:
+//                    res =  R.drawable.user_fp3;
+//                    break;
+//            }
+//            bm = BitmapFactory.decodeResource(getResources(),res);
+//            mUserInfo.photo = Base64.encodeToString(ImageUtil.bitmapToByteArray(bm), 0);
+//            mUserInfo.photo = mUserInfo.photo.replaceAll("\n", "");
+//            mUserInfo.photo_exist = true;
+//            bm.recycle();
+//            mUserInfo.login_id = null;
+//            mUserInfo.email = null;
+//            mUserInfo.phone_number = null;
+//            mUserInfo.password = null;
+//            mLayout.setUserID(mUserInfo.user_id);
+//            mUserDataProvider.createUser(TAG, mUserInfo, mCreateUserListener, mCreateUserErrorListener, null);
+//        }
+//    }
 
     public enum PhotoStatus {
         NOT_MODIFY, MODIFY, DELETE

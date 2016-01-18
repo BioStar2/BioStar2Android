@@ -110,10 +110,10 @@
 <string name="notification">Push 알림</string>
 <string name="notification_time">알림 시간</string>
 <string name="ok">확인</string>
-<string name="only_alpha_num_email">"알파벳,숫자,"","","".""만 입력해주세요."</string>
+<string name="only_alpha_num_email">"알파벳,숫자,",","."만 입력해주세요."</string>
 <string name="only_alpha_num_special">알파벳,숫자,일부 특수기호만 입력해주세요</string>
 <string name="only_number">숫자만 입력해주세요</string>
-<string name="only_number_dash">"숫자와 ""-"",""+"" 만 입력해주세요."</string>
+<string name="only_number_dash">"숫자와 "-", "+" 만 입력해주세요."</string>
 <string name="open">개방</string>
 <string name="open_door_time">출입문 개방 시간</string>
 <string name="open_door_time_des">요청후 3시간내에 로그</string>
@@ -188,4 +188,6 @@
 <string name="version_mobile">BioStar 2 모바일 버전</string>
 <string name="view_log">로그 보기</string>
 <string name="wait">잠시만 기다려주세요..</string>
+    <string name="guide_feature_permission">해당 기능을 사용하려면 권한이 필요합니다.</string>
+    <string name="allow_permission">권한을 허용해주세요.</string>
 </resources>

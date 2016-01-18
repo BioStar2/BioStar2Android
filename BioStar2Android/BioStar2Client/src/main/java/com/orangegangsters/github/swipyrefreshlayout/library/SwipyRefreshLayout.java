@@ -255,7 +255,6 @@ public class SwipyRefreshLayout extends ViewGroup {
      */
     public SwipyRefreshLayout(Context context, AttributeSet attrs) {
         super(context, attrs);
-
         mTouchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
 
         mMediumAnimationDuration = getResources().getInteger(
@@ -321,7 +320,7 @@ public class SwipyRefreshLayout extends ViewGroup {
     }
 
     public boolean canChildScrollDown() {
-        if (android.os.Build.VERSION.SDK_INT < 14) {
+         if (android.os.Build.VERSION.SDK_INT < 14) {
             if (mTarget instanceof AbsListView) {
                 final AbsListView absListView = (AbsListView) mTarget;
                 try {
@@ -372,7 +371,7 @@ public class SwipyRefreshLayout extends ViewGroup {
     }
 
     private void ensureTarget() {
-        // Don't bother getting the parent height if the parent hasn't been laid
+         // Don't bother getting the parent height if the parent hasn't been laid
         // out yet.
         if (mTarget == null) {
             for (int i = 0; i < getChildCount(); i++) {
@@ -475,7 +474,7 @@ public class SwipyRefreshLayout extends ViewGroup {
     }
 
     private void moveToStart(float interpolatedTime) {
-        int targetTop = 0;
+         int targetTop = 0;
         targetTop = (mFrom + (int) ((mOriginalOffsetTop - mFrom) * interpolatedTime));
         int offset = targetTop - mCircleView.getTop();
         setTargetOffsetTopAndBottom(offset, false /* requires update */);
@@ -723,7 +722,6 @@ public class SwipyRefreshLayout extends ViewGroup {
     @Override
     public boolean onInterceptTouchEvent(MotionEvent ev) {
         ensureTarget();
-
         final int action = MotionEventCompat.getActionMasked(ev);
 
         if (mReturningToStart && action == MotionEvent.ACTION_DOWN) {
@@ -824,7 +822,7 @@ public class SwipyRefreshLayout extends ViewGroup {
     }
 
     protected int getChildDrawingOrder(int childCount, int i) {
-        if (mCircleViewIndex < 0) {
+          if (mCircleViewIndex < 0) {
             return i;
         } else if (i == childCount - 1) {
             // Draw the selected child last
@@ -869,7 +867,7 @@ public class SwipyRefreshLayout extends ViewGroup {
      * @param progress
      */
     private void setAnimationProgress(float progress) {
-        if (isAlphaUsedForScale()) {
+         if (isAlphaUsedForScale()) {
             setColorViewAlpha((int) (progress * MAX_ALPHA));
         } else {
             ViewCompat.setScaleX(mCircleView, progress);

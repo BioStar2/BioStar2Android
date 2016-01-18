@@ -38,7 +38,7 @@ import com.supremainc.biostar2.Setting;
 import com.supremainc.biostar2.base.BaseFragment;
 import com.supremainc.biostar2.sdk.datatype.PermissionData.PERMISSION_MODULE;
 import com.supremainc.biostar2.sdk.datatype.UserData.User;
-import com.supremainc.biostar2.sdk.provider.CommonDataProvider.DATE_TYPE;
+import com.supremainc.biostar2.sdk.provider.TimeConvertProvider;
 import com.supremainc.biostar2.sdk.utils.ImageUtil;
 import com.supremainc.biostar2.widget.ScreenControl.ScreenType;
 
@@ -270,9 +270,8 @@ public class UserInquriyFragment extends BaseFragment {
         } else {
             mLayout.setStatus(getString(R.string.inactive));
         }
-
-        String sd = mUserInfo.getStartDate(mContext, DATE_TYPE.FORMAT_DATE);
-        String ed = mUserInfo.getExpireDate(mContext, DATE_TYPE.FORMAT_DATE);
+        String sd = mUserInfo.getTimeFormmat(mTimeConvertProvider, User.UserTimeType.start_datetime, TimeConvertProvider.DATE_TYPE.FORMAT_DATE);
+        String ed = mUserInfo.getTimeFormmat(mTimeConvertProvider, User.UserTimeType.expiry_datetime, TimeConvertProvider.DATE_TYPE.FORMAT_DATE);
         String pd = " ~ ";
         if (sd != null) {
             pd = sd + pd;

@@ -16,7 +16,6 @@
 package com.supremainc.biostar2.sdk.provider;
 
 import android.content.Context;
-import android.util.Log;
 
 import com.supremainc.biostar2.sdk.datatype.PreferenceData.Preference;
 import com.supremainc.biostar2.sdk.datatype.ResponseStatus;
@@ -29,7 +28,6 @@ import com.supremainc.biostar2.sdk.volley.VolleyError;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
@@ -50,9 +48,41 @@ public class CommonDataProvider extends BaseDataProvider {
 	private String DATE_FORMAT;
 	private String TIME_FORMAT;
 
-	private SimpleDateFormat mFormmaterSec;
-	private SimpleDateFormat mFormmaterMin;
-	private SimpleDateFormat mFormmaterDate;
+	/**
+	 * a hh:mm:ss : default
+	 * HH:mm:ss
+	 * hh:mm:ss a
+	 */
+	protected SimpleDateFormat mFormmaterHourMinSec;
+	/**
+	 * a hh:mm : default
+	 * HH:mm
+	 * hh:mm a
+	 */
+	protected SimpleDateFormat mFormmaterHourMin;
+
+	/**
+	 * Date + a hh:mm:ss : default
+	 * Date + HH:mm:ss
+	 * Date + hh:mm:ss a
+	 */
+	protected SimpleDateFormat mFormmaterDateHourMinSec;
+	/**
+	 * Date + a hh:mm : default
+	 * Date + HH:mm
+	 * Date + hh:mm a
+	 */
+	protected SimpleDateFormat mFormmaterDateHourMin;
+	/**
+	 * 	yyyy/MM/dd : default
+	 *  MM/dd/yyyy
+	 */
+	protected SimpleDateFormat mFormmaterDate;
+	/**
+	 * yyyy-MM-dd'T'HH:mm:ss.SS'Z'
+	 */
+	protected static SimpleDateFormat mFormmaterWeek = new SimpleDateFormat("EEE");
+	public static final SimpleDateFormat mFormatterServer = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SS'Z'",Locale.ENGLISH);
 
 	private CommonDataProvider(Context context) {
 		super(context);
@@ -161,10 +191,10 @@ public class CommonDataProvider extends BaseDataProvider {
 		Preference content = new Preference();
 		getTimeZoneAdjust();
 		content.date_format = "yyyy/MM/dd";
-		content.time_format = "hh:mm";
+		content.time_format = "a hh:mm";
 		setDateTimeFormat(mContext, content.date_format, content.time_format);
 
-		if (!generatorFormatter(mContext)) {
+		if (!generatorFormatter()) {
 			return false;
 		}
 		return true;
@@ -188,45 +218,45 @@ public class CommonDataProvider extends BaseDataProvider {
 		TIME_ZONE_ADJUST = tz.getRawOffset();
 	}
 
-	public String getDateFormat(Context context) {
+	public String getDateFormat() {
 		if (DATE_FORMAT == null) {
-			DATE_FORMAT = PreferenceUtil.getSharedPreference(context, PREF_DATE_FORMAT);
+			DATE_FORMAT = PreferenceUtil.getSharedPreference(mContext, PREF_DATE_FORMAT);
 		}
 		return DATE_FORMAT;
 	}
 
-	public String getTimeFormat(Context context) {
+	public String getTimeFormat() {
 		if (TIME_FORMAT == null) {
-			TIME_FORMAT = PreferenceUtil.getSharedPreference(context, PREF_TIME_FORMAT);
+			TIME_FORMAT = PreferenceUtil.getSharedPreference(mContext, PREF_TIME_FORMAT);
 		}
 		return TIME_FORMAT;
 	}
 
 	public void setDateTimeFormat(Context context, String date, String time) {
-		// DATE_FORMAT = date.replaceAll(" ", "");
-		// TIME_FORMAT = time.replaceAll(" ", "");
 		DATE_FORMAT = date;
 		TIME_FORMAT = time;
 		PreferenceUtil.putSharedPreference(context, PREF_DATE_FORMAT, date);
 		PreferenceUtil.putSharedPreference(context, PREF_TIME_FORMAT, time);
 		mFormmaterDate = null;
-		mFormmaterMin = null;
-		mFormmaterSec = null;
-		generatorFormatter(context);
+		mFormmaterHourMin = null;
+		mFormmaterHourMinSec = null;
+		mFormmaterHourMin = null;
+		mFormmaterHourMinSec = null;
+		generatorFormatter();
 	}
 
-	private boolean generatorFormatter(Context context) {
+	protected boolean generatorFormatter() {
 		getTimeZoneAdjust();
-		getDateFormat(context);
-		getTimeFormat(context);
+		getDateFormat();
+		getTimeFormat();
 
 		if (DATE_FORMAT == null || TIME_FORMAT == null) {
 			return false;
 		}
 		if (mFormmaterDate == null) {
-			mFormmaterDate = new SimpleDateFormat(DATE_FORMAT, Locale.ENGLISH);
+			mFormmaterDate = new SimpleDateFormat(DATE_FORMAT);
 		}
-		if (mFormmaterMin == null) {
+		if (mFormmaterDateHourMin == null || mFormmaterHourMin == null) {
 			String format = TIME_FORMAT;
 			format = format.replaceAll(" ", "");
 			if (format.startsWith("a")) {
@@ -236,9 +266,10 @@ public class CommonDataProvider extends BaseDataProvider {
 				format = format.replace("a", "");
 				format = format + " a";
 			}
-			mFormmaterMin = new SimpleDateFormat(DATE_FORMAT + " " + format, Locale.ENGLISH);
+			mFormmaterDateHourMin = new SimpleDateFormat(DATE_FORMAT + " " + format);
+			mFormmaterHourMin = new SimpleDateFormat(format);
 		}
-		if (mFormmaterSec == null) {
+		if (mFormmaterDateHourMinSec == null || mFormmaterHourMinSec == null) {
 			String format = TIME_FORMAT;
 			if (format.startsWith("a")) {
 				format = format.replace("a", "");
@@ -249,80 +280,56 @@ public class CommonDataProvider extends BaseDataProvider {
 			} else {
 				format = format + ":ss";
 			}
-			mFormmaterSec = new SimpleDateFormat(DATE_FORMAT + " " + format, Locale.ENGLISH);
+			mFormmaterDateHourMinSec = new SimpleDateFormat(DATE_FORMAT + " " + format);
+			mFormmaterHourMinSec = new SimpleDateFormat(format);
 		}
 		return true;
-
 	}
 
-	public enum DATE_TYPE {
-		FORMAT_DATE, FORMAT_MIN, FORMAT_SEC
-	};
 
-	public SimpleDateFormat getClientTimeFormat(Context context, DATE_TYPE type) {
-		generatorFormatter(context);
-		SimpleDateFormat clientFormatter = null;
-		switch (type) {
-			case FORMAT_DATE :
-				clientFormatter = mFormmaterDate;
-				break;
-			case FORMAT_MIN :
-				clientFormatter = mFormmaterMin;
-				break;
-			case FORMAT_SEC :
-				clientFormatter = mFormmaterSec;
-				break;
-			default :
-				break;
-		}
-		return clientFormatter;
-	}
 
-	@SuppressWarnings("deprecation")
-	private String convertTime(Context context, SimpleDateFormat srcFormat, SimpleDateFormat targetFormat, String srcTime, long timZone, boolean isDateEnd) {
-		try {
-			Date date = srcFormat.parse(srcTime);
-			if (isDateEnd) {
-				date.setHours(23);
-				date.setMinutes(59);
-				date.setSeconds(59);
-			}
-			date.setTime(date.getTime() + timZone);
-			return targetFormat.format(date);
-		} catch (Exception e) {
-			Log.e("convert time", "" + e.getMessage());
-		}
-		return null;
-	}
-
-	public String convertClientTimeToServerTime(Context context, DATE_TYPE clientTimetype, String clientTime, boolean isApplyTimeZone) {
-		SimpleDateFormat serverFormatter = ConfigDataProvider.mServerFormatter;
-		SimpleDateFormat clientFormatter = getClientTimeFormat(context, clientTimetype);
-		long timZone = 0;
-		if (isApplyTimeZone) {
-			timZone = getTimeZoneAdjust() * -1;
-		}
-		return convertTime(context, clientFormatter, serverFormatter, clientTime, timZone, false);
-	}
-
-	public String convertClientTimeToServerTimeDateEnd(Context context, DATE_TYPE clientTimetype, String clientTime, boolean isApplyTimeZone) {
-		SimpleDateFormat serverFormatter = ConfigDataProvider.mServerFormatter;
-		SimpleDateFormat clientFormatter = getClientTimeFormat(context, clientTimetype);
-		long timZone = 0;
-		if (isApplyTimeZone) {
-			timZone = getTimeZoneAdjust() * -1;
-		}
-		return convertTime(context, clientFormatter, serverFormatter, clientTime, timZone, true);
-	}
-
-	public String convertServerTimeToClientTime(Context context, DATE_TYPE clientTimetype, String serverTime, boolean isApplyTimeZone) {
-		SimpleDateFormat serverFormatter = ConfigDataProvider.mServerFormatter;
-		SimpleDateFormat clientFormatter = getClientTimeFormat(context, clientTimetype);
-		long timZone = 0;
-		if (isApplyTimeZone) {
-			timZone = getTimeZoneAdjust();
-		}
-		return convertTime(context, serverFormatter, clientFormatter, serverTime, timZone, false);
-	}
+//	@SuppressWarnings("deprecation")
+//	private String convertTime(SimpleDateFormat srcFormat, SimpleDateFormat targetFormat, String srcTime, long timZone, boolean isDateEnd) {
+//		try {
+//			Date date = srcFormat.parse(srcTime);
+//			if (isDateEnd) {
+//				date.setHours(23);
+//				date.setMinutes(59);
+//				date.setSeconds(59);
+//			}
+//			date.setTime(date.getTime() + timZone);
+//			return targetFormat.format(date);
+//		} catch (Exception e) {
+//			Log.e("convert time", "" + e.getMessage());
+//		}
+//		return null;
+//	}
+//
+//	public String convertClientTimeToServerTime(DATE_TYPE clientTimetype, String clientTime, boolean isApplyTimeZone) {
+//		SimpleDateFormat clientFormatter = getClientTimeFormat(mContext, clientTimetype);
+//		long timZone = 0;
+//		if (isApplyTimeZone) {
+//			timZone = getTimeZoneAdjust() * -1;
+//		}
+//		return convertTime(clientFormatter, mFormatterServer, clientTime, timZone, false);
+//	}
+//
+//	public String convertClientTimeToServerTimeDateEnd(DATE_TYPE clientTimetype, String clientTime, boolean isApplyTimeZone) {
+//		SimpleDateFormat clientFormatter = getClientTimeFormat(mContext, clientTimetype);
+//		long timZone = 0;
+//		if (isApplyTimeZone) {
+//			timZone = getTimeZoneAdjust() * -1;
+//		}
+//		return convertTime(clientFormatter, mFormatterServer, clientTime, timZone, true);
+//	}
+//
+//	public String convertServerTimeToClientTime(DATE_TYPE clientTimetype, String serverTime, boolean isApplyTimeZone) {
+//		SimpleDateFormat clientFormatter = getClientTimeFormat(mContext, clientTimetype);
+//		long timZone = 0;
+//		if (isApplyTimeZone) {
+//			timZone = getTimeZoneAdjust();
+//		}
+//		return convertTime(mFormatterServer, clientFormatter, serverTime, timZone, false);
+//	}
 
 }

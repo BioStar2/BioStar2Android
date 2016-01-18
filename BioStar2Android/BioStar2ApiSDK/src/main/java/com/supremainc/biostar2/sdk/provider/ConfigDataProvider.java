@@ -19,9 +19,6 @@ import android.content.Context;
 
 import com.supremainc.biostar2.sdk.BuildConfig;
 
-import java.text.SimpleDateFormat;
-import java.util.Locale;
-
 public class ConfigDataProvider extends BaseDataProvider {
 	// private final String TAG = getClass().getSimpleName();
 	public static final boolean TEST_RELEASE_DELETE = true;
@@ -31,7 +28,6 @@ public class ConfigDataProvider extends BaseDataProvider {
 	public static final boolean SSL_ALL_PASS = false;
 	public static final NetworkType mNetworkType = NetworkType.OK_HTTP;
 	public static final String URL = "https://api.biostar2.com/v1/";
-	public static SimpleDateFormat mServerFormatter = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SS'Z'", Locale.ENGLISH);
 
 	public enum NetworkType {
 		HURL, HTTP_CLIENT, OK_HTTP

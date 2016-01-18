@@ -15,13 +15,17 @@
  */
 package com.supremainc.biostar2.door;
 
+import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.telephony.PhoneNumberUtils;
 import android.telephony.TelephonyManager;
@@ -30,6 +34,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.supremainc.biostar2.BuildConfig;
 import com.supremainc.biostar2.R;
 import com.supremainc.biostar2.Setting;
 import com.supremainc.biostar2.base.BaseFragment;
@@ -41,14 +46,14 @@ import com.supremainc.biostar2.popup.ToastPopup;
 import com.supremainc.biostar2.sdk.datatype.DoorData.Door;
 import com.supremainc.biostar2.sdk.datatype.PermissionData.PERMISSION_MODULE;
 import com.supremainc.biostar2.sdk.datatype.ResponseStatus;
-import com.supremainc.biostar2.sdk.provider.CommonDataProvider.DATE_TYPE;
+import com.supremainc.biostar2.sdk.provider.TimeConvertProvider;
 import com.supremainc.biostar2.sdk.volley.Response;
 import com.supremainc.biostar2.sdk.volley.Response.Listener;
 import com.supremainc.biostar2.sdk.volley.VolleyError;
 import com.supremainc.biostar2.widget.ScreenControl.ScreenType;
 
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.Calendar;
 
 public class DoorFragment extends BaseFragment {
     private DoorFragmentLayout mLayout;
@@ -101,7 +106,8 @@ public class DoorFragment extends BaseFragment {
                     message = getString(R.string.clear_alarm);
                     break;
             }
-            mToastPopup.show(ToastPopup.TYPE_DOOR, message, mCommonDataProvider.getClientTimeFormat(mContext, DATE_TYPE.FORMAT_SEC).format(new Date()) + " / " + mDoor.name);
+            String date = mTimeConvertProvider.convertCalendarToFormatter(Calendar.getInstance(), TimeConvertProvider.DATE_TYPE.FORMAT_DATE_HOUR_MIN_SEC);
+            mToastPopup.show(ToastPopup.TYPE_DOOR, message, date + " / " + mDoor.name);
         }
     };
     private Response.ErrorListener mControlErrorListener = new Response.ErrorListener() {
@@ -131,7 +137,8 @@ public class DoorFragment extends BaseFragment {
                     message = getString(R.string.clear_alarm) + " " + getString(R.string.fail);
                     break;
             }
-            mToastPopup.show(ToastPopup.TYPE_DOOR, message, mCommonDataProvider.getClientTimeFormat(mContext, DATE_TYPE.FORMAT_SEC).format(new Date()) + " / " + mDoor.name);
+            String date = mTimeConvertProvider.convertCalendarToFormatter(Calendar.getInstance(),TimeConvertProvider.DATE_TYPE.FORMAT_DATE_HOUR_MIN_SEC);
+            mToastPopup.show(ToastPopup.TYPE_DOOR, message, date + " / " + mDoor.name);
 //			mToastPopup.show(ToastPopup.TYPE_DOOR, message, Setting.getErrorMessage(error, mContext));
         }
     };
@@ -334,14 +341,60 @@ public class DoorFragment extends BaseFragment {
         }, linkType, getString(R.string.door_control), false, true);
     }
 
+
+    private Runnable mRunAllow = new Runnable() {
+        @Override
+        public void run() {
+            sendOpenRequest();
+        }
+    };
+    private Runnable mRunDeny = new Runnable() {
+        @Override
+        public void run() {
+            mPopup.showWait(true);
+            mDoorDataProvider.openRequestDoor(TAG, mDoor.id, mDoorDataProvider.getLoginUserInfo().phone_number, mRequestDoorListener, mRequestDoorErrorListener, null);
+        }
+    };
+
+    @Override
+    public void onAllow(int requestCode) {
+        if (mHandler == null || requestCode != Setting.REQUEST_READ_PHONE_STATE) {
+            return;
+        }
+        mHandler.removeCallbacks(mRunAllow);
+        mHandler.postDelayed(mRunAllow,1000);
+    }
+    @Override
+    public void onDeny(int requestCode) {
+        if (mHandler == null || requestCode != Setting.REQUEST_READ_PHONE_STATE) {
+            return;
+        }
+        mHandler.removeCallbacks(mRunDeny);
+        mHandler.postDelayed(mRunDeny, 1000);
+    }
+
     private void sendOpenRequest() {
         String PhoneNumber = null;
         try {
+            if (Build.VERSION.SDK_INT >= 23) {
+                if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED ) {
+                    ActivityCompat.requestPermissions(mContext, new String[]{Manifest.permission.READ_PHONE_STATE},
+                            Setting.REQUEST_READ_PHONE_STATE);
+                    return;
+                }
+            }
             TelephonyManager telephony = (TelephonyManager) mContext.getSystemService(Context.TELEPHONY_SERVICE);
-            PhoneNumber = telephony.getLine1Number();
-            PhoneNumber = PhoneNumberUtils.formatNumber(PhoneNumber);
+            if (telephony != null) {
+                PhoneNumber = telephony.getLine1Number();
+            }
+            if (PhoneNumber != null) {
+                PhoneNumber = PhoneNumberUtils.formatNumber(PhoneNumber);
+            }
         } catch (Exception e) {
             PhoneNumber = null;
+            if (BuildConfig.DEBUG) {
+                Log.e(TAG," "+e.getMessage());
+            }
         }
 
         if (PhoneNumber == null) {

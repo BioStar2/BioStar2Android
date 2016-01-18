@@ -110,10 +110,10 @@
 <string name="notification">Pranešimas</string>
 <string name="notification_time">Pranešimo laikas</string>
 <string name="ok">OK</string>
-<string name="only_alpha_num_email">"Įrašykite raides, skaičius arba ,"","",""."""</string>
+<string name="only_alpha_num_email">"Įrašykite raides, skaičius arba ,",",".""</string>
 <string name="only_alpha_num_special">Rašykite tik raides ir skaičius</string>
 <string name="only_number">Rašykite tik skaičius</string>
-<string name="only_number_dash">"Raykite tik skaičius ir ""-"""</string>
+<string name="only_number_dash">"Raykite tik skaičius ir "-""</string>
 <string name="open">Atidaryta</string>
 <string name="open_door_time">Durų atidarymo laikas</string>
 <string name="open_door_time_des">(per 3 valandas)</string>

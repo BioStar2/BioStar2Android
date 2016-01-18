@@ -257,15 +257,19 @@ public class BaseListViewScroll implements OnScrollListener {
     }
 
     public void setFloatingActionButton(FloatingActionButton fab, ListView listView, BaseListAdapter baseListAdapter) {
-        mFab = fab;
-        mFab.setOnClickListener(mFabClickListener);
+        if (fab != null) {
+            mFab = fab;
+            mFab.setOnClickListener(mFabClickListener);
+        }
         mListView = listView;
         mBaseListAdapter = baseListAdapter;
     }
 
     public void setFloatingActionButton(FloatingActionButton fab, ListView listView, BaseListCursorAdapter baseListCursorAdapter) {
-        mFab = fab;
-        mFab.setOnClickListener(mFabClickListener);
+        if (fab != null) {
+            mFab = fab;
+            mFab.setOnClickListener(mFabClickListener);
+        }
         mListView = listView;
         mBaseListCursorAdapter = baseListCursorAdapter;
     }

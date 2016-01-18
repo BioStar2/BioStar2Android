@@ -87,7 +87,8 @@ public class NetWork {
 	protected static final String PARAM_PERMISSIONS = "permissions";
 
 	protected static final String PARAM_SETTING = "setting";
-	protected static final String PARAM_SETTING_NOTIFICATIONTOKEN = PARAM_SETTING + "/updateNotificationToken";
+//	protected static final String PARAM_SETTING_NOTIFICATIONTOKEN = PARAM_SETTING + "/updateNotificationToken";
+	protected static final String PARAM_SETTING_NOTIFICATIONTOKEN = PARAM_SETTING + "/update_notification_token";
 	protected static final String PARAM_VERSION = "admin/app_versions";
 	
 	protected static final String PARAM_LOGOUT = "logout";

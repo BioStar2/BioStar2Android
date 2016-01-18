@@ -113,7 +113,7 @@
 <string name="only_alpha_num_email">英数字および、カンマ、ピリオドを入力してください。</string>
 <string name="only_alpha_num_special">英数字および記号を入力して下さい。</string>
 <string name="only_number">数字のみの入力です。</string>
-<string name="only_number_dash">"数字と""-""のみの入力です。"</string>
+<string name="only_number_dash">"数字と"-"のみの入力です。"</string>
 <string name="open">開放</string>
 <string name="open_door_time">ゲート開放時間</string>
 <string name="open_door_time_des">（3時間以内）</string>

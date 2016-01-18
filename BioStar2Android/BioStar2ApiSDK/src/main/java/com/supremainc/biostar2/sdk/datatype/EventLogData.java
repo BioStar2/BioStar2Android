@@ -15,24 +15,17 @@
  */
 package com.supremainc.biostar2.sdk.datatype;
 
-import java.io.Serializable;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-
-import android.app.Activity;
-import android.util.Log;
-
 import com.google.gson.annotations.SerializedName;
 import com.supremainc.biostar2.sdk.datatype.AccessGroupData.BaseAccessGroup;
 import com.supremainc.biostar2.sdk.datatype.AccessGroupData.ListAccessGroup;
 import com.supremainc.biostar2.sdk.datatype.DeviceData.BaseDevice;
 import com.supremainc.biostar2.sdk.datatype.DoorData.BaseDoor;
 import com.supremainc.biostar2.sdk.datatype.UserData.BaseUser;
-import com.supremainc.biostar2.sdk.provider.CommonDataProvider;
-import com.supremainc.biostar2.sdk.provider.CommonDataProvider.DATE_TYPE;
-import com.supremainc.biostar2.sdk.provider.ConfigDataProvider;
+import com.supremainc.biostar2.sdk.provider.TimeConvertProvider;
+
+import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Calendar;
 
 public class EventLogData {
 
@@ -155,7 +148,7 @@ public class EventLogData {
 	public static class ListEventLog extends BaseEventLog implements Cloneable, Serializable {
 		private static final long serialVersionUID = -7033989203058201905L;
 		public  static final String TAG = ListAccessGroup.class.getSimpleName();
-
+		public enum ListEventLogTimeType {datetime,server_datetime};
 		@SerializedName("device")
 		public BaseDevice device;
 		
@@ -187,94 +180,55 @@ public class EventLogData {
 		public ListEventLog() {
 
 		}
-		
-		public String getDeviceDate(Activity context, DATE_TYPE clientTimetype) {
-			CommonDataProvider commonDataProvider = CommonDataProvider.getInstance(context);
-			return commonDataProvider.convertServerTimeToClientTime(context, clientTimetype, datetime,true);
-		}
-
-		public String getServerDate(Activity context, DATE_TYPE clientTimetype) {
-			CommonDataProvider commonDataProvider = CommonDataProvider.getInstance(context);
-			SimpleDateFormat srcFormat = ConfigDataProvider.mServerFormatter;
-			SimpleDateFormat targetFormat = commonDataProvider.getClientTimeFormat(context, clientTimetype);
-			Date date;
-			try {
-				date = srcFormat.parse(server_datetime);
-				return targetFormat.format(date);
-			} catch (ParseException e) {
-				e.printStackTrace();
+		public String getTimeType(ListEventLogTimeType timeType) {
+			String src= null;
+			switch (timeType) {
+				case datetime:
+					src = datetime;
+					break;
+				case server_datetime:
+					src = server_datetime;
+					break;
+				default:
+					break;
 			}
-			return null;
-			//return commonDataProvider.convertServerTimeToClientTime(context, clientTimetype, server_datetime);
+			return src;
 		}
 
-		public boolean setDeviceDate(Activity context, DATE_TYPE clientTimetype, String deviceDate) {
-			CommonDataProvider commonDataProvider = CommonDataProvider.getInstance(context);
-			try {
-				datetime = commonDataProvider.convertClientTimeToServerTime(context, clientTimetype, deviceDate,true);
-			} catch (Exception e) {
-				Log.e(TAG, " " + e.getMessage());
+		public boolean setTimeType(ListEventLogTimeType timeType,String src) {
+			if (src == null || src.isEmpty()) {
 				return false;
+			}
+			switch (timeType) {
+				case datetime:
+					datetime = src;
+					break;
+				case server_datetime:
+					server_datetime = src;
+					break;
+				default:
+					return false;
 			}
 			return true;
 		}
 
-//		public boolean setServerDate(Activity context, DATE_TYPE clientTimetype, String serverDate) {
-//			CommonDataProvider commonDataProvider = CommonDataProvider.getInstance(context);
-//			try {
-//				server_datetime = commonDataProvider.convertClientTimeToServerTime(context, clientTimetype, serverDate);
-//			} catch (Exception e) {
-//				Log.e(TAG, " " + e.getMessage());
-//				return false;
-//			}
-//			return true;
-//		}
-
-		public long getDeviceDateTick(Activity context) {
-			return getDateTick(context,datetime);
+		public Calendar getTimeCalendar(TimeConvertProvider convert,ListEventLogTimeType timeType) {
+			return convert.convertServerTimeToCalendar(getTimeType(timeType),true);
 		}
 
-		public long getServerDateTick(Activity context) {
-			return getDateTick(context,server_datetime);
+		public boolean setTimeCalendar(TimeConvertProvider convert,ListEventLogTimeType timeType,Calendar cal) {
+			return setTimeType(timeType, convert.convertCalendarToServerTime(cal, true));
 		}
 
-		public boolean setDeviceDateTick(Activity context,long tick) {
-			CommonDataProvider commonDataProvider = CommonDataProvider.getInstance(context);
-			try {
-				datetime = ConfigDataProvider.mServerFormatter.format(new Date(tick-commonDataProvider.getTimeZoneAdjust()));
-			} catch (Exception e) {
-				Log.e(TAG, " " + e.getMessage());
-				return false;
-			}
-			return true;
+		public String getTimeFormmat(TimeConvertProvider convert,ListEventLogTimeType timeType,TimeConvertProvider.DATE_TYPE type) {
+			Calendar cal = getTimeCalendar(convert, timeType);
+			return convert.convertCalendarToFormatter(cal, type);
 		}
 
-//		public boolean setServerDateTick(Activity context,long tick) {
-//			CommonDataProvider commonDataProvider = CommonDataProvider.getInstance(context);
-//			try {
-//				server_datetime = ConfigDataProvider.mServerFormatter.format(new Date(tick-commonDataProvider.getTimeZoneAdjust(context)));
-//			} catch (Exception e) {
-//				Log.e(TAG, " " + e.getMessage());
-//				return false;
-//			}
-//			return true;
-//		}
-
-		private long getDateTick(Activity context,String st) {
-			CommonDataProvider commonDataProvider = CommonDataProvider.getInstance(context);
-			if (st == null) {
-				return -1;
-			}
-			Date date = null;
-			try {
-				date = ConfigDataProvider.mServerFormatter.parse(st);
-				return date.getTime()+commonDataProvider.getTimeZoneAdjust();
-			} catch (ParseException e) {
-				e.printStackTrace();
-				return -1;
-			}
+		public boolean setTimeFormmat(TimeConvertProvider convert,ListEventLogTimeType timeType,TimeConvertProvider.DATE_TYPE type,String src) {
+			Calendar cal = convert.convertFormatterToCalendar(src,type);
+			return setTimeCalendar(convert,timeType,cal);
 		}
-
 		
 		public ListEventLog clone() throws CloneNotSupportedException {
 			ListEventLog target = (ListEventLog) super.clone();

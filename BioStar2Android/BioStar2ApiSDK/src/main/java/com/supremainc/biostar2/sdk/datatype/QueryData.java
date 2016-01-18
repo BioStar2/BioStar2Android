@@ -15,22 +15,18 @@
  */
 package com.supremainc.biostar2.sdk.datatype;
 
-import android.app.Activity;
-import android.util.Log;
-
 import com.google.gson.annotations.SerializedName;
-import com.supremainc.biostar2.sdk.provider.CommonDataProvider;
-import com.supremainc.biostar2.sdk.provider.CommonDataProvider.DATE_TYPE;
-import com.supremainc.biostar2.sdk.provider.ConfigDataProvider;
+import com.supremainc.biostar2.sdk.provider.TimeConvertProvider;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.Calendar;
 
 public class QueryData {
 	public static class Query implements Cloneable, Serializable {
 		private static final long serialVersionUID = -183415165995480102L;
 		public static final String TAG = Query.class.getSimpleName();
+		public enum QueryTimeType {start_datetime,end_datetime};
 		@SerializedName("offset")
 		public int offset;
 		@SerializedName("limit")
@@ -71,37 +67,83 @@ public class QueryData {
 			this.user_id = user_id;
 		}
 
-		public boolean setDateValue(Activity context, DATE_TYPE clientTimetype, String StartDate, String endDate) {
-			try {
-				datetime = new ArrayList<String>();
-				CommonDataProvider commonDataProvider = CommonDataProvider.getInstance(context);
-				String startTime = commonDataProvider.convertClientTimeToServerTime(context, clientTimetype, StartDate, true);
-				String endTime = commonDataProvider.convertClientTimeToServerTimeDateEnd(context, clientTimetype, endDate, true);
-				datetime.add(startTime);
-				datetime.add(endTime);
+		public String getTimeType(QueryTimeType type) {
+			String src= null;
+			switch (type) {
+				case start_datetime:
+					if (datetime == null || datetime.size() < 1) {
+						return null;
+					}
+					src = datetime.get(0);
+					break;
+				case end_datetime:
+					if (datetime == null || datetime.size() < 2) {
+						return null;
+					}
+					src = datetime.get(1);
+					break;
+				default:
+					break;
+			}
+			return src;
+		}
 
-			} catch (Exception e) {
-				Log.e(TAG, " " + e.getMessage());
+		public boolean setTimeType(QueryTimeType type,String src) {
+			if (src == null || src.isEmpty()) {
 				return false;
+			}
+			switch (type) {
+				case start_datetime:
+					if (datetime == null || datetime.size() < 1) {
+						datetime = new ArrayList<String>();
+						datetime.add(src);
+					} else {
+						datetime.set(0,src);
+					}
+					break;
+				case end_datetime:
+					if (datetime == null || datetime.size() < 1) {
+						datetime = new ArrayList<String>();
+						datetime.add(src);
+						datetime.add(src);
+					} else if (datetime.size() < 2){
+						datetime.add(src);;
+					} else {
+						datetime.set(1,src);
+					}
+					break;
+				default:
+					return false;
 			}
 			return true;
 		}
 
-		public boolean setDateTickValue(Activity context, long startTick,long endTick) {
-			try {
-				datetime = new ArrayList<String>();
-				CommonDataProvider commonDataProvider = CommonDataProvider.getInstance(context);
-				String startTime = ConfigDataProvider.mServerFormatter.format(new Date(startTick - commonDataProvider.getTimeZoneAdjust()));
-				String endTime =  ConfigDataProvider.mServerFormatter.format(new Date(endTick - commonDataProvider.getTimeZoneAdjust()));
-				datetime.add(startTime);
-				datetime.add(endTime);
-
-			} catch (Exception e) {
-				Log.e(TAG, " " + e.getMessage());
-				return false;
-			}
-			return true;
+		public Calendar getTimeCalendar(TimeConvertProvider convert,QueryTimeType timeType) {
+			return convert.convertServerTimeToCalendar(getTimeType(timeType), true);
 		}
+
+		public boolean setTimeCalendar(TimeConvertProvider convert,QueryTimeType timeType,Calendar cal) {
+			switch (timeType) {
+				case end_datetime:
+					cal.set(Calendar.HOUR_OF_DAY,23);
+					cal.set(Calendar.MINUTE,59);
+					break;
+				default:
+					break;
+			}
+			return setTimeType(timeType, convert.convertCalendarToServerTime(cal, true));
+		}
+
+		public String getTimeFormmat(TimeConvertProvider convert,QueryTimeType timeType,TimeConvertProvider.DATE_TYPE type) {
+			Calendar cal = getTimeCalendar(convert, timeType);
+			return convert.convertCalendarToFormatter(cal, type);
+		}
+
+		public boolean setTimeFormmat(TimeConvertProvider convert,QueryTimeType timeType,TimeConvertProvider.DATE_TYPE type,String src) {
+			Calendar cal = convert.convertFormatterToCalendar(src,type);
+			return setTimeCalendar(convert,timeType,cal);
+		}
+
 
 		@SuppressWarnings("unchecked")
 		public Query clone() throws CloneNotSupportedException {

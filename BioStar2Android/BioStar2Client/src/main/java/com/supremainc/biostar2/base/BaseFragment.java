@@ -49,6 +49,7 @@ import com.supremainc.biostar2.sdk.provider.DoorDataProvider;
 import com.supremainc.biostar2.sdk.provider.EventDataProvider;
 import com.supremainc.biostar2.sdk.provider.PermissionDataProvider;
 import com.supremainc.biostar2.sdk.provider.PushDataProvider;
+import com.supremainc.biostar2.sdk.provider.TimeConvertProvider;
 import com.supremainc.biostar2.sdk.provider.UserDataProvider;
 import com.supremainc.biostar2.sdk.volley.VolleyError;
 import com.supremainc.biostar2.widget.ActionbarTitle;
@@ -76,6 +77,7 @@ public class BaseFragment extends Fragment {
     protected PermissionDataProvider mPermissionDataProvider;
     protected PushDataProvider mPushDataProvider;
     protected UserDataProvider mUserDataProvider;
+    protected TimeConvertProvider mTimeConvertProvider;
     // OBJECT
     private BaseFragmentLayout mBaseFragmentLayout;
     protected Popup mPopup;
@@ -279,6 +281,9 @@ public class BaseFragment extends Fragment {
         }
         if (mPushDataProvider == null) {
             mPushDataProvider = PushDataProvider.getInstance(getActivity());
+        }
+        if (mTimeConvertProvider == null) {
+            mTimeConvertProvider = TimeConvertProvider.getInstance(getActivity());
         }
         if (mImm == null) {
             mImm = (InputMethodManager) mContext.getSystemService(mContext.INPUT_METHOD_SERVICE);

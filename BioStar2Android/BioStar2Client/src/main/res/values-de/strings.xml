@@ -110,7 +110,7 @@
 <string name="notification">Benachrichtigung</string>
 <string name="notification_time">Benachrichtigungszeit</string>
 <string name="ok">OK</string>
-<string name="only_alpha_num_email">"Bitte nur Buchstaben, Zahlen, "","" und ""."" eingeben."</string>
+<string name="only_alpha_num_email">"Bitte nur Buchstaben, Zahlen, "," und "." eingeben."</string>
 <string name="only_alpha_num_special">Bitte nur Buchstaben, Zahlen und Sonderzeichen eingeben.</string>
 <string name="only_number">Bitte nur Zahlen eingeben.</string>
 <string name="only_number_dash">Bitte nur Zahlen, Bindestrich oder +-Zeichen eingeben.</string>

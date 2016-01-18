@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?><!-- <~SCREEN NAME)> {Popup} </~SCREEN NAME> -->
 <LinearLayout
-    android:id="@+id/container"
+    android:id="@+id/waitpopup_container"
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content"

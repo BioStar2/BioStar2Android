@@ -51,13 +51,12 @@ import com.supremainc.biostar2.sdk.datatype.NotificationData.NotificationType;
 import com.supremainc.biostar2.sdk.datatype.NotificationData.PushNotification;
 import com.supremainc.biostar2.sdk.datatype.PermissionData.PERMISSION_MODULE;
 import com.supremainc.biostar2.sdk.datatype.UserData.BaseUser;
-import com.supremainc.biostar2.sdk.provider.ConfigDataProvider;
 import com.supremainc.biostar2.view.SubToolbar;
 import com.supremainc.biostar2.widget.ScreenControl;
 import com.supremainc.biostar2.widget.ScreenControl.ScreenType;
 
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.Calendar;
 
 public class AlarmListFragment extends BaseFragment {
     protected static final int MODE_DELETE = 1;
@@ -291,7 +290,7 @@ public class AlarmListFragment extends BaseFragment {
                                 noti.device = new BaseDevice();
                                 noti.device.id = "302039949";
                                 noti.device.name = "testDevice";
-                                noti.request_timestamp = ConfigDataProvider.mServerFormatter.format(new Date());
+                                noti.request_timestamp = mTimeConvertProvider.convertCalendarToServerTime(Calendar.getInstance(), true);
                                 mNotificationDBProvider.insert(noti);
                             }
                             if (BuildConfig.DEBUG) {

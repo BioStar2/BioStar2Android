@@ -88,7 +88,7 @@
 <string name="max_size">Maksymalna liczba zarejestrowanych</string>
 <string name="memory_poor">Niewystarczająca pamięć</string>
 <string name="menu">Menu</string>
-<string name="minute">Minimum</string>
+<string name="minute">Min</string>
 <string name="mobile">Mobilnie</string>
 <string name="monitoring">Monitoring</string>
 <string name="monitoring_upper">Monitoring</string>
@@ -110,7 +110,7 @@
 <string name="notification">Powiadomienie</string>
 <string name="notification_time">Czas powiadomienia</string>
 <string name="ok">OK</string>
-<string name="only_alpha_num_email">"Wprowadź tylko znaki alfabetu,liczby,"","",""."""</string>
+<string name="only_alpha_num_email">"Wprowadź tylko znaki alfabetu,liczby,",",".""</string>
 <string name="only_alpha_num_special">Wprowadź tylko znaki alfabetu,liczby i znaki specjalne</string>
 <string name="only_number">Proszę wpisać tylko cyfry</string>
 <string name="only_number_dash">Proszę wpisać tylko cyfry i tyldę</string>

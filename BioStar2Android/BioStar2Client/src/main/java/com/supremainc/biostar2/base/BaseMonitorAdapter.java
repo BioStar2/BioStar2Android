@@ -37,8 +37,8 @@ import com.supremainc.biostar2.sdk.datatype.EventLogData.ListEventLog;
 import com.supremainc.biostar2.sdk.datatype.EventLogData.LogLevel;
 import com.supremainc.biostar2.sdk.datatype.EventLogData.LogType;
 import com.supremainc.biostar2.sdk.datatype.QueryData.Query;
-import com.supremainc.biostar2.sdk.provider.CommonDataProvider.DATE_TYPE;
 import com.supremainc.biostar2.sdk.provider.EventDataProvider;
+import com.supremainc.biostar2.sdk.provider.TimeConvertProvider;
 import com.supremainc.biostar2.sdk.volley.Response;
 import com.supremainc.biostar2.sdk.volley.Response.Listener;
 import com.supremainc.biostar2.sdk.volley.VolleyError;
@@ -58,6 +58,8 @@ public class BaseMonitorAdapter extends BaseListAdapter<ListEventLog> {
     protected OnItemsListener mOnItemsListener;
     protected BaseListViewScroll mOnScroll;
     protected Query mQuery;
+    protected TimeConvertProvider mTimeConvertProvider;
+
     Listener<EventLogs> mEventsListener = new Response.Listener<EventLogs>() {
         @Override
         public void onResponse(EventLogs response, Object deliverParam) {
@@ -154,6 +156,7 @@ public class BaseMonitorAdapter extends BaseListAdapter<ListEventLog> {
                               OnItemsListener onItemsListener) {
         super(context, items, listView, popup);
         mIsClickEnable = clickEnable;
+        mTimeConvertProvider = TimeConvertProvider.getInstance(context);
         if (mIsClickEnable) {
             setOnItemClickListener(itemClickListener);
         } else {
@@ -259,7 +262,7 @@ public class BaseMonitorAdapter extends BaseListAdapter<ListEventLog> {
         ListEventLog item = mItems.get(position);
         if (item != null) {
             displayDescription(item, vh);
-            String deviceTime = item.getDeviceDate(mContext, DATE_TYPE.FORMAT_SEC);
+            String deviceTime = item.getTimeFormmat(mTimeConvertProvider, ListEventLog.ListEventLogTimeType.datetime,TimeConvertProvider.DATE_TYPE.FORMAT_DATE_HOUR_MIN_SEC);
             vh.mDate.setText(deviceTime);
             boolean isUserLink = displayUser(item, vh);
             boolean isDeviceLink = displayDevice(item, vh);

@@ -110,10 +110,10 @@
 <string name="notification">Upozornění</string>
 <string name="notification_time">Čas upozornění</string>
 <string name="ok">OK</string>
-<string name="only_alpha_num_email">"Zadávejte pouze písmena, číslice a znaky "","" a ""."""</string>
+<string name="only_alpha_num_email">"Zadávejte pouze písmena, číslice a znaky "," a ".""</string>
 <string name="only_alpha_num_special">Zadávejte pouze písmena, číslice, a speciální znaky</string>
 <string name="only_number">Zadávejte pouze číslice</string>
-<string name="only_number_dash">"Zadávejte pouze číslice a ""-"""</string>
+<string name="only_number_dash">"Zadávejte pouze číslice a "-""</string>
 <string name="open">Otevřít</string>
 <string name="open_door_time">Doba otevření dveří</string>
 <string name="open_door_time_des">(za 3 hodiny)</string>

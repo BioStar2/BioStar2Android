@@ -39,6 +39,7 @@ import com.supremainc.biostar2.sdk.datatype.DeviceData.ListDevice;
 import com.supremainc.biostar2.sdk.datatype.EventLogData.EventType;
 import com.supremainc.biostar2.sdk.datatype.QueryData.Query;
 import com.supremainc.biostar2.sdk.datatype.UserData.ListUser;
+import com.supremainc.biostar2.sdk.provider.TimeConvertProvider;
 
 import java.text.DecimalFormat;
 import java.util.ArrayList;
@@ -48,6 +49,7 @@ import java.util.Calendar;
 public class FilterView {
     FragmentActivity mActivity;
     Fragment mContext;
+    TimeConvertProvider mTimeConvertProvider;
     boolean mIsExapnd = false;
     private Calendar mCalendar;
     private StyledTextView mDateEnd;
@@ -196,7 +198,7 @@ public class FilterView {
         mDateTimePicker = new DateTimePicker(mActivity);
         mPopup = popup;
         mFormat = new DecimalFormat("00");
-
+        mTimeConvertProvider = TimeConvertProvider.getInstance(mActivity);
         mDateStart = (StyledTextView) mFilterView.findViewById(R.id.filter_date_start);
         mDateEnd = (StyledTextView) mFilterView.findViewById(R.id.filter_date_end);
         mTimeStart = (StyledTextView) mFilterView.findViewById(R.id.filter_time_start);
@@ -297,7 +299,9 @@ public class FilterView {
         end.set(Calendar.DAY_OF_MONTH, mEndDay);
         end.set(Calendar.HOUR_OF_DAY, mEndHour);
         end.set(Calendar.MINUTE, mEndMinute);
-        query.setDateTickValue(mActivity, start.getTimeInMillis(), end.getTimeInMillis());
+
+        query.setTimeCalendar(mTimeConvertProvider, Query.QueryTimeType.start_datetime, start);
+        query.setTimeCalendar(mTimeConvertProvider,Query.QueryTimeType.end_datetime,end);
 
         if (mDevices != null && mDevices.size() > 0) {
             ArrayList<String> devicesId = new ArrayList<String>();

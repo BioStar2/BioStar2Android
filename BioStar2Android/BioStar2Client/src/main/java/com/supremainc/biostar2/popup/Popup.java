@@ -149,7 +149,8 @@ public class Popup {
         if (title != null) {
             titleView.setText(title);
         }
-
+        final LinearLayout mainView = (LinearLayout) layout.findViewById(R.id.main_container);
+        mainView.setTag(type);
         ImageView popupType = (ImageView) layout.findViewById(R.id.type);
         boolean isRunHeight = true;
         switch (type) {
@@ -214,7 +215,7 @@ public class Popup {
         Log.e("popup", "line:" + contentView.getLineCount());
         final ScrollView contentContainer = (ScrollView) layout.findViewById(R.id.scroll);
 
-        final LinearLayout mainView = (LinearLayout) layout.findViewById(R.id.main_container);
+
         mDialog.setLayout(layout);
         if (isRunHeight) {
             mainView.setVisibility(View.INVISIBLE);
@@ -257,7 +258,7 @@ public class Popup {
             mWaitPopup.setCancelable(false);
             mWaitPopup.setOnCancelListener(null);
         }
-        mWaitPopup.findViewById(R.id.container).setVisibility(View.VISIBLE);
+        mWaitPopup.findViewById(R.id.waitpopup_container).setVisibility(View.VISIBLE);
         mWaitPopup.show();
     }
 

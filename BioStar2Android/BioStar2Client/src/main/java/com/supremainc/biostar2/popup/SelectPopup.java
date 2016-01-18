@@ -299,7 +299,7 @@ public class SelectPopup<T> {
         }
         mSubToolbar.setTotal(mListAdapter.getCount());
         mMainView = layout.findViewById(R.id.main_container);
-
+        mMainView.setTag(type);
         mDialog.setLayout(layout);
         final OnSingleClickListener onClickListener = new OnSingleClickListener() {
             @Override

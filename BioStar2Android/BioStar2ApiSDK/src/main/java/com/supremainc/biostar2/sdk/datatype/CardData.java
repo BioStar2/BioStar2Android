@@ -22,7 +22,7 @@ import java.util.ArrayList;
 
 public class CardData {
 	public static class Cards  implements Cloneable, Serializable  {
-		private static final long serialVersionUID = -1992147184266614998L;
+		private static final long serialVersionUID = 6325123415290278418L;
 		public static final String TAG = Cards.class.getSimpleName();
 		@SerializedName("statusCode")
 		public String statusCode;

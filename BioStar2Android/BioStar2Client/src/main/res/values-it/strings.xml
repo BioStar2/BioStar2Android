@@ -110,10 +110,10 @@
 <string name="notification">Notifiche</string>
 <string name="notification_time">Ora Notifiche</string>
 <string name="ok">OK</string>
-<string name="only_alpha_num_email">"Solo lettere, numeri e "","",""."" accettati"</string>
+<string name="only_alpha_num_email">"Solo lettere, numeri e ",","." accettati"</string>
 <string name="only_alpha_num_special">Solo lettere, numeri e caratteri speciali accettati</string>
 <string name="only_number">Immettere solo numeri</string>
-<string name="only_number_dash">"Immettere solo numeri e ""-"""</string>
+<string name="only_number_dash">"Immettere solo numeri e "-""</string>
 <string name="open">Apri</string>
 <string name="open_door_time">Ora Apertura Porta</string>
 <string name="open_door_time_des">(in 3 secondi)</string>

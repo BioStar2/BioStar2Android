@@ -10,6 +10,7 @@ import android.graphics.PorterDuff.Mode;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
+import android.os.Build;
 import android.util.AttributeSet;
 import android.util.TypedValue;
 import android.widget.ImageView;
@@ -102,7 +103,11 @@ public class FloatingActionButton extends Button {
     public void setDrawableIcon(Drawable drawableIcon) {
         this.drawableIcon = drawableIcon;
         try {
-            icon.setBackground(drawableIcon);
+            if (Build.VERSION.SDK_INT >= 16) {
+                icon.setBackground(drawableIcon);
+            } else {
+                icon.setBackgroundDrawable(drawableIcon);
+            }
         } catch (NoSuchMethodError e) {
             e.printStackTrace();
         }
@@ -125,8 +130,9 @@ public class FloatingActionButton extends Button {
             Bitmap bmp = cropCircle(makeCircle());
             canvas.drawBitmap(bmp, src, dst, null);
             bmp.recycle();
+            invalidate();
         }
-        invalidate();
+
     }
 
     public void setDirectioDown() {

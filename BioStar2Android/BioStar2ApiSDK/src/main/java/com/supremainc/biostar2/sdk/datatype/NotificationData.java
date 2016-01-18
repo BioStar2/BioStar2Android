@@ -19,8 +19,10 @@ import com.google.gson.annotations.SerializedName;
 import com.supremainc.biostar2.sdk.datatype.DeviceData.BaseDevice;
 import com.supremainc.biostar2.sdk.datatype.DoorData.BaseDoor;
 import com.supremainc.biostar2.sdk.datatype.UserData.BaseUser;
+import com.supremainc.biostar2.sdk.provider.TimeConvertProvider;
 
 import java.io.Serializable;
+import java.util.Calendar;
 
 public class NotificationData {
 	
@@ -36,6 +38,7 @@ public class NotificationData {
 	public static class PushNotification implements Cloneable, Serializable {
 		private static final long serialVersionUID = -3331394917966008473L;
 		public static final String TAG = PushNotification.class.getSimpleName();
+		public enum PushNotificationTimeType {request_timestamp};
 		@SerializedName("device")
 		public BaseDevice device;
 		@SerializedName("door")
@@ -56,7 +59,51 @@ public class NotificationData {
 		 * 0: read , 1: unread
 		 */
 		public int unread;
-		
+
+		public String getTimeType(PushNotificationTimeType timeType) {
+			String src= null;
+			switch (timeType) {
+				case request_timestamp:
+					src = request_timestamp;
+					break;
+				default:
+					break;
+			}
+			return src;
+		}
+
+		public boolean setTimeType(PushNotificationTimeType timeType,String src) {
+			if (src == null || src.isEmpty()) {
+				return false;
+			}
+			switch (timeType) {
+				case request_timestamp:
+					request_timestamp = src;
+					break;
+				default:
+					return false;
+			}
+			return true;
+		}
+
+		public Calendar getTimeCalendar(TimeConvertProvider convert,PushNotificationTimeType timeType) {
+			return convert.convertServerTimeToCalendar(getTimeType(timeType),true);
+		}
+
+		public boolean setTimeCalendar(TimeConvertProvider convert,PushNotificationTimeType timeType,Calendar cal) {
+			return setTimeType(timeType, convert.convertCalendarToServerTime(cal, true));
+		}
+
+		public String getTimeFormmat(TimeConvertProvider convert,PushNotificationTimeType timeType,TimeConvertProvider.DATE_TYPE type) {
+			Calendar cal = getTimeCalendar(convert, timeType);
+			return convert.convertCalendarToFormatter(cal, type);
+		}
+
+		public boolean setTimeFormmat(TimeConvertProvider convert,PushNotificationTimeType timeType,TimeConvertProvider.DATE_TYPE type,String src) {
+			Calendar cal = convert.convertFormatterToCalendar(src,type);
+			return setTimeCalendar(convert,timeType,cal);
+		}
+
 		public PushNotification clone() throws CloneNotSupportedException {
 			PushNotification target = (PushNotification) super.clone();
 			if (device != null) {

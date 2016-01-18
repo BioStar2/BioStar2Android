@@ -43,17 +43,15 @@ import com.supremainc.biostar2.sdk.datatype.NotificationData.NotificationType;
 import com.supremainc.biostar2.sdk.datatype.NotificationData.PushNotification;
 import com.supremainc.biostar2.sdk.datatype.ResponseStatus;
 import com.supremainc.biostar2.sdk.datatype.UserData.User;
-import com.supremainc.biostar2.sdk.provider.CommonDataProvider.DATE_TYPE;
-import com.supremainc.biostar2.sdk.provider.ConfigDataProvider;
+import com.supremainc.biostar2.sdk.provider.TimeConvertProvider;
 import com.supremainc.biostar2.sdk.volley.Response;
 import com.supremainc.biostar2.sdk.volley.Response.Listener;
 import com.supremainc.biostar2.sdk.volley.VolleyError;
 import com.supremainc.biostar2.widget.ScreenControl;
 import com.supremainc.biostar2.widget.ScreenControl.ScreenType;
 
-import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Date;
+import java.util.Calendar;
 
 public class AlarmFragment extends BaseFragment {
     private AlarmFragmentLayout mLayout;
@@ -61,7 +59,6 @@ public class AlarmFragment extends BaseFragment {
     private Door mDoor;
     private PushNotification mPushData;
     private ArrayList<EventLog> mEventLogList;
-    private long mNotifyTick;
 
     private OnCancelListener mCancelListener = new OnCancelListener() {
         @Override
@@ -87,7 +84,8 @@ public class AlarmFragment extends BaseFragment {
                 Log.e(TAG, "get openErrorListener:" + volleyError.getMessage());
             }
             String title = (String) deliverParam + " " + getString(R.string.fail);
-            mToastPopup.show(ToastPopup.TYPE_DOOR, title, mCommonDataProvider.getClientTimeFormat(mContext, DATE_TYPE.FORMAT_SEC).format(new Date()) + " / " + mDoor.name);
+            String date = mTimeConvertProvider.convertCalendarToFormatter(Calendar.getInstance(),TimeConvertProvider.DATE_TYPE.FORMAT_DATE_HOUR_MIN_SEC);
+            mToastPopup.show(ToastPopup.TYPE_DOOR, title, date + " / " + mDoor.name);
         }
     };
     private Response.Listener<User> mUserListener = new Response.Listener<User>() {
@@ -233,7 +231,8 @@ public class AlarmFragment extends BaseFragment {
             }
             mPopup.dismissWiat();
             String title = (String) deliverParam;
-            mToastPopup.show(ToastPopup.TYPE_DOOR, title, mCommonDataProvider.getClientTimeFormat(mContext, DATE_TYPE.FORMAT_SEC).format(new Date()) + " / " + mDoor.name);
+            String date = mTimeConvertProvider.convertCalendarToFormatter(Calendar.getInstance(),TimeConvertProvider.DATE_TYPE.FORMAT_DATE_HOUR_MIN_SEC);
+            mToastPopup.show(ToastPopup.TYPE_DOOR, title,date + " / " + mDoor.name);
         }
     };
     private AlarmFragmentLayout.AlarmFragmentLayoutEvent mLayoutEvent = new AlarmFragmentLayout.AlarmFragmentLayoutEvent() {
@@ -369,13 +368,11 @@ public class AlarmFragment extends BaseFragment {
         if (mPushData == null) {
             return false;
         }
-        mLayout.setNotificationTime(mCommonDataProvider.convertServerTimeToClientTime(mContext, DATE_TYPE.FORMAT_SEC, mPushData.request_timestamp, true));
-        try {
-            mNotifyTick = ConfigDataProvider.mServerFormatter.parse(mPushData.request_timestamp).getTime() + mCommonDataProvider.getTimeZoneAdjust();
-        } catch (ParseException e) {
-            e.printStackTrace();
+        String date = mPushData.getTimeFormmat(mTimeConvertProvider, PushNotification.PushNotificationTimeType.request_timestamp,TimeConvertProvider.DATE_TYPE.FORMAT_DATE_HOUR_MIN_SEC);
+        if (date == null) {
             return false;
         }
+        mLayout.setNotificationTime(date);
         String code = mPushData.code;
         mLayout.setPushMessage(mPushData.message);
         setIcon();

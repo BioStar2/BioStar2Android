@@ -23,7 +23,7 @@ import android.app.TimePickerDialog;
 import android.app.TimePickerDialog.OnTimeSetListener;
 
 import com.supremainc.biostar2.sdk.provider.CommonDataProvider;
-import com.supremainc.biostar2.sdk.provider.CommonDataProvider.DATE_TYPE;
+import com.supremainc.biostar2.sdk.provider.TimeConvertProvider;
 
 import java.util.Calendar;
 
@@ -33,10 +33,12 @@ public class DateTimePicker {
     Dialog dlgDate;
     Dialog dlgTime;
     private Activity mActivity;
+    private TimeConvertProvider mTimeConvertProvider;
 
     public DateTimePicker(Activity activity) {
         mActivity = activity;
         mCommonDataProvider = CommonDataProvider.getInstance(activity);
+        mTimeConvertProvider = TimeConvertProvider.getInstance(activity);
     }
 
     private void close() {
@@ -57,7 +59,7 @@ public class DateTimePicker {
         cal.set(Calendar.YEAR, y);
         cal.set(Calendar.MONTH, m);
         cal.set(Calendar.DAY_OF_MONTH, d);
-        return mCommonDataProvider.getClientTimeFormat(mActivity, DATE_TYPE.FORMAT_DATE).format(cal.getTime());
+        return mTimeConvertProvider.convertCalendarToFormatter(cal,TimeConvertProvider.DATE_TYPE.FORMAT_DATE);
     }
 
     public boolean isErrorSetDate(int sYear, int sMonth, int sDay, int eYear, int eMonth, int eDay) {

@@ -57,6 +57,10 @@ public class BaseFragmentLayout {
         return (ListView) mRootView.findViewById(R.id.listview);
     }
 
+    public View getRootView() {
+        return mRootView;
+    }
+
     public SwipyRefreshLayout getSwipeyLayout() {
         return (SwipyRefreshLayout) mRootView.findViewById(R.id.swipe_refresh_layout);
     }
