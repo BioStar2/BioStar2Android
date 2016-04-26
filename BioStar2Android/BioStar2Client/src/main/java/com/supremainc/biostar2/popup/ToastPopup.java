@@ -73,22 +73,22 @@ public class ToastPopup extends Toast {
         if (title != null) {
             mTitleView.setVisibility(View.VISIBLE);
             mTitleView.setText(title);
-            mContentView.setMaxLines(1);
-            mContentView.setSingleLine(true);
+//            mContentView.setMaxLines(1);
+//            mContentView.setSingleLine(true);
         } else {
             mTitleView.setVisibility(View.GONE);
-            mContentView.setMaxLines(2);
-            mContentView.setSingleLine(false);
+//            mContentView.setMaxLines(2);
+//            mContentView.setSingleLine(false);
         }
         if (content != null) {
             mContentView.setVisibility(View.VISIBLE);
             mContentView.setText(content);
-            mTitleView.setMaxLines(1);
-            mTitleView.setSingleLine(true);
+//            mTitleView.setMaxLines(1);
+//            mTitleView.setSingleLine(true);
         } else {
             mContentView.setVisibility(View.GONE);
-            mTitleView.setMaxLines(2);
-            mTitleView.setSingleLine(false);
+//            mTitleView.setMaxLines(2);
+//            mTitleView.setSingleLine(false);
         }
         if (mType != null) {
             switch (type) {

@@ -191,13 +191,13 @@
                     android:ellipsize="end"
                     android:gravity="left|center"
                     android:maxLines="2"
-                    android:text="@string/door_sensor"
+                    android:text="@string/exit_device"
                     android:textColor="@color/select_text"
                     android:textSize="16dp"
                     androidfont:typeface="roboto_bold.ttf"/>
 
                 <com.supremainc.biostar2.widget.StyledTextView
-                    android:id="@+id/door_sensor"
+                    android:id="@+id/exit_device"
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_marginRight="18dp"
@@ -210,12 +210,12 @@
                     androidfont:typeface="roboto_medium.ttf"/>
             </LinearLayout>
 
-
             <FrameLayout
                 android:layout_width="match_parent"
                 android:layout_height="0.8dp"
                 android:background="@color/list_devider"/>
             <!--  -->
+
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -270,46 +270,6 @@
                     android:ellipsize="end"
                     android:gravity="left|center"
                     android:maxLines="2"
-                    android:text="@string/exit_device"
-                    android:textColor="@color/select_text"
-                    android:textSize="16dp"
-                    androidfont:typeface="roboto_bold.ttf"/>
-
-                <com.supremainc.biostar2.widget.StyledTextView
-                    android:id="@+id/exit_device"
-                    android:layout_width="0dp"
-                    android:layout_height="match_parent"
-                    android:layout_marginRight="18dp"
-                    android:layout_weight="1"
-                    android:ellipsize="end"
-                    android:gravity="right|center"
-                    android:maxLines="2"
-                    android:textColor="@color/actionbar_bg"
-                    android:textSize="14dp"
-                    androidfont:typeface="roboto_medium.ttf"/>
-            </LinearLayout>
-
-            <FrameLayout
-                android:layout_width="match_parent"
-                android:layout_height="0.8dp"
-                android:background="@color/list_devider"/>
-            <!--  -->
-
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="54dp"
-                android:gravity="left"
-                android:orientation="horizontal">
-
-                <com.supremainc.biostar2.widget.StyledTextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="match_parent"
-                    android:layout_marginLeft="18dp"
-                    android:layout_marginRight="18dp"
-                    android:ellipsize="end"
-                    android:gravity="left|center"
-                    android:maxLines="2"
                     android:text="@string/exit_button"
                     android:textColor="@color/select_text"
                     android:textSize="16dp"
@@ -333,6 +293,46 @@
                 android:layout_width="match_parent"
                 android:layout_height="0.8dp"
                 android:background="@color/list_devider"/>
+            <!--  -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="54dp"
+                android:gravity="left"
+                android:orientation="horizontal">
+
+                <com.supremainc.biostar2.widget.StyledTextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:layout_marginLeft="18dp"
+                    android:layout_marginRight="18dp"
+                    android:ellipsize="end"
+                    android:gravity="left|center"
+                    android:maxLines="2"
+                    android:text="@string/door_sensor"
+                    android:textColor="@color/select_text"
+                    android:textSize="16dp"
+                    androidfont:typeface="roboto_bold.ttf"/>
+
+                <com.supremainc.biostar2.widget.StyledTextView
+                    android:id="@+id/door_sensor"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_marginRight="18dp"
+                    android:layout_weight="1"
+                    android:ellipsize="end"
+                    android:gravity="right|center"
+                    android:maxLines="2"
+                    android:textColor="@color/actionbar_bg"
+                    android:textSize="14dp"
+                    androidfont:typeface="roboto_medium.ttf"/>
+            </LinearLayout>
+
+
+            <FrameLayout
+                android:layout_width="match_parent"
+                android:layout_height="0.8dp"
+                android:background="@color/list_devider"/>
+
             <!--  -->
 
             <LinearLayout

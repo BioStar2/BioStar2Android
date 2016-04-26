@@ -43,6 +43,10 @@ public class BaseDoorAdapter extends BaseListAdapter<ListDoor> {
     protected DoorDataProvider mDoorDataProvider;
     protected OnItemsListener mOnItemsListener;
     protected String mQuery;
+    private int mSetFirstVisible = 0;
+    private int mOldFirstVisible = 0;
+    private BaseListViewScroll mOnScroll;
+
     Listener<Doors> mItemListener = new Response.Listener<Doors>() {
         @Override
         public void onResponse(Doors response, Object deliverParam) {
@@ -66,6 +70,10 @@ public class BaseDoorAdapter extends BaseListAdapter<ListDoor> {
                 return;
             }
             setData(response.records);
+            if (mSetFirstVisible != 0) {
+                mListView.setSelection(mSetFirstVisible);
+                mSetFirstVisible = 0;
+            }
         }
     };
     Runnable mRunGetItems = new Runnable() {
@@ -123,6 +131,14 @@ public class BaseDoorAdapter extends BaseListAdapter<ListDoor> {
         mListView.postDelayed(mRunGetItems, 100);
     }
 
+    public void setPostReceiveToLastPosition() {
+        if (mOnScroll != null) {
+            mSetFirstVisible = mOnScroll.getmOldFirstVisibleItemPosition();
+        } else {
+            mSetFirstVisible = mOldFirstVisible;
+        }
+    }
+
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         super.onItemClick(parent, view, position, id);
@@ -143,9 +159,9 @@ public class BaseDoorAdapter extends BaseListAdapter<ListDoor> {
     }
 
     public void setSwipyRefreshLayout(SwipyRefreshLayout swipyRefreshLayout, FloatingActionButton fab) {
-        BaseListViewScroll onScroll = new BaseListViewScroll();
-        onScroll.setFloatingActionButton(fab, mListView, this);
-        setOnScrollListener(onScroll);
+        mOnScroll = new BaseListViewScroll();
+        mOnScroll.setFloatingActionButton(fab, mListView, this);
+        setOnScrollListener(mOnScroll);
         mSwipyRefreshLayout = swipyRefreshLayout;
         mSwipyRefreshLayout.setEnableBottom(false);
         mSwipyRefreshLayout.setOnRefreshListener(new SwipyRefreshLayout.OnRefreshListener() {

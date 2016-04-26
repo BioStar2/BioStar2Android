@@ -9,7 +9,7 @@
     <LinearLayout
         android:id="@+id/popup_bg"
         android:layout_width="match_parent"
-        android:layout_height="70dp"
+        android:layout_height="wrap_content"
         android:layout_gravity="center_vertical|left"
         android:layout_marginBottom="20dp"
         android:layout_marginLeft="13.33dp"
@@ -22,6 +22,8 @@
             android:id="@+id/popup_item"
             android:layout_width="50dp"
             android:layout_height="50dp"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="10dp"
             android:layout_gravity="center_vertical|left"
             android:layout_marginLeft="20dp"
             android:layout_marginRight="20dp"
@@ -32,9 +34,11 @@
 
         <LinearLayout
             android:layout_width="0dp"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:layout_gravity="center_vertical|left"
             android:layout_weight="1"
+            android:layout_marginTop="10dp"
+            android:layout_marginBottom="10dp"
             android:gravity="center_vertical|left"
             android:orientation="vertical">
 
@@ -42,9 +46,7 @@
                 android:id="@+id/popup_title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:ellipsize="end"
                 android:gravity="left|center"
-                android:singleLine="true"
                 android:textColor="@color/white"
                 android:textSize="16dp"
                 androidfont:typeface="roboto_bold.ttf"/>
@@ -53,9 +55,7 @@
                 android:id="@+id/popup_content"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:ellipsize="end"
                 android:gravity="left|center"
-                android:maxLines="2"
                 android:textColor="@color/white"
                 android:textSize="13.33dp"
                 androidfont:typeface="roboto_bold.ttf"/>

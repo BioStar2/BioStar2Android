@@ -236,19 +236,6 @@ public class UserData {
 			CloudRole role = new  CloudRole();
 			role.code = "DEFAULT_USER";
 		}
-		
-		public void setMyProfile() {
-			start_datetime = null;
-			expiry_datetime = null;
-			status = null;
-			access_groups = null;
-			cards = null;
-			fingerprint_templates = null;
-			permissions = null;
-			roles = null;
-			security_level = null;
-			user_group = null;
-		}
 
 		public boolean isActive() {
 			if (status == null) {

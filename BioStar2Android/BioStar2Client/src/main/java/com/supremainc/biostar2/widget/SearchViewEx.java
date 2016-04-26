@@ -15,8 +15,11 @@
  */
 package com.supremainc.biostar2.widget;
 
+import android.app.SearchManager;
 import android.content.Context;
+import android.database.Cursor;
 import android.graphics.Color;
+import android.support.v7.widget.SearchView;
 import android.text.SpannableStringBuilder;
 import android.util.AttributeSet;
 import android.view.View;
@@ -104,7 +107,35 @@ public class SearchViewEx extends android.support.v7.widget.SearchView {
             default:
                 break;
         }
+        setOnSuggestionListener(mOnSuggestionListener);
     }
+
+    private String getStringOrNull(Cursor cursor, int col) {
+        if (col == -1) {
+            return null;
+        }
+        try {
+            return cursor.getString(col);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private SearchView.OnSuggestionListener mOnSuggestionListener = new SearchView.OnSuggestionListener() {
+        @Override
+        public boolean onSuggestionSelect(int position) {
+            return false;
+        }
+
+        @Override
+        public boolean onSuggestionClick(int position) {
+            Cursor cursor = (Cursor) getSuggestionsAdapter().getItem(position);
+            int col = cursor.getColumnIndex(SearchManager.SUGGEST_COLUMN_QUERY);
+            String query = getStringOrNull(cursor,col);
+            setQuery(query, false);
+            return false;
+        }
+    };
 
     public void setExpandMaxWidth(int px) {
         setMaxWidth(px);

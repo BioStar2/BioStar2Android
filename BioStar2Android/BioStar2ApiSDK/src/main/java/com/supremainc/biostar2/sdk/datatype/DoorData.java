@@ -272,6 +272,18 @@ public class DoorData {
 		public boolean apb_failed;
 		@SerializedName("disconnected")
 		public boolean disconnected;
+		@SerializedName("scheduleLocked")
+		public boolean scheduleLocked;
+		@SerializedName("scheduleUnlocked")
+		public boolean scheduleUnlocked;
+		@SerializedName("emergencyLocked")
+		public boolean emergencyLocked;
+		@SerializedName("emergencyUnlocked")
+		public boolean emergencyUnlocked;
+		@SerializedName("operatorLocked")
+		public boolean operatorLocked;
+		@SerializedName("operatorUnlocked")
+		public boolean operatorUnlocked;
 
 		public DoorStatus clone() throws CloneNotSupportedException {
 			DoorStatus target = (DoorStatus) super.clone();

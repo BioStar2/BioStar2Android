@@ -8,8 +8,8 @@ android {
     defaultConfig {
         minSdkVersion 10
         targetSdkVersion 23
-        versionCode 6
-        versionName "1.0.5"
+        versionCode 7
+        versionName "1.1.0"
     }
 
     buildTypes {
@@ -18,14 +18,13 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
         }
     }
-    useLibrary 'org.apache.http.legacy'
 }
 
 publish {
     userOrg = 'biostar2'
     groupId = 'com.supremainc.biostar2'
     artifactId = 'biostar2sdk'
-    publishVersion = '1.0.5'
+    publishVersion = '1.1.0'
     desc = 'BioStar2 Android SDK'
     website = 'https://github.com/BioStar2/BioStar2Android'
     issueTracker = "${website}/issues"
@@ -35,4 +34,5 @@ publish {
 dependencies {
     compile 'com.google.code.gson:gson:1.7.1'
     compile 'com.squareup.okhttp:okhttp-android-support:2.4.0'
+    compile files('libs/org.apache.http.legacy.jar')
 }

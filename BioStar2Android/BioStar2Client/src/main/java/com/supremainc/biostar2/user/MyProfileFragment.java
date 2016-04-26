@@ -652,7 +652,6 @@ public class MyProfileFragment extends BaseFragment {
                     e.printStackTrace();
                     return true;
                 }
-                user.setMyProfile();
                 mUserDataProvider.modifyMyProfile(TAG, user, mModifyUserListener, mModifyUserErrorListener, null);
                 return true;
             default:
@@ -783,11 +782,28 @@ public class MyProfileFragment extends BaseFragment {
         mLayout.setBlurBackGroud(mBlurBmp);
         mRbmp = ImageUtil.getRoundedBitmap(bmp, false);
         mLayout.setUserPhoto(mRbmp);
-
         mPhotoStatus = PhotoStatus.MODIFY;
-        mUserInfo.photo = Base64.encodeToString(ImageUtil.bitmapToByteArray(bmp), 0);
+        Bitmap bmp2 = null;
+        byte[] reSizeByte = ImageUtil.bitmapToByteArray(bmp,20);
+        if (BuildConfig.DEBUG) {
+            Log.e(TAG,"reSizeByte:"+reSizeByte.length);
+        }
+        if (reSizeByte.length > Setting.USER_PROFILE_IMAGE_SIZE_BYTE) {
+            Log.e(TAG,"reSizeByte2:"+reSizeByte.length);
+            reSizeByte = ImageUtil.bitmapToByteArray(bmp,0);
+            if (reSizeByte.length > Setting.USER_PROFILE_IMAGE_SIZE_BYTE) {
+                bmp2 = ImageUtil.resizeBitmap(bmp, Setting.USER_PROFILE_IMAGE_SIZE/2, false);
+                reSizeByte = ImageUtil.bitmapToByteArray(bmp2,0);
+                Log.e(TAG, "reSizeByte3:" + reSizeByte.length);
+            }
+        }
+        mUserInfo.photo = Base64.encodeToString(reSizeByte, 0);
         mUserInfo.photo = mUserInfo.photo.replaceAll("\n", "");
         mBackupPhoto = mUserInfo.photo;
+        if (bmp2 != null) {
+            bmp2.recycle();
+            bmp2 = null;
+        }
     }
 
     private void setPermission() {

@@ -24,8 +24,8 @@ import java.util.ArrayList;
 
 public class DeviceData {
 	public static final String SCAN_FINGERPRINT_ENROLL_QUALITY = "enroll_quality";
-	public static final String SCAN_FINGERPRINT_GET_IMAGE = "get_raw_image";
-	
+	public static final String SCAN_FINGERPRINT_GET_IMAGE = "retrieve_raw_image";
+
 	public static class Devices implements Cloneable, Serializable {
 		private static final long serialVersionUID = 412418435452173287L;
 		public static final String TAG = Devices.class.getSimpleName();

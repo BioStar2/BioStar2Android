@@ -38,6 +38,7 @@ import com.supremainc.biostar2.BuildConfig;
 import com.supremainc.biostar2.R;
 import com.supremainc.biostar2.Setting;
 import com.supremainc.biostar2.base.BaseFragment;
+import com.supremainc.biostar2.popup.Popup;
 import com.supremainc.biostar2.popup.SelectCustomData;
 import com.supremainc.biostar2.popup.SelectPopup;
 import com.supremainc.biostar2.popup.SelectPopup.OnSelectResultListener;
@@ -80,13 +81,59 @@ public class DoorFragment extends BaseFragment {
             // null,Setting.getErrorMessage(error, mContext));
         }
     };
+    private Listener<Door> mDoorListener = new Listener<Door>() {
+        @Override
+        public void onResponse(Door response, Object param) {
+            if (mIsDestroy || !isAdded()) {
+                return;
+            }
+            mPopup.dismissWiat();
+            if (response != null) {
+                mDoor = response;
+                setView();
+            }
+            try {
+                sendLocalBroadcast(Setting.BROADCAST_UPDATE_DOOR, mDoor.clone());
+            } catch (CloneNotSupportedException e) {
+                if (e != null) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    };
+    private Response.ErrorListener mDoorErrorListener = new Response.ErrorListener() {
+        @Override
+        public void onErrorResponse(VolleyError error, final Object deliverParam) {
+            if (isInValidCheck(error)) {
+                return;
+            }
+            mPopup.dismissWiat();
+            mPopup.show(Popup.PopupType.ALERT, mContext.getString(R.string.fail_retry), Setting.getErrorMessage(error, mContext), new Popup.OnPopupClickListener() {
+                @Override
+                public void OnNegative() {
+                        sendLocalBroadcast(Setting.BROADCAST_UPDATE_DOOR,null);
+                }
+
+                @Override
+                public void OnPositive() {
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            mPopup.showWait(true);
+                            mDoorDataProvider.getDoor(TAG, mDoor.id, mDoorListener, mDoorErrorListener, null);
+                        }
+                    });
+                }
+            }, mContext.getString(R.string.ok), mContext.getString(R.string.cancel));
+        }
+    };
+
     private Listener<ResponseStatus> mControlListener = new Response.Listener<ResponseStatus>() {
         @Override
         public void onResponse(ResponseStatus response, Object deliverParam) {
             if (mIsDestroy || !isAdded()) {
                 return;
             }
-            mPopup.dismissWiat();
             int id = (Integer) deliverParam;
             String message = "";
             switch (id) {
@@ -94,10 +141,13 @@ public class DoorFragment extends BaseFragment {
                     message = getString(R.string.door_is_open);
                     break;
                 case R.id.action_lock:
-                    message = getString(R.string.lock);
+                    message = getString(R.string.manual_lock);
                     break;
                 case R.id.action_unlock:
-                    message = getString(R.string.unlock);
+                    message = getString(R.string.manual_unlock);
+                    break;
+                case R.id.action_release:
+                    message = getString(R.string.release);
                     break;
                 case R.id.action_clear_apb:
                     message = getString(R.string.clear_apb);
@@ -108,6 +158,11 @@ public class DoorFragment extends BaseFragment {
             }
             String date = mTimeConvertProvider.convertCalendarToFormatter(Calendar.getInstance(), TimeConvertProvider.DATE_TYPE.FORMAT_DATE_HOUR_MIN_SEC);
             mToastPopup.show(ToastPopup.TYPE_DOOR, message, date + " / " + mDoor.name);
+            if (mDoor == null) {
+                mPopup.dismissWiat();
+            } else {
+                mDoorDataProvider.getDoor(TAG, mDoor.id, mDoorListener, mDoorErrorListener, null);
+            }
         }
     };
     private Response.ErrorListener mControlErrorListener = new Response.ErrorListener() {
@@ -116,8 +171,8 @@ public class DoorFragment extends BaseFragment {
             if (isInValidCheck(error)) {
                 return;
             }
-            mPopup.dismissWiat();
-            Log.e(TAG, "get mDoor:" + error.getMessage());
+            String errorDetail = error.getMessage();
+            Log.e(TAG, "get mDoor:" +errorDetail);
             int id = (Integer) deliverParam;
             String message = "";
             switch (id) {
@@ -125,10 +180,13 @@ public class DoorFragment extends BaseFragment {
                     message = getString(R.string.door_open_fail);
                     break;
                 case R.id.action_lock:
-                    message = getString(R.string.lock) + " " + getString(R.string.fail);
+                    message = getString(R.string.manual_lock) + " " + getString(R.string.fail);
                     break;
                 case R.id.action_unlock:
-                    message = getString(R.string.unlock) + " " + getString(R.string.fail);
+                    message = getString(R.string.manual_unlock) + " " + getString(R.string.fail);
+                    break;
+                case R.id.action_release:
+                    message = getString(R.string.release)+ " " + getString(R.string.fail);
                     break;
                 case R.id.action_clear_apb:
                     message = getString(R.string.clear_apb) + " " + getString(R.string.fail);
@@ -138,8 +196,16 @@ public class DoorFragment extends BaseFragment {
                     break;
             }
             String date = mTimeConvertProvider.convertCalendarToFormatter(Calendar.getInstance(),TimeConvertProvider.DATE_TYPE.FORMAT_DATE_HOUR_MIN_SEC);
-            mToastPopup.show(ToastPopup.TYPE_DOOR, message, date + " / " + mDoor.name);
-//			mToastPopup.show(ToastPopup.TYPE_DOOR, message, Setting.getErrorMessage(error, mContext));
+            if (errorDetail != null && !errorDetail.isEmpty()) {
+                mToastPopup.show(ToastPopup.TYPE_DOOR, message, date + " / " + mDoor.name+"\n"+errorDetail);
+            } else {
+                mToastPopup.show(ToastPopup.TYPE_DOOR, message, date + " / " + mDoor.name);
+            }
+            if (mDoor == null) {
+                mPopup.dismissWiat();
+            } else {
+                mDoorDataProvider.getDoor(TAG, mDoor.id, mDoorListener, mDoorErrorListener, null);
+            }
         }
     };
     private Listener<ResponseStatus> mRequestDoorListener = new Response.Listener<ResponseStatus>() {
@@ -171,8 +237,10 @@ public class DoorFragment extends BaseFragment {
                     mToastPopup.show(ToastPopup.TYPE_DOOR, getString(R.string.held_opened), null);
                 } else if (mDoor.status.disconnected) {
                     mToastPopup.show(ToastPopup.TYPE_DOOR, getString(R.string.disconnected), null);
-                } else if (mDoor.status.unlocked) {
-                    mToastPopup.show(ToastPopup.TYPE_DOOR, getString(R.string.unlock), null);
+                } else if (mDoor.status.unlocked || mDoor.status.operatorUnlocked || mDoor.status.emergencyUnlocked || mDoor.status.scheduleUnlocked) {
+                    mToastPopup.show(ToastPopup.TYPE_DOOR, getString(R.string.manual_unlock), null);
+                } else if (mDoor.status.locked || mDoor.status.operatorLocked || mDoor.status.emergencyLocked || mDoor.status.scheduleLocked) {
+                    mToastPopup.show(ToastPopup.TYPE_DOOR, getString(R.string.manual_lock), null);
                 }
             }
         }
@@ -212,6 +280,10 @@ public class DoorFragment extends BaseFragment {
                 mPopup.showWait(mCancelListener);
                 mDoorDataProvider.unlockDoor(TAG, mDoor.id, mControlListener, mControlErrorListener, R.id.action_unlock);
                 break;
+            case R.id.action_release:
+                mPopup.showWait(mCancelListener);
+                mDoorDataProvider.releaseDoor(TAG, mDoor.id, mControlListener, mControlErrorListener, R.id.action_release);
+                break;
             case R.id.action_clear_apb:
                 mPopup.showWait(mCancelListener);
                 mDoorDataProvider.clearAntiPassback(TAG, mDoor.id, mControlListener, mControlErrorListener, R.id.action_clear_apb);
@@ -232,6 +304,11 @@ public class DoorFragment extends BaseFragment {
             } else {
                 mLayout.setActionButtonName(getString(R.string.request_open));
             }
+            if (mPermissionDataProvider.getPermission(PERMISSION_MODULE.MONITORING, false)) {
+                mLayout.showLogView(true);
+            } else {
+                mLayout.showLogView(false);
+            }
         }
     }
 
@@ -240,7 +317,6 @@ public class DoorFragment extends BaseFragment {
         if (mDoor == null) {
             return false;
         }
-        mLayout.setContent(mDoor.name, mDoor.description);
         applyPermission();
         setView();
         return true;
@@ -313,8 +389,9 @@ public class DoorFragment extends BaseFragment {
         SelectPopup<SelectCustomData> selectPopup = new SelectPopup<SelectCustomData>(mContext, mPopup);
         ArrayList<SelectCustomData> linkType = new ArrayList<SelectCustomData>();
         linkType.add(new SelectCustomData(getString(R.string.open), R.id.action_open, false));
-        linkType.add(new SelectCustomData(getString(R.string.lock), R.id.action_lock, false));
-        linkType.add(new SelectCustomData(getString(R.string.unlock), R.id.action_unlock, false));
+        linkType.add(new SelectCustomData(getString(R.string.manual_lock), R.id.action_lock, false));
+        linkType.add(new SelectCustomData(getString(R.string.manual_unlock), R.id.action_unlock, false));
+        linkType.add(new SelectCustomData(getString(R.string.release), R.id.action_release, false));
         linkType.add(new SelectCustomData(getString(R.string.clear_apb), R.id.action_clear_apb, false));
         linkType.add(new SelectCustomData(getString(R.string.clear_alarm), R.id.action_clear_alarm, false));
         if (Setting.IS_TEST_OPEN_DOOR_REQUEST) {
@@ -404,19 +481,41 @@ public class DoorFragment extends BaseFragment {
         mDoorDataProvider.openRequestDoor(TAG, mDoor.id, PhoneNumber, mRequestDoorListener, mRequestDoorErrorListener, null);
     }
 
-    private void setView() {
-        if (mDoor.status != null) {
-            if (mDoor.status.forced_open) {
-                mLayout.setIcon(R.drawable.door_ic_2);
-            } else if (mDoor.status.held_opened) {
-                mLayout.setIcon(R.drawable.door_ic_1);
-            } else if (mDoor.status.disconnected) {
-                mLayout.setIcon(R.drawable.door_ic_2);
-            } else if (mDoor.status.unlocked) {
-                mLayout.setIcon(R.drawable.door_ic_1);
+    private void setDoorIcon() {
+        if (mDoor != null && mDoor.status != null) {
+            if (mDoor.status != null) {
+                if (mDoor.status.forced_open) {
+                    mLayout.setIcon(R.drawable.door_ic_2);
+                } else if (mDoor.status.held_opened) {
+                    mLayout.setIcon(R.drawable.door_ic_1);
+                } else if (mDoor.status.disconnected) {
+                    mLayout.setIcon(R.drawable.door_ic_2);
+                } else if (mDoor.status.unlocked) {
+                    mLayout.setIcon(R.drawable.door_ic_1);
+                } else if (mDoor.status.locked) {
+                    mLayout.setIcon(R.drawable.door_ic_1);
+                } else if (mDoor.status.scheduleLocked) {
+                    mLayout.setIcon(R.drawable.door_ic_1);
+                } else if (mDoor.status.scheduleUnlocked) {
+                    mLayout.setIcon(R.drawable.door_ic_1);
+                } else if (mDoor.status.emergencyLocked) {
+                    mLayout.setIcon(R.drawable.door_ic_2);
+                } else if (mDoor.status.emergencyUnlocked) {
+                    mLayout.setIcon(R.drawable.door_ic_2);
+                } else if (mDoor.status.operatorLocked) {
+                    mLayout.setIcon(R.drawable.door_ic_1);
+                } else if (mDoor.status.operatorUnlocked) {
+                    mLayout.setIcon(R.drawable.door_ic_1);
+                } else {
+                    mLayout.setIcon(R.drawable.door_ic_3);
+                }
             }
         }
+    }
 
+    private void setView() {
+        mLayout.setContent(mDoor.name, mDoor.description);
+        setDoorIcon();
         String data = getString(R.string.none);
         if (mDoor.entry_device != null) {
             data = mDoor.entry_device.getName();

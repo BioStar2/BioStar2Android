@@ -282,7 +282,7 @@ public class MonitorFragment extends BaseFragment {
                     isDoor = true;
                 }
                 if (!isUser && !isDoor) {
-                    mToastPopup.show(getString(R.string.none_door), null);
+                    mToastPopup.show(getString(R.string.none_door)+"\n"+getString(R.string.none_user), null);
                     return;
                 }
             }
@@ -301,6 +301,7 @@ public class MonitorFragment extends BaseFragment {
                     return;
                 }
             } else if (!isUser && !isDoor) {
+                mToastPopup.show(getString(R.string.none_door)+"\n"+getString(R.string.none_user), null);
                 return;
             } else if (isUser && isDoor) {
                 for (BaseDoor door : listDoor) {
@@ -340,6 +341,21 @@ public class MonitorFragment extends BaseFragment {
         super();
         setType(ScreenType.MONITOR);
         TAG = getClass().getSimpleName() + String.valueOf(System.currentTimeMillis());
+    }
+
+    @Override
+    public boolean onBack() {
+        if (super.onBack()) {
+            return true;
+        }
+        if (mMonitorAdapter != null) {
+            if (mMonitorAdapter.getCount() < 1 && mQuery != null) {
+                mQuery = null;
+                mMonitorAdapter. getItems(mQuery);
+                return true;
+            }
+        }
+        return false;
     }
 
     private boolean initValue(Bundle savedInstanceState) {

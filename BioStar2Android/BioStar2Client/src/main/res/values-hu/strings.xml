@@ -77,7 +77,6 @@
 <string name="invalid_email">Érvénytelen e-mail</string>
 <string name="invalid_userid">Érvénytelen felhasználó, adjon meg egy számot 1 és 4,294,967,294 között</string>
 <string name="latest_version">Aktuális verzió</string>
-<string name="lock">Zár</string>
 <string name="log_out">KIJELENTKEZÉS</string>
 <string name="login">Bejelentkezés</string>
 <string name="login_empty">Hiányzó ID/Jelszó/URL cím</string>
@@ -85,6 +84,8 @@
 <string name="login_fail">Bejelentkezés sikertelen</string>
 <string name="login_id">Bejelentkezési ID</string>
 <string name="low_quality">Elégtelen ujjlenyomat minőség</string>
+<string name="manual_lock">Zár</string>
+<string name="manual_unlock">Feloldás</string>
 <string name="max_size">Regisztrációs limit túllépése</string>
 <string name="memory_poor">Kevés memória</string>
 <string name="menu">Menü</string>
@@ -172,7 +173,6 @@
 <string name="time">Idő</string>
 <string name="timezone">Időzóna</string>
 <string name="total">Teljes</string>
-<string name="unlock">Feloldás</string>
 <string name="unread">Új</string>
 <string name="update_guide">Frissítés elérhető konfiguráción keresztül az oldalsó menüben</string>
 <string name="user">Felhasználó</string>

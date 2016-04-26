@@ -83,9 +83,15 @@ public class AlarmFragment extends BaseFragment {
             if (BuildConfig.DEBUG) {
                 Log.e(TAG, "get openErrorListener:" + volleyError.getMessage());
             }
+            String errorDetail = volleyError.getMessage();
             String title = (String) deliverParam + " " + getString(R.string.fail);
             String date = mTimeConvertProvider.convertCalendarToFormatter(Calendar.getInstance(),TimeConvertProvider.DATE_TYPE.FORMAT_DATE_HOUR_MIN_SEC);
-            mToastPopup.show(ToastPopup.TYPE_DOOR, title, date + " / " + mDoor.name);
+
+            if (errorDetail != null && !errorDetail.isEmpty()) {
+                mToastPopup.show(ToastPopup.TYPE_DOOR, title, date + " / " + mDoor.name+"\n"+errorDetail);
+            } else {
+                mToastPopup.show(ToastPopup.TYPE_DOOR, title, date + " / " + mDoor.name);
+            }
         }
     };
     private Response.Listener<User> mUserListener = new Response.Listener<User>() {
@@ -219,6 +225,7 @@ public class AlarmFragment extends BaseFragment {
                 mDoorErrorListener.onErrorResponse(new VolleyError("Server response is NUll"), null);
                 return;
             }
+            mPopup.dismissWiat();
             mDoor = response;
             mLayout.setTitle(mDoor.getName());
         }
@@ -342,11 +349,15 @@ public class AlarmFragment extends BaseFragment {
                 break;
             case R.id.action_lock:
                 mPopup.showWait(mCancelListener);
-                mDoorDataProvider.lockDoor(TAG, mDoor.id, mActionListener, mActionErrorListener, getString(R.string.lock));
+                mDoorDataProvider.lockDoor(TAG, mDoor.id, mActionListener, mActionErrorListener, getString(R.string.manual_lock));
                 break;
             case R.id.action_unlock:
                 mPopup.showWait(mCancelListener);
-                mDoorDataProvider.unlockDoor(TAG, mDoor.id, mActionListener, mActionErrorListener, getString(R.string.unlock));
+                mDoorDataProvider.unlockDoor(TAG, mDoor.id, mActionListener, mActionErrorListener, getString(R.string.manual_unlock));
+                break;
+            case R.id.action_release:
+                mPopup.showWait(mCancelListener);
+                mDoorDataProvider.releaseDoor(TAG, mDoor.id, mActionListener, mActionErrorListener, getString(R.string.release));
                 break;
             case R.id.action_clear_apb:
                 mPopup.showWait(mCancelListener);
@@ -455,8 +466,9 @@ public class AlarmFragment extends BaseFragment {
         SelectPopup<SelectCustomData> selectPopup = new SelectPopup<SelectCustomData>(mContext, mPopup);
         ArrayList<SelectCustomData> linkType = new ArrayList<SelectCustomData>();
         linkType.add(new SelectCustomData(getString(R.string.open), R.id.action_open, false));
-        linkType.add(new SelectCustomData(getString(R.string.lock), R.id.action_lock, false));
-        linkType.add(new SelectCustomData(getString(R.string.unlock), R.id.action_unlock, false));
+        linkType.add(new SelectCustomData(getString(R.string.manual_lock), R.id.action_lock, false));
+        linkType.add(new SelectCustomData(getString(R.string.manual_unlock), R.id.action_unlock, false));
+        linkType.add(new SelectCustomData(getString(R.string.release), R.id.action_release, false));
         linkType.add(new SelectCustomData(getString(R.string.clear_apb), R.id.action_clear_apb, false));
         linkType.add(new SelectCustomData(getString(R.string.clear_alarm), R.id.action_clear_alarm, false));
         selectPopup.show(SelectType.CUSTOM, new OnSelectResultListener<SelectCustomData>() {

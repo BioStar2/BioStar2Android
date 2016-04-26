@@ -32,6 +32,7 @@ public class Setting {
     public static final String BROADCAST_PUSH_TOKEN_UPDATE = "com.suprema.basic.TokenRefresh.BROADCAST";
     public static final String BROADCAST_REROGIN = "com.suprema.basic.RELOGIN.BROADCAST";
     public static final String BROADCAST_UPDATE_CARD = "com.suprema.basic.UpdateCard.BROADCAST";
+    public static final String BROADCAST_UPDATE_DOOR = "com.suprema.basic.UpdateDoor.BROADCAST";
     public static final String BROADCAST_UPDATE_FINGER = "com.suprema.basic.UpdateFinger.BROADCAST";
     public static final String BROADCAST_UPDATE_PERMISSION = "com.suprema.basic.UpdatePermission.BROADCAST";
     public static final String BROADCAST_UPDATE_USER_ACCESS_GROUP = "com.suprema.basic.UpdateUserAccessGroup.BROADCAST";
@@ -55,6 +56,7 @@ public class Setting {
     public static final int REQUEST_READ_PHONE_STATE = 201;
 
     public static final int USER_PROFILE_IMAGE_SIZE = 400;
+    public static final int USER_PROFILE_IMAGE_SIZE_BYTE = 16000;
     public static final String CRITTERISM = "555e7af0b60a7d3e63908d21";
     // IOS (R.string.no_permission)
     public static String getDebugFlag() {

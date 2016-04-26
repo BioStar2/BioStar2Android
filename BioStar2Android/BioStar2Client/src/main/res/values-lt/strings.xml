@@ -77,7 +77,6 @@
 <string name="invalid_email">Negaliojantis e.paštas</string>
 <string name="invalid_userid">Netinkamas naudotojo ID, pasirinkite numerį tarp 1 ~ 4,294,967,294</string>
 <string name="latest_version">Dabartinė versija</string>
-<string name="lock">Užrakinti</string>
 <string name="log_out">Atsijungti</string>
 <string name="login">Prisijungti</string>
 <string name="login_empty">Įveskite trūkstamą ID/Slaptažodžio/URL</string>
@@ -85,6 +84,8 @@
 <string name="login_fail">Prisijungimas negalimas</string>
 <string name="login_id">Prisijungimo ID</string>
 <string name="low_quality">Nepakankama atspaudo kokybė</string>
+<string name="manual_lock">Užrakinti</string>
+<string name="manual_unlock">Atrakinti</string>
 <string name="max_size">Viršytas prisijungimų limitas</string>
 <string name="memory_poor">Nepakanka atminties</string>
 <string name="menu">Meniu</string>
@@ -171,7 +172,6 @@
 <string name="time">Laikas</string>
 <string name="timezone">Laiko zona</string>
 <string name="total">Visas</string>
-<string name="unlock">Atrakinti</string>
 <string name="unread">Naujas</string>
 <string name="update_guide">Papildomame meniu galimas atnaujinimas</string>
 <string name="user">Vartotojas</string>

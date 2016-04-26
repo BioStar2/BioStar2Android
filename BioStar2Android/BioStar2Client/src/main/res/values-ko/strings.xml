@@ -9,6 +9,7 @@
 <string name="all_door">모든 출입문</string>
 <string name="all_events">모든 이벤트</string>
 <string name="all_users">모든 사용자</string>
+<string name="allow_permission">권한을 허용해주세요</string>
 <string name="already_assigned">이미 할당되었습니다.</string>
 <string name="app_name">BioStar 2</string>
 <string name="applied_filter">검색조건이 적용되었습니다.</string>
@@ -44,6 +45,7 @@
 <string name="edit">수정</string>
 <string name="edit_photo">사진 수정</string>
 <string name="email">이메일</string>
+<string name="email_not_setted">장치 설정 앱에서 이메일 셋팅을 해주세요.</string>
 <string name="end_date">종료일</string>
 <string name="end_time">종료 시간</string>
 <string name="entry_device">입실 장치</string>
@@ -67,6 +69,7 @@
 <string name="format">형식</string>
 <string name="from_gallery">갤러리에서 가져오기</string>
 <string name="group">그룹</string>
+<string name="guide_feature_permission">해당 기능을 사용하려면 권한이 필요합니다.</string>
 <string name="held_opened">장시간 문열림</string>
 <string name="id">ID</string>
 <string name="inactive">비활성화</string>
@@ -77,7 +80,6 @@
 <string name="invalid_email">이메일 주소가 올바르지 않습니다.</string>
 <string name="invalid_userid">사용할 수 없는 ID입니다.\n 1 ~ 4294967294의 숫자를 입력하십시오.</string>
 <string name="latest_version">최신 버전입니다.</string>
-<string name="lock">잠김</string>
 <string name="log_out">로그아웃</string>
 <string name="login">로그인</string>
 <string name="login_empty">아이디와 패스워드 도메인정보를 입력해야 합니다.</string>
@@ -85,6 +87,8 @@
 <string name="login_fail">로그인 실패</string>
 <string name="login_id">로그인 아이디</string>
 <string name="low_quality">스캔 품질이 낮습니다.</string>
+<string name="manual_lock">수동 잠김</string>
+<string name="manual_unlock">수동 개방</string>
 <string name="max_size">최대등록 갯수를 넘었습니다.</string>
 <string name="memory_poor">스마트폰의 메모리가 부족합니다.</string>
 <string name="menu">메뉴</string>
@@ -114,7 +118,7 @@
 <string name="only_alpha_num_special">알파벳,숫자,일부 특수기호만 입력해주세요</string>
 <string name="only_number">숫자만 입력해주세요</string>
 <string name="only_number_dash">"숫자와 "-", "+" 만 입력해주세요."</string>
-<string name="open">개방</string>
+<string name="open">열림</string>
 <string name="open_door_time">출입문 개방 시간</string>
 <string name="open_door_time_des">요청후 3시간내에 로그</string>
 <string name="open_time">개방 시간</string>
@@ -140,6 +144,7 @@
 <string name="registeration_option_assign_card">카드 할당</string>
 <string name="registeration_option_card_reader">장치리더로 등록(신규카드)</string>
 <string name="relay">릴레이</string>
+<string name="release">해제</string>
 <string name="request_open">출입문 개방 요청</string>
 <string name="request_open_fail">출입문 개방 요청 실패</string>
 <string name="request_open_sent">출입문 개방 요청을 보냈습니다.</string>
@@ -172,7 +177,6 @@
 <string name="time">시간</string>
 <string name="timezone">표준시간대</string>
 <string name="total">총 갯수</string>
-<string name="unlock">잠금해제</string>
 <string name="unread">새로운 알림</string>
 <string name="update_guide">사이드 메뉴의 환경설정을 통해서 업데이트가 가능합니다.</string>
 <string name="user">사용자</string>
@@ -188,6 +192,4 @@
 <string name="version_mobile">BioStar 2 모바일 버전</string>
 <string name="view_log">로그 보기</string>
 <string name="wait">잠시만 기다려주세요..</string>
-    <string name="guide_feature_permission">해당 기능을 사용하려면 권한이 필요합니다.</string>
-    <string name="allow_permission">권한을 허용해주세요.</string>
 </resources>

@@ -9,6 +9,7 @@
 <string name="all_door">جميع الأبواب</string>
 <string name="all_events">جميع الأحداث</string>
 <string name="all_users">جميع المستخدمين</string>
+<string name="allow_permission">يرجى إعطاء السماحية اللازمة</string>
 <string name="already_assigned">تم التخصيص مسبقاً</string>
 <string name="app_name">BioStar 2</string>
 <string name="applied_filter">تم تطبيق التصفية</string>
@@ -44,6 +45,7 @@
 <string name="edit">تعديل</string>
 <string name="edit_photo">تعديل الصورة</string>
 <string name="email">البريد الإلكتروني</string>
+<string name="email_not_setted">يرجى تعريف الإيميل على برنامج إعدادات الجهاز</string>
 <string name="end_date">تاريخ إنتهاء الصلاحية</string>
 <string name="end_time">وقت الإنتهاء</string>
 <string name="entry_device">وقت الدخول</string>
@@ -67,6 +69,7 @@
 <string name="format">صيغة</string>
 <string name="from_gallery">من الأستديو</string>
 <string name="group">المجموعة</string>
+<string name="guide_feature_permission">تحتاج لسماحيات خاصة لاستخدام هذه الخاصية</string>
 <string name="held_opened">بقاء الباب مفتوحاً</string>
 <string name="id">الرقم</string>
 <string name="inactive">غير فعّال</string>
@@ -77,7 +80,6 @@
 <string name="invalid_email">الإيميل غير صحيح</string>
 <string name="invalid_userid">رقم الموظف غير صحيح, الرجاء إدخال رقم بين 1 إلى 4,294,967,294</string>
 <string name="latest_version">تم تحديث الإصدار</string>
-<string name="lock">قفل</string>
 <string name="log_out">تسجيل خروج</string>
 <string name="login">تسجيل دخول</string>
 <string name="login_empty">إسم المستخدم/كلمة المرور/عنوان الويب غير مدخل</string>
@@ -85,6 +87,8 @@
 <string name="login_fail">فشل في تسجيل الدخول</string>
 <string name="login_id">إسم المستخدم</string>
 <string name="low_quality">جودة البصمة غير كافية</string>
+<string name="manual_lock">قفل يدوي</string>
+<string name="manual_unlock">إلغاء القفل</string>
 <string name="max_size">تم تجاوز حد التسجيل</string>
 <string name="memory_poor">الذاكرة غير كافية</string>
 <string name="menu">القائمة</string>
@@ -104,6 +108,7 @@
 <string name="none_data">لا توجد بيانات متوفرة</string>
 <string name="none_device">لم يتم العثور على الجهاز</string>
 <string name="none_door">لم يتم العثور على الباب</string>
+<string name="none_user">لم يتم العثور على المستخدم</string>
 <string name="notice_connection_fail">فشل الإتصال بالشبكة</string>
 <string name="notification">إعلام</string>
 <string name="notification_time">وقت الإعلام</string>
@@ -131,12 +136,13 @@
 <string name="preference">الإعدادات</string>
 <string name="quality">الجودة</string>
 <string name="quit">خروج</string>
-<string name="quit_question">هل أنت متأكد من الخروج</string>
+<string name="quit_question">هل أنت متأكد من الخروج؟</string>
 <string name="recent_url">عنوان الويب URL</string>
 <string name="registeration_option">خيارات التعريف</string>
 <string name="registeration_option_assign_card">تعيين بطاقة</string>
 <string name="registeration_option_card_reader">تعريف باستخدام قارئ البطائق</string>
 <string name="relay">المرحِّل</string>
+<string name="release">تحرير</string>
 <string name="request_open">طلب فتح الباب</string>
 <string name="request_open_fail">تم رفض طلب فتح الباب</string>
 <string name="request_open_sent">تم إرسال طلب فتح الباب</string>
@@ -167,7 +173,6 @@
 <string name="time">الوقت</string>
 <string name="timezone">المنطقة الزمنية</string>
 <string name="total">الإجمالي</string>
-<string name="unlock">إلغاء القفل</string>
 <string name="unread">جديد</string>
 <string name="update_guide">التحديث متوفر من خلال قائمة الإعدادات من القائمة الجانبية</string>
 <string name="user">الموظف</string>

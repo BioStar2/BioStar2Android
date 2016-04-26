@@ -48,9 +48,15 @@ import java.io.File;
 
 public class ImageUtil {
 
-    public static byte[] bitmapToByteArray(Bitmap bitmap) {
+    public static byte[] bitmapToByteArray(Bitmap bitmap,int quality) {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
-        bitmap.compress(CompressFormat.JPEG, 100, stream);
+        if (quality < 0) {
+            quality = 0;
+        }
+        if (quality > 100) {
+            quality = 100;
+        }
+        bitmap.compress(CompressFormat.JPEG, quality, stream);
         byte[] byteArray = stream.toByteArray();
         return byteArray;
     }

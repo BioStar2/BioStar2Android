@@ -69,6 +69,20 @@ public class DoorAdapter extends BaseDoorAdapter {
                     vh.mPicture.setImageResource(R.drawable.door_ic_2);
                 } else if (item.status.unlocked) {
                     vh.mPicture.setImageResource(R.drawable.door_ic_1);
+                } else if (item.status.locked) {
+                    vh.mPicture.setImageResource(R.drawable.door_ic_1);
+                } else if (item.status.scheduleLocked) {
+                    vh.mPicture.setImageResource(R.drawable.door_ic_1);
+                } else if (item.status.scheduleUnlocked) {
+                    vh.mPicture.setImageResource(R.drawable.door_ic_1);
+                } else if (item.status.emergencyLocked) {
+                    vh.mPicture.setImageResource(R.drawable.door_ic_2);
+                } else if (item.status.emergencyUnlocked) {
+                    vh.mPicture.setImageResource(R.drawable.door_ic_2);
+                } else if (item.status.operatorLocked) {
+                    vh.mPicture.setImageResource(R.drawable.door_ic_1);
+                } else if (item.status.operatorUnlocked) {
+                    vh.mPicture.setImageResource(R.drawable.door_ic_1);
                 } else {
                     vh.mPicture.setImageResource(R.drawable.door_ic_3);
                 }

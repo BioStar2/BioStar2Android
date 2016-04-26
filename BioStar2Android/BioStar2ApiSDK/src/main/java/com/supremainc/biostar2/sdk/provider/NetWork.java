@@ -76,12 +76,13 @@ public class NetWork {
 	protected static final String PARAM_OPEN = "open";
 	protected static final String PARAM_UNLOCK = "unlock";
 	protected static final String PARAM_LOCK = "lock";
+	protected static final String PARAM_RELEASE = "release";
 	protected static final String PARAM_CLEAR_ALARM = "clear_alarm";
 	protected static final String PARAM_CLEAR_APB = "clear_anti_pass_back";
 	protected static final String PARAM_OPEN_REQUEST = "request_open";
 
 	protected static final String PARAM_MONITORING = "monitoring";
-	protected static final String PARAM_MONITORING_SEARCH = PARAM_MONITORING + "/event_log/search";
+	protected static final String PARAM_MONITORING_SEARCH = PARAM_MONITORING + "/event_log/search_more";
 
 	protected static final String PARAM_SCHEDULES = "schedules";
 	protected static final String PARAM_PERMISSIONS = "permissions";

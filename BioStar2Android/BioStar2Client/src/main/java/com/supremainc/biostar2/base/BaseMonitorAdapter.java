@@ -55,6 +55,7 @@ public class BaseMonitorAdapter extends BaseListAdapter<ListEventLog> {
     protected boolean mIsLastItemVisible = false;
     protected int mLimit = 100;
     protected int mOffset = 0;
+    protected boolean mIsExistMoreData = true;
     protected OnItemsListener mOnItemsListener;
     protected BaseListViewScroll mOnScroll;
     protected Query mQuery;
@@ -76,20 +77,24 @@ public class BaseMonitorAdapter extends BaseListAdapter<ListEventLog> {
                 }
                 mSwipyRefreshLayout.setEnableBottom(false);
                 mTotal = getCount();
+                mIsExistMoreData = false;
                 return;
             }
+            mIsExistMoreData = response.isNext;
             if (mItems == null) {
                 mItems = new ArrayList<ListEventLog>();
             }
-
-            // mTotal = response.total;
             mOffset = mOffset + response.records.size();
 
-            for (ListEventLog user : response.records) {
-                mItems.add(user);
+            for (ListEventLog log : response.records) {
+                mItems.add(log);
             }
             setData(mItems);
-            mTotal = getCount() + 2;
+            if (mIsExistMoreData) {
+                mTotal = getCount() + 2;
+            } else {
+                mTotal = getCount();
+            }
             if (mOnItemsListener != null) {
                 mOnItemsListener.onTotalReceive(mTotal);
             }
@@ -416,7 +421,7 @@ public class BaseMonitorAdapter extends BaseListAdapter<ListEventLog> {
                         getItems(mQuery);
                         break;
                     case BOTTOM:
-                        if (mTotal - 1 > mOffset) {
+                        if (mIsExistMoreData) {
                             mListView.removeCallbacks(mRunGetItems);
                             mListView.postDelayed(mRunGetItems, 100);
                         } else {

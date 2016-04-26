@@ -180,7 +180,12 @@ public class GcmBroadcastReceiver extends WakefulBroadcastReceiver {
         PushNotification noti = null;
         for (String key : bundle.keySet()) {
             String value;
-            value = (String) bundle.get(key);
+            try {
+                value = (String) bundle.get(key);
+            } catch (Exception e) {
+                Log.e(TAG," "+e.getMessage());
+                continue;
+            }
             if (value == null) {
                 continue;
             }

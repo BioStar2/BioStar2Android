@@ -60,10 +60,14 @@ public class BaseUserAdapter extends BaseListAdapter<ListUser> {
     protected OnItemsListener mOnItemsListener;
     protected String mQuery;
     protected UserDataProvider mUserDataProvider;
-    private String mLastModify;
+//    private String mLastModify;
     private OkHttpUrlLoader.Factory mFactory;
     private String mSubDomain;
     private String mGroupId = "1";
+    private BaseListViewScroll mOnScroll;
+
+
+
     Listener<Users> mUsersListener = new Response.Listener<Users>() {
         @Override
         public void onResponse(Users response, Object deliverParam) {
@@ -151,7 +155,25 @@ public class BaseUserAdapter extends BaseListAdapter<ListUser> {
                     mFactory);
         }
     }
+    public boolean modifyItem(ListUser user) {
+        if (user == null || user.user_id == null) {
+            return false;
+        }
+        for (int i=0;i < mItems.size(); i++) {
+            ListUser itemUser = mItems.get(i);
+            if (itemUser.user_id.equals(user.user_id)) {
+                user.last_modify = String.valueOf(System.currentTimeMillis());
+                try {
+                    mItems.set(i, user.clone());
+                    notifyDataSetChanged();
+                    return true;
+                } catch (Exception e) {
 
+                }
+            }
+        }
+        return false;
+    }
     public void clearItems() {
         if (mUserDataProvider != null) {
             mUserDataProvider.cancelAll(TAG);
@@ -165,7 +187,7 @@ public class BaseUserAdapter extends BaseListAdapter<ListUser> {
         mLimit = FIRST_LIMIT;
         mListView.removeCallbacks(mRunGetItems);
         mUserDataProvider.cancelAll(TAG);
-        mLastModify = String.valueOf(System.currentTimeMillis());
+//        mLastModify = String.valueOf(System.currentTimeMillis());
         mOffset = 0;
         mTotal = 0;
         if (mItems != null) {
@@ -209,10 +231,10 @@ public class BaseUserAdapter extends BaseListAdapter<ListUser> {
     private void getPhoto(ListUser user, ImageView picture) {
         String lastModify = null;
         if (user.last_modify == null) {
-            if (mLastModify == null) {
-                mLastModify = String.valueOf(System.currentTimeMillis());
-            }
-            lastModify = mLastModify;
+//            if (mLastModify == null) {
+//                mLastModify = String.valueOf(System.currentTimeMillis());
+//            }
+            lastModify = "0";
         } else {
             lastModify = user.last_modify;
         }
@@ -346,9 +368,9 @@ public class BaseUserAdapter extends BaseListAdapter<ListUser> {
     }
 
     public void setSwipyRefreshLayout(SwipyRefreshLayout swipyRefreshLayout, FloatingActionButton fab) {
-        BaseListViewScroll onScroll = new BaseListViewScroll();
-        onScroll.setFloatingActionButton(fab, mListView, this);
-        setOnScrollListener(onScroll);
+        mOnScroll = new BaseListViewScroll();
+        mOnScroll.setFloatingActionButton(fab, mListView, this);
+        setOnScrollListener(mOnScroll);
         mSwipyRefreshLayout = swipyRefreshLayout;
         mSwipyRefreshLayout.setOnRefreshListener(new SwipyRefreshLayout.OnRefreshListener() {
             @Override

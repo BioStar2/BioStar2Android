@@ -378,7 +378,6 @@ public class UserListFragment extends BaseFragment {
         mUserAdapter.clearChoices();
         mSubToolbar.setSelectedCount(0);
         mUserAdapter.getItems(mSearchText);
-
         return true;
     }
 
@@ -392,6 +391,12 @@ public class UserListFragment extends BaseFragment {
                         return;
                     }
                     if (action.equals(Setting.BROADCAST_USER)) {
+                        User user = (User)getExtraData(Setting.BROADCAST_USER,intent);
+                        if (user != null) {
+                            if (mUserAdapter.modifyItem(user)) {
+                                return;
+                            }
+                        }
                         if (isResumed()) {
                             mUserAdapter.getItems(mSearchText);
                         } else {

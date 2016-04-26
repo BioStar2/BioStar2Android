@@ -17,6 +17,8 @@ package com.supremainc.biostar2.widget;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.util.AttributeSet;
@@ -25,6 +27,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
 import com.supremainc.biostar2.R;
 import com.supremainc.biostar2.base.BaseFragment;
@@ -40,6 +43,7 @@ public class DrawLayerMenuView extends LinearLayout {
     User mUser;
     int mUserCount = -1;
     StyledTextView mUserCountView;
+    Context mContext;
 
     private OnSelectionListener mSelectionListener;
     OnSingleClickListener mClickListener = new OnSingleClickListener() {
@@ -88,6 +92,16 @@ public class DrawLayerMenuView extends LinearLayout {
 //                    return;
                 case R.id.side_menu_logout:
                     menuType = ScreenType.LOG_OUT;
+                    break;
+                case R.id.side_menu_version:
+                    PackageInfo pi = null;
+
+                    try {
+                        pi = mContext.getPackageManager().getPackageInfo(mContext.getPackageName(), 0);
+                    } catch (PackageManager.NameNotFoundException e) {
+                        e.printStackTrace();
+                    }
+                    Toast.makeText(mContext,mContext.getString(R.string.app_version)+" Build number: "+pi.versionCode,Toast.LENGTH_LONG).show();
                     break;
                 default:
                     break;
@@ -169,11 +183,12 @@ public class DrawLayerMenuView extends LinearLayout {
     }
 
     private void loadView(Context context) {
+        mContext = context;
         LayoutInflater inflater = (LayoutInflater) context.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         LinearLayout mainLayout = (LinearLayout) inflater.inflate(R.layout.view_drawlayer_menu, null);
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
         addView(mainLayout, params);
-        int[] ids = {R.id.side_menu_user, R.id.side_menu_door, R.id.side_menu_monitor, R.id.side_menu_alram, R.id.side_menu_logout, R.id.my_profile};
+        int[] ids = {R.id.side_menu_user, R.id.side_menu_door, R.id.side_menu_monitor, R.id.side_menu_alram, R.id.side_menu_logout, R.id.my_profile, R.id.side_menu_version};
         for (int i : ids) {
             mainLayout.findViewById(i).setOnClickListener(mClickListener);
         }

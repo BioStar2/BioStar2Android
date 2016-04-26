@@ -9,6 +9,7 @@
 <string name="all_door">Todas las Puertas</string>
 <string name="all_events">Todos los Eventos</string>
 <string name="all_users">Todos los Usuarios</string>
+<string name="allow_permission">Por favor, conceda permiso.</string>
 <string name="already_assigned">Asignado</string>
 <string name="app_name">BioStar 2</string>
 <string name="applied_filter">Filtro Aplicado</string>
@@ -44,6 +45,7 @@
 <string name="edit">Editar</string>
 <string name="edit_photo">Editar Fotografía</string>
 <string name="email">Email</string>
+<string name="email_not_setted">Defina email en App. propiedades dispositivo</string>
 <string name="end_date">Fecha Final</string>
 <string name="end_time">Hora Final</string>
 <string name="entry_device">Indique Dispositivo</string>
@@ -67,6 +69,7 @@
 <string name="format">Formato</string>
 <string name="from_gallery">Desde Galería</string>
 <string name="group">Grupo</string>
+<string name="guide_feature_permission">Para usar esta característica se precisa permiso</string>
 <string name="held_opened">Puerta Permanece Abierta</string>
 <string name="id">ID</string>
 <string name="inactive">Inactivo</string>
@@ -77,7 +80,6 @@
 <string name="invalid_email">Cuenta Invalida</string>
 <string name="invalid_userid">ID de Usuario Inválido, por favor ingrese un número entre 1 - 4,294,967,294</string>
 <string name="latest_version">Última Versión</string>
-<string name="lock">Bloquea</string>
 <string name="log_out">Salir</string>
 <string name="login">Acceso</string>
 <string name="login_empty">Debe de indicar ID/Password/URL</string>
@@ -85,10 +87,12 @@
 <string name="login_fail">Falló Acceso</string>
 <string name="login_id">ID Acceso</string>
 <string name="low_quality">Baja Calidad al leer.</string>
+<string name="manual_lock">Cierre Manual</string>
+<string name="manual_unlock">Apertura manual</string>
 <string name="max_size">Contador Max de Registros</string>
 <string name="memory_poor">Memoria insuficiente</string>
 <string name="menu">Menú</string>
-<string name="minute">Minuto</string>
+<string name="minute">Min</string>
 <string name="mobile">Móvil</string>
 <string name="monitoring">Monitorear</string>
 <string name="monitoring_upper">Monitorear</string>
@@ -137,6 +141,7 @@
 <string name="registeration_option_assign_card">Asigna Tarjeta</string>
 <string name="registeration_option_card_reader">Registra por Lector de Tarjeta</string>
 <string name="relay">Relevador</string>
+<string name="release">Liberar</string>
 <string name="request_open">Solicita Apertura</string>
 <string name="request_open_fail">Falló Solicita Apertura</string>
 <string name="request_open_sent">Envía petición de Apertura</string>
@@ -169,7 +174,6 @@
 <string name="time">Hora</string>
 <string name="timezone">Zona Horaria</string>
 <string name="total">Total</string>
-<string name="unlock">Desbloquea</string>
 <string name="unread">Nuevo</string>
 <string name="update_guide">Actualización disponible a través de la configuración en el pánel lateral</string>
 <string name="user">Usuario</string>

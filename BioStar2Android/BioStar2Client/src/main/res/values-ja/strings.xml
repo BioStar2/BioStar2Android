@@ -9,6 +9,7 @@
 <string name="all_door">全てのゲート</string>
 <string name="all_events">全てのイベント</string>
 <string name="all_users">全てのユーザー</string>
+<string name="allow_permission">権限を許可にしてください。</string>
 <string name="already_assigned">割り当て済み</string>
 <string name="app_name">BioStar 2</string>
 <string name="applied_filter">検索条件が適用されました。</string>
@@ -44,6 +45,7 @@
 <string name="edit">修正</string>
 <string name="edit_photo">写真の修正</string>
 <string name="email">メール</string>
+<string name="email_not_setted">端末設定アプリで、eメールの設定をしてください。</string>
 <string name="end_date">終了日</string>
 <string name="end_time">終了時間</string>
 <string name="entry_device">入室端末</string>
@@ -67,6 +69,7 @@
 <string name="format">フォーマット</string>
 <string name="from_gallery">ギャラリーからインポート</string>
 <string name="group">グループ</string>
+<string name="guide_feature_permission">この機能の使用するには権限が必要です。</string>
 <string name="held_opened">連続解錠</string>
 <string name="id">ID</string>
 <string name="inactive">無効</string>
@@ -77,7 +80,6 @@
 <string name="invalid_email">メールアドレスが、不正です。</string>
 <string name="invalid_userid">ユーザーIDが不正です。1～4,294,967,294の範囲で入力して下さい。</string>
 <string name="latest_version">最新バージョン</string>
-<string name="lock">ロック</string>
 <string name="log_out">ログアウト</string>
 <string name="login">ログイン</string>
 <string name="login_empty">ID / パスワード / URLを入力する必要があります。</string>
@@ -85,6 +87,8 @@
 <string name="login_fail">ログイン失敗</string>
 <string name="login_id">ログインID</string>
 <string name="low_quality">指紋スキャンの品質が低いです。</string>
+<string name="manual_lock">ロック</string>
+<string name="manual_unlock">ロック解除</string>
 <string name="max_size">最大登録数を超えました。</string>
 <string name="memory_poor">スマートフォンのメモリが不足しています。</string>
 <string name="menu">メニュー</string>
@@ -139,6 +143,7 @@
 <string name="registeration_option_assign_card">カード割当て</string>
 <string name="registeration_option_card_reader">カードリーダーで登録</string>
 <string name="relay">リレー</string>
+<string name="release">解除</string>
 <string name="request_open">ゲート開放要求</string>
 <string name="request_open_fail">ゲート開放要求 拒否</string>
 <string name="request_open_sent">ゲート開放要求を送信しました。</string>
@@ -171,7 +176,6 @@
 <string name="time">時間</string>
 <string name="timezone">タイムゾーン</string>
 <string name="total">総数</string>
-<string name="unlock">ロック解除</string>
 <string name="unread">新着通知</string>
 <string name="update_guide">サイドメニューの環境設定から、更新が可能です。</string>
 <string name="user">ユーザー</string>

@@ -137,6 +137,11 @@ public class UserModifyFragment extends BaseFragment {
                 }
                 LocalBroadcastManager.getInstance(mContext).sendBroadcast(new Intent(Setting.BROADCAST_UPDATE_MYINFO));
             }
+            if (mLayout.isOperator()) {
+                if (mPasswordData != null) {
+                    mUserInfo.password_exist = true;
+                }
+            }
             mPopup.dismissWiat();
             mPopup.show(PopupType.CONFIRM, getString(R.string.info), getString(R.string.user_modify_success), mPopupSucess, null, null);
         }
@@ -391,12 +396,15 @@ public class UserModifyFragment extends BaseFragment {
             case NOT_MODIFY:
                 if (mUserInfo.photo != null) {
                     mBackupPhoto = mUserInfo.photo;
+                    mUserInfo.photo_exist = true;
                 }
                 mUserInfo.photo = null;
                 break;
             case MODIFY:
+                mUserInfo.photo_exist = true;
                 break;
             case DELETE:
+                mUserInfo.photo_exist = false;
                 mUserInfo.photo = "";
                 break;
         }
@@ -577,7 +585,7 @@ public class UserModifyFragment extends BaseFragment {
             return;
         }
         mHandler.removeCallbacks(mRunDeny);
-        mHandler.postDelayed(mRunDeny,1000);
+        mHandler.postDelayed(mRunDeny, 1000);
     }
 
 
@@ -681,6 +689,7 @@ public class UserModifyFragment extends BaseFragment {
         if (cropFile.exists() == false) {
             return false;
         }
+
         if (bmp != null) {
             bmp.recycle();
             bmp = null;
@@ -982,7 +991,7 @@ public class UserModifyFragment extends BaseFragment {
         if (mUserInfo.cards != null) {
             mLayout.setCardCount(String.valueOf(mUserInfo.cards.size()));
         } else {
-            mLayout.setCardCount(String.valueOf("0"));
+             mLayout.setCardCount(String.valueOf("0"));
         }
 
     }
@@ -1008,17 +1017,42 @@ public class UserModifyFragment extends BaseFragment {
         mLayout.setUserPhoto(mRbmp);
 
         mPhotoStatus = PhotoStatus.MODIFY;
-        mUserInfo.photo = Base64.encodeToString(ImageUtil.bitmapToByteArray(bmp), 0);
+        Bitmap bmp2 = null;
+        byte[] reSizeByte = ImageUtil.bitmapToByteArray(bmp,20);
+        if (BuildConfig.DEBUG) {
+            Log.e(TAG,"reSizeByte:"+reSizeByte.length);
+        }
+        if (reSizeByte.length > Setting.USER_PROFILE_IMAGE_SIZE_BYTE) {
+            Log.e(TAG,"reSizeByte2:"+reSizeByte.length);
+            reSizeByte = ImageUtil.bitmapToByteArray(bmp,0);
+            if (reSizeByte.length > Setting.USER_PROFILE_IMAGE_SIZE_BYTE) {
+                bmp2 = ImageUtil.resizeBitmap(bmp, Setting.USER_PROFILE_IMAGE_SIZE/2, false);
+                reSizeByte = ImageUtil.bitmapToByteArray(bmp2,0);
+                Log.e(TAG, "reSizeByte3:" + reSizeByte.length);
+            }
+        }
+        mUserInfo.photo = Base64.encodeToString(reSizeByte, 0);
         mUserInfo.photo = mUserInfo.photo.replaceAll("\n", "");
         mBackupPhoto = mUserInfo.photo;
+        if (bmp2 != null) {
+            bmp2.recycle();
+            bmp2 = null;
+        }
     }
 
     private void setPermission() {
         if (mUserInfo.roles == null || mUserInfo.roles.size() < 1) {
+            mLayout.setPassword("");
+            mUserInfo.password_exist = false;
             mLayout.setOperator(false, getString(R.string.none));
         } else {
             int size = mUserInfo.roles.size();
             size--;
+            if (mUserInfo.password_exist || (mPasswordData != null && !mPasswordData.isEmpty())) {
+                mLayout.setPassword(getString(R.string.password_display));
+            } else {
+                mLayout.setPassword("");
+            }
             if (size == 0) {
                 mLayout.setOperator(true, mUserInfo.roles.get(0).description);
             } else if (size > 0) {
@@ -1299,7 +1333,7 @@ public class UserModifyFragment extends BaseFragment {
                     break;
             }
             bm = BitmapFactory.decodeResource(getResources(),res);
-            mUserInfo.photo = Base64.encodeToString(ImageUtil.bitmapToByteArray(bm), 0);
+            mUserInfo.photo = Base64.encodeToString(ImageUtil.bitmapToByteArray(bm,0), 0);
             mUserInfo.photo = mUserInfo.photo.replaceAll("\n", "");
             mUserInfo.photo_exist = true;
             bm.recycle();

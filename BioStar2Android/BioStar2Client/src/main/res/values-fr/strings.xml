@@ -77,7 +77,6 @@
 <string name="invalid_email">E-mail invalide</string>
 <string name="invalid_userid">ID utilisateur invalide, entrer un nombre entre 1 et 4,294,967,294</string>
 <string name="latest_version">Dernière version</string>
-<string name="lock">Verrouillée</string>
 <string name="log_out">Déconnecter</string>
 <string name="login">Connexion</string>
 <string name="login_empty">ID/Mot de passe/URL manquant</string>
@@ -85,6 +84,8 @@
 <string name="login_fail">Echec de la connexion</string>
 <string name="login_id">ID de connexion</string>
 <string name="low_quality">Qualité de l\'empreinte insuffisante</string>
+<string name="manual_lock">Verrouillée</string>
+<string name="manual_unlock">Débloqué</string>
 <string name="max_size">Limite d\'enregistrement dépassée</string>
 <string name="memory_poor">Espace mémoire insuffisant</string>
 <string name="menu">Menu</string>
@@ -172,7 +173,6 @@
 <string name="time">Temps</string>
 <string name="timezone">Zone de temps</string>
 <string name="total">Total</string>
-<string name="unlock">Débloqué</string>
 <string name="unread">Nouveau</string>
 <string name="update_guide">Vous pouvez mettre à jour via les paramètres du menu</string>
 <string name="user">Utilisateur</string>

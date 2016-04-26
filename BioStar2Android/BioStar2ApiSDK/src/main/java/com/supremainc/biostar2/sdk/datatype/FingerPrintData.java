@@ -77,7 +77,13 @@ public class FingerPrintData {
 		public String enroll_quality;
 		@SerializedName("template_image0")
 		public String template_image0;
-		
+		@SerializedName("template_image1")
+		public String template_image1;
+		@SerializedName("raw_image0")
+		public String raw_image0;
+		@SerializedName("raw_image1")
+		public String raw_image1;
+
 		public ScanFingerprintTemplate clone() throws CloneNotSupportedException {
 			return (ScanFingerprintTemplate) super.clone();
 		}

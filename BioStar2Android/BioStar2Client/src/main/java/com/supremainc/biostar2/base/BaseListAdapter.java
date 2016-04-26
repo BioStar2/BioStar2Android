@@ -347,6 +347,13 @@ public abstract class BaseListAdapter<T> extends BaseAdapter implements OnItemCl
         notifyDataSetChanged();
     }
 
+    public void setData(int position,T item) {
+        if (mItems != null && mItems.size() > position) {
+            mItems.set(position,item);
+            notifyDataSetChanged();
+        }
+    }
+
     public void setOnItemClickListener(OnItemClickListener l) {
         mOnItemClickListener = l;
     }

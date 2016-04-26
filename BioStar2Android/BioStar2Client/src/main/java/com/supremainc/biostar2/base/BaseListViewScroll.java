@@ -152,6 +152,10 @@ public class BaseListViewScroll implements OnScrollListener {
         }
     }
 
+    public int getmOldFirstVisibleItemPosition() {
+        return mOldFirstVisibleItem;
+    }
+
     private int getTopItemScrollY() {
         if (mListView == null || mListView.getChildAt(0) == null)
             return 0;

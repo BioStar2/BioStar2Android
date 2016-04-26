@@ -1,7 +1,7 @@
 <manifest
     package="com.supremainc.biostar2"
     xmlns:android="http://schemas.android.com/apk/res/android"
-    android:versionCode="29"
+    android:versionCode="38"
     android:versionName="@string/app_version">
 
     <uses-sdk

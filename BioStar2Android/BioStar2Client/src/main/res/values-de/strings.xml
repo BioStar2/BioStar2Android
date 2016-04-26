@@ -77,7 +77,6 @@
 <string name="invalid_email">E-Mail-Adresse ungültig</string>
 <string name="invalid_userid">Der Maximalwert für die Benutzer-ID ist 4294967294.</string>
 <string name="latest_version">Aktuellste Version</string>
-<string name="lock">Verschließen</string>
 <string name="log_out">ABMELDEN</string>
 <string name="login">Anmelden</string>
 <string name="login_empty">Sie müssen ID/Passwort/URL eingeben</string>
@@ -85,6 +84,8 @@
 <string name="login_fail">Anmeldung fehlgeschlagen</string>
 <string name="login_id">Anmelde-ID</string>
 <string name="low_quality">Scanqualität ist niedrig</string>
+<string name="manual_lock">Verschließen</string>
+<string name="manual_unlock">Aufschließen</string>
 <string name="max_size">Maximale Registrierungsanzahl</string>
 <string name="memory_poor">Nicht genug Speicherplatz</string>
 <string name="menu">Menü</string>
@@ -172,7 +173,6 @@
 <string name="time">Zeit</string>
 <string name="timezone">Zeitzone</string>
 <string name="total">Gesamt</string>
-<string name="unlock">Aufschließen</string>
 <string name="unread">Neu</string>
 <string name="update_guide">Sie können mithilfe der Konfiguration des seitlichen Menüs ein Update vornehmen.</string>
 <string name="user">Benutzer</string>

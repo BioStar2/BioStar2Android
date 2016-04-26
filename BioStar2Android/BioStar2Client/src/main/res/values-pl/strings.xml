@@ -9,6 +9,7 @@
 <string name="all_door">Wszystkie drzwi</string>
 <string name="all_events">Wszystkie zdarzenia</string>
 <string name="all_users">Wszyscy użytkownicy</string>
+<string name="allow_permission">Proszę nadać uprawnienia</string>
 <string name="already_assigned">Już przydzielono</string>
 <string name="app_name">BioStar 2</string>
 <string name="applied_filter">Filtr aktywny</string>
@@ -44,6 +45,7 @@
 <string name="edit">Edycja</string>
 <string name="edit_photo">Edytuj zdjęcie</string>
 <string name="email">Email</string>
+<string name="email_not_setted">Proszę ustawić email w ustawieniach aplikacji</string>
 <string name="end_date">Data końca</string>
 <string name="end_time">Czas końca</string>
 <string name="entry_device">Urządzenie wejściowe</string>
@@ -67,6 +69,7 @@
 <string name="format">Format</string>
 <string name="from_gallery">Z Galerii</string>
 <string name="group">Grupa</string>
+<string name="guide_feature_permission">Wymagane są większe uprawnienia ,aby skorzystać z tej funkcji</string>
 <string name="held_opened">Drzwi przytrzymane</string>
 <string name="id">ID</string>
 <string name="inactive">Nieaktywny</string>
@@ -77,7 +80,6 @@
 <string name="invalid_email">Niepoprawny adres Email</string>
 <string name="invalid_userid">Maksymalna wartość ID użytkownika to 4294967294.</string>
 <string name="latest_version">Najnowsza wersja</string>
-<string name="lock">Zablokowany</string>
 <string name="log_out">Wyloguj</string>
 <string name="login">Login</string>
 <string name="login_empty">Musisz wpisać numer ID/hasło/adres Url</string>
@@ -85,10 +87,12 @@
 <string name="login_fail">Błąd logowania</string>
 <string name="login_id">Login Id</string>
 <string name="low_quality">Jakość skanowania jest niska</string>
+<string name="manual_lock">Zablokowany</string>
+<string name="manual_unlock">Blokada manualna</string>
 <string name="max_size">Maksymalna liczba zarejestrowanych</string>
 <string name="memory_poor">Niewystarczająca pamięć</string>
 <string name="menu">Menu</string>
-<string name="minute">Min</string>
+<string name="minute">min</string>
 <string name="mobile">Mobilnie</string>
 <string name="monitoring">Monitoring</string>
 <string name="monitoring_upper">Monitoring</string>
@@ -139,6 +143,7 @@
 <string name="registeration_option_assign_card">Karta przypisana</string>
 <string name="registeration_option_card_reader">Zarejestrowano przez czytnik kart</string>
 <string name="relay">Przekaźnik</string>
+<string name="release">Odblokować</string>
 <string name="request_open">Otwarcie</string>
 <string name="request_open_fail">Otwarcie drzwi zakończone niepowodzeniem</string>
 <string name="request_open_sent">Otwórz drzwi</string>
@@ -171,7 +176,6 @@
 <string name="time">Czas</string>
 <string name="timezone">Strefa czasowa</string>
 <string name="total">Ogółem</string>
-<string name="unlock">Odblokuj</string>
 <string name="unread">Nowe</string>
 <string name="update_guide">Aktualizacja dostępna za pośrednictwem konfiguracji w menu bocznym</string>
 <string name="user">Użytkownik</string>

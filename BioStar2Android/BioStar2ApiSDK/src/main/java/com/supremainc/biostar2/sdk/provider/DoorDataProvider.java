@@ -71,6 +71,10 @@ public class DoorDataProvider extends BaseDataProvider {
 		sendRequest(tag, ResponseStatus.class, Method.POST, createUrl(NetWork.PARAM_DOORS, id,NetWork.PARAM_LOCK), null, null, null, listener, errorListener, deliverParam);
 	}
 
+	public void releaseDoor(String tag, String id, Listener<ResponseStatus> listener, ErrorListener errorListener, Object deliverParam) {
+		sendRequest(tag, ResponseStatus.class, Method.POST, createUrl(NetWork.PARAM_DOORS, id,NetWork.PARAM_RELEASE), null, null, null, listener, errorListener, deliverParam);
+	}
+
 	public void clearAlarm(String tag, String id, Listener<ResponseStatus> listener, ErrorListener errorListener, Object deliverParam) {
 		sendRequest(tag, ResponseStatus.class, Method.POST, createUrl(NetWork.PARAM_DOORS, id,NetWork.PARAM_CLEAR_ALARM), null, null, null, listener, errorListener, deliverParam);
 	}

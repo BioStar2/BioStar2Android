@@ -42,7 +42,7 @@
                 android:layout_height="wrap_content"
                 android:layout_marginRight="18dp"
                 android:gravity="left"
-                android:maxLines="2"
+                android:maxLines="3"
                 android:textColor="@color/select_text"
                 android:textSize="16dp"
                 androidfont:typeface="roboto_bold.ttf"/>

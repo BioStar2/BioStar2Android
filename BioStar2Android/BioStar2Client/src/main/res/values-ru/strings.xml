@@ -9,6 +9,7 @@
 <string name="all_door">Все двери</string>
 <string name="all_events">Все события</string>
 <string name="all_users">Все пользователи</string>
+<string name="allow_permission">Пожалуйста, предоставьте разрешение</string>
 <string name="already_assigned">Уже назначена</string>
 <string name="app_name">BioStar 2</string>
 <string name="applied_filter">Фильтр задан</string>
@@ -44,6 +45,7 @@
 <string name="edit">Изменить</string>
 <string name="edit_photo">Изменить фото</string>
 <string name="email">Email</string>
+<string name="email_not_setted">Пожалуйста, введите Email в настройках устройства</string>
 <string name="end_date">Дата окончания</string>
 <string name="end_time">Время окончания</string>
 <string name="entry_device">Устройство входа</string>
@@ -67,6 +69,7 @@
 <string name="format">Формат</string>
 <string name="from_gallery">Из галереи</string>
 <string name="group">Группа</string>
+<string name="guide_feature_permission">Требуется разрешение для использования этой функции</string>
 <string name="held_opened">Удержание двери открытой</string>
 <string name="id">ID</string>
 <string name="inactive">Неактивный</string>
@@ -77,7 +80,6 @@
 <string name="invalid_email">Неверный Email</string>
 <string name="invalid_userid">Неправильный ID пользователя, пожалуйста введите число 1 - 4,294,967,294</string>
 <string name="latest_version">Версия обновлена</string>
-<string name="lock">Закрыть</string>
 <string name="log_out">ВЫЙТИ</string>
 <string name="login">Логин</string>
 <string name="login_empty">Пропущен ID/пароль/URL</string>
@@ -85,6 +87,8 @@
 <string name="login_fail">Ошибка входа</string>
 <string name="login_id">ID логина</string>
 <string name="low_quality">Недостаточное качество отпечатка</string>
+<string name="manual_lock">Закрыть</string>
+<string name="manual_unlock">Разблокировать</string>
 <string name="max_size">Превышен регистрационный предел</string>
 <string name="memory_poor">Недостаточно памяти</string>
 <string name="menu">Меню</string>
@@ -172,7 +176,6 @@
 <string name="time">Время</string>
 <string name="timezone">Часовой пояс</string>
 <string name="total">Всего</string>
-<string name="unlock">Разблокировать</string>
 <string name="unread">Новая</string>
 <string name="update_guide">Обновление доступно через настройки в меню</string>
 <string name="user">Пользователь</string>

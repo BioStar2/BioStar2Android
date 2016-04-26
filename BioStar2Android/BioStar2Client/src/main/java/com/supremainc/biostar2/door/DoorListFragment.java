@@ -15,7 +15,12 @@
  */
 package com.supremainc.biostar2.door;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
+import android.support.v4.content.LocalBroadcastManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -43,7 +48,7 @@ public class DoorListFragment extends BaseFragment {
     private String mSearchText;
     private SubToolbar mSubToolbar;
     private int mTotal = -1;
-
+    private int mSelectedDoorPosition = -1;
     private Listener<Door> mDoorListener = new Listener<Door>() {
         @Override
         public void onResponse(Door response, Object param) {
@@ -54,6 +59,9 @@ public class DoorListFragment extends BaseFragment {
             Bundle bundle = new Bundle();
             try {
                 bundle.putSerializable(Door.TAG, response);
+                if (mDoorAdapter != null && mSelectedDoorPosition > -1) {
+                    mDoorAdapter.setData(mSelectedDoorPosition,response);
+                }
             } catch (Exception e) {
                 e.printStackTrace();
                 return;
@@ -61,7 +69,6 @@ public class DoorListFragment extends BaseFragment {
             ScreenControl screenControl = ScreenControl.getInstance();
             screenControl.addScreen(ScreenType.DOOR, bundle);
         }
-
     };
     private Response.ErrorListener mDoorErrorListener = new Response.ErrorListener() {
         @Override
@@ -97,6 +104,7 @@ public class DoorListFragment extends BaseFragment {
                 return;
             }
             mPopup.showWait(true);
+            mSelectedDoorPosition = position;
             mDoorDataProvider.getDoor(TAG, item.id, mDoorListener, mDoorErrorListener, item.id);
         }
     };
@@ -179,6 +187,7 @@ public class DoorListFragment extends BaseFragment {
         if (!mIsDataReceived) {
             if (mPopup != null && mDoorAdapter != null) {
                 mDoorAdapter.getItems(mSearchText);
+                mDoorAdapter.setPostReceiveToLastPosition();
             }
         }
     }
@@ -207,5 +216,32 @@ public class DoorListFragment extends BaseFragment {
             mDoorAdapter.getItems(query);
         }
         return true;
+    }
+    protected void registerBroadcast() {
+        if (mReceiver == null) {
+            mReceiver = new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    if (mIsDestroy) {
+                        return;
+                    }
+                    String action = intent.getAction();
+                    if (action.equals(Setting.BROADCAST_UPDATE_DOOR)) {
+                        if (isResumed()) {
+                            if (mDoorAdapter != null) {
+                                mDoorAdapter.getItems(mSearchText);
+                                mDoorAdapter.setPostReceiveToLastPosition();
+                            }
+                        } else {
+                            mIsDataReceived = false;
+                            mTotal = -1;
+                        }
+                    }
+                }
+            };
+            IntentFilter intentFilter = new IntentFilter();
+            intentFilter.addAction(Setting.BROADCAST_UPDATE_DOOR);
+            LocalBroadcastManager.getInstance(getActivity()).registerReceiver(mReceiver, intentFilter);
+        }
     }
 }

@@ -9,6 +9,7 @@
 <string name="all_door">All Doors</string>
 <string name="all_events">All Events</string>
 <string name="all_users">All Users</string>
+<string name="allow_permission">Please allow permission.</string>
 <string name="already_assigned">Already Allocated</string>
 <string name="app_name">BioStar 2</string>
 <string name="applied_filter">Filter Applied</string>
@@ -44,6 +45,7 @@
 <string name="edit">Edit</string>
 <string name="edit_photo">Edit photo</string>
 <string name="email">Email</string>
+<string name="email_not_setted">Please set email on device setting app.</string>
 <string name="end_date">Expiry date</string>
 <string name="end_time">End time</string>
 <string name="entry_device">Entry Device</string>
@@ -67,6 +69,7 @@
 <string name="format">Format</string>
 <string name="from_gallery">From Gallery</string>
 <string name="group">Group</string>
+<string name="guide_feature_permission">To use this feature, permission is needed</string>
 <string name="held_opened">Door Held Open</string>
 <string name="id">ID</string>
 <string name="inactive">Inactive</string>
@@ -77,7 +80,6 @@
 <string name="invalid_email">Invalid Email</string>
 <string name="invalid_userid">Invalid User ID, Please Enter a Number between 1 - 4,294,967,294</string>
 <string name="latest_version">Version is up to Date</string>
-<string name="lock">Lock</string>
 <string name="log_out">LOG OUT</string>
 <string name="login">Login</string>
 <string name="login_empty">Missing ID/Password/URL</string>
@@ -85,6 +87,8 @@
 <string name="login_fail">Login Failed</string>
 <string name="login_id">Login ID</string>
 <string name="low_quality">Insufficient Fingerprint Quality</string>
+<string name="manual_lock">Manual Lock</string>
+<string name="manual_unlock">Manual Unlock</string>
 <string name="max_size">Exceeded Registration Limit</string>
 <string name="memory_poor">Insufficient Memory</string>
 <string name="menu">Menu</string>
@@ -140,6 +144,7 @@
 <string name="registeration_option_assign_card">Assign Card</string>
 <string name="registeration_option_card_reader">Register via Card Reader</string>
 <string name="relay">Relay</string>
+<string name="release">Release</string>
 <string name="request_open">Door Open Request</string>
 <string name="request_open_fail">Door Open Request Denied</string>
 <string name="request_open_sent">Door Open Request Sent</string>
@@ -172,7 +177,6 @@
 <string name="time">Time</string>
 <string name="timezone">Time Zone</string>
 <string name="total">Total</string>
-<string name="unlock">Unlock</string>
 <string name="unread">New</string>
 <string name="update_guide">Update Available Through Configuration in the Side Menu</string>
 <string name="user">User</string>
@@ -188,11 +192,9 @@
 <string name="version_mobile">BioStar 2 Mobile Version</string>
 <string name="view_log">View Log</string>
 <string name="wait">Please Wait</string>
-    <string name="guide_feature_permission">To use this feature, permission is needed.</string>
-    <string name="allow_permission">Please allow permission.</string>
-<string name="image">image</string>
-<string name="app_version">1.0.3</string>
-<string name="wave">~</string>
-<string name="korean_day">요일</string>
-<string name="password_display">********</string>
+    <string name="image">image</string>
+    <string name="app_version">1.1.0</string>
+    <string name="wave">~</string>
+    <string name="korean_day">요일</string>
+    <string name="password_display">********</string>
 </resources>

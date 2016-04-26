@@ -91,24 +91,14 @@ public class EventLogData {
 		public String message;
 		@SerializedName("records")
 		public ArrayList<EventLog> records;
-		@SerializedName("total")
-		public int total;
+		@SerializedName("is_next")
+		public boolean isNext;
 		
 		public EventLogs() {
 			
 		}
 				
-		public EventLogs(ArrayList<EventLog> rows,int total) {
-			this.total = total;
-			this.records = rows;
-		}
-		
-		public EventLogs(ArrayList<EventLog> rows) {
-			if (rows != null) {
-				total = rows.size();
-			}
-			this.records = rows;
-		}
+
 		
 		@SuppressWarnings("unchecked")
 		public EventLogs clone() throws CloneNotSupportedException {

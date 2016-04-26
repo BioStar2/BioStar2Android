@@ -296,6 +296,7 @@
             android:orientation="vertical"/>
 
         <LinearLayout
+            android:id="@+id/side_menu_version"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginLeft="24dp"
@@ -312,7 +313,6 @@
                 androidfont:typeface="roboto_bold.ttf"/>
 
             <com.supremainc.biostar2.widget.StyledTextView
-                android:id="@+id/side_menu_version"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:gravity="center"

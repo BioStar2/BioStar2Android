@@ -31,6 +31,8 @@ public class DoorFragmentLayout extends BaseFragmentLayout {
     private final String TAG = getClass().getSimpleName();
     private DoorFragmentLayoutEvent mLayoutEvent;
     private StyledTextView mActionButton;
+    private View mLogView;
+    private ImageView mDoorIcon;
     private OnSingleClickListener mClickListener = new OnSingleClickListener() {
         @Override
         public void onSingleClick(View v) {
@@ -60,11 +62,14 @@ public class DoorFragmentLayout extends BaseFragmentLayout {
         View v = super.initView(fragment, inflater, container, savedInstanceState, R.layout.fragment_door);
         mActionButton = ((StyledTextView) v.findViewById(R.id.door_control));
         mActionButton.setOnClickListener(mClickListener);
-
-        int[] ids = {R.id.go_view};
-        for (int i : ids) {
-            v.findViewById(i).setOnClickListener(mClickListener);
-        }
+        mLogView = v.findViewById(R.id.go_view);
+        mLogView.setOnClickListener(mClickListener);
+        mDoorIcon = (ImageView) mRootView.findViewById(R.id.icon);
+        mDoorIcon.setOnClickListener(mClickListener);
+//        int[] ids = {R.id.go_view};
+//        for (int i : ids) {
+//            v.findViewById(i).setOnClickListener(mClickListener);
+//        }
         return v;
     }
 
@@ -97,10 +102,22 @@ public class DoorFragmentLayout extends BaseFragmentLayout {
         setTextView(R.id.exit_device, name);
     }
 
+    public void showLogView(boolean show) {
+        if (mLogView != null) {
+            if (show) {
+                mLogView.setOnClickListener(mClickListener);
+                mLogView.setVisibility(View.VISIBLE);
+            } else {
+                mLogView.setOnClickListener(null);
+                mLogView.setVisibility(View.INVISIBLE);
+            }
+        }
+    }
+
     public void setIcon(int resID) {
-        ImageView v = (ImageView) mRootView.findViewById(R.id.icon);
-        v.setImageResource(resID);
-        v.setOnClickListener(mClickListener);
+        if (mDoorIcon != null) {
+            mDoorIcon.setImageResource(resID);
+        }
     }
 
     public void setOpenDuration(String name) {

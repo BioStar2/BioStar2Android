@@ -77,7 +77,6 @@
 <string name="invalid_email">E-mail non valida</string>
 <string name="invalid_userid">Id Utente non valido, immettere numero tra 1 ~ 4,294,967,294</string>
 <string name="latest_version">Versione attuale</string>
-<string name="lock">Blocca</string>
 <string name="log_out">Disconnettersi</string>
 <string name="login">Login</string>
 <string name="login_empty">Immettere ID/Password/URL</string>
@@ -85,6 +84,8 @@
 <string name="login_fail">Errore Login</string>
 <string name="login_id">ID Login</string>
 <string name="low_quality">Qualita\' scan impronta bassa</string>
+<string name="manual_lock">Blocca</string>
+<string name="manual_unlock">Sblocca</string>
 <string name="max_size">Numero massimo registrazioni</string>
 <string name="memory_poor">Memoria insufficiente</string>
 <string name="menu">Menu\'</string>
@@ -171,7 +172,6 @@
 <string name="time">Ora</string>
 <string name="timezone">Fuso Orario</string>
 <string name="total">Totale</string>
-<string name="unlock">Sblocca</string>
 <string name="unread">Nuovo</string>
 <string name="update_guide">Aggiornamento disponibile in Configurazione nel Menu\'</string>
 <string name="user">Utente</string>
