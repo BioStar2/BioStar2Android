@@ -98,7 +98,6 @@ public class LoginActivity extends Activity {
                     if (isFinishing()) {
                         return;
                     }
-                    finish();
                 }
 
                 @Override

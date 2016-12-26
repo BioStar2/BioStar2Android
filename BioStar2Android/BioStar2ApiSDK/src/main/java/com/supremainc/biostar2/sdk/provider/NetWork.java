@@ -65,6 +65,7 @@ public class NetWork {
     public static final String PARAM_CARDS_REISSUE = "reissue";
     public static final String PARAM_CARDS_UNBLOCK = "unblock";
     public static final String PARAM_DEVICES = "devices";
+    public static final String PARAM_REGISTER = "register";
     /*
      * PARAM_DEVICES + id + PARAM_SCAN_FINGERPRINT
      */
@@ -92,6 +93,7 @@ public class NetWork {
     public static final String PARAM_LOGOUT = "logout";
     public static final String PARAM_PRIVILEGE =  "privileges";
     public static final String PARAM_REFERENCE = "references";
+    public static final String PARAM_BIOSTAR_VERSION = "biostar_version";
     public static final String PARAM_REFERENCE_CODES = PARAM_REFERENCE + "/role_codes";
     public static final String PARAM_REFERENCE_EVENT_TYPES = PARAM_REFERENCE + "/event_types";
     //	public static final String SERVER_ADDRESS = "https://api.biostar2.com/v1/";
@@ -260,11 +262,11 @@ public class NetWork {
     }
 
     protected void getVersion(String domain, String url,  final Listener<VersionData> listener, final ErrorListener errorListener, final Object deliverParam) {
-        String body = "{"+"\"domain\":"+"\""+domain+"\"}";
-        HashMap<String, String> headers = new HashMap<String, String>();
+//        String body = "{"+"\"domain\":"+"\""+domain+"\"}";
+         HashMap<String, String> headers = new HashMap<String, String>();
         Locale locale = mContext.getResources().getConfiguration().locale;
         headers.put("Content-Language", locale.getISO3Language());
-        JsonObjectRequest<VersionData> req = new JsonObjectRequest<VersionData>(VersionData.class, Method.GET, url, headers, null, body, listener, errorListener, deliverParam);
+        JsonObjectRequest<VersionData> req = new JsonObjectRequest<VersionData>(VersionData.class, Method.GET, url, headers, null, null, listener, errorListener, deliverParam);
         mRequestQueue.add(req);
     }
 

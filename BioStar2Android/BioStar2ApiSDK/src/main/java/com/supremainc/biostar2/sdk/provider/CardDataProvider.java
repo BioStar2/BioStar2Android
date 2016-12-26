@@ -16,6 +16,8 @@
 package com.supremainc.biostar2.sdk.provider;
 
 import android.content.Context;
+import android.os.Build;
+import android.provider.Settings;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -23,13 +25,17 @@ import com.google.gson.JsonPrimitive;
 import com.supremainc.biostar2.sdk.datatype.v2.Card.BaseCard;
 import com.supremainc.biostar2.sdk.datatype.v2.Card.Card;
 import com.supremainc.biostar2.sdk.datatype.v2.Card.Cards;
+import com.supremainc.biostar2.sdk.datatype.v2.Card.MobileCardRaw;
+import com.supremainc.biostar2.sdk.datatype.v2.Card.MobileCards;
 import com.supremainc.biostar2.sdk.datatype.v2.Card.SmartCardLayouts;
 import com.supremainc.biostar2.sdk.datatype.v2.Card.WiegandFormat;
 import com.supremainc.biostar2.sdk.datatype.v2.Card.WiegandFormats;
 import com.supremainc.biostar2.sdk.datatype.v2.Common.ResponseStatus;
 import com.supremainc.biostar2.sdk.datatype.v2.Common.SimpleDatas;
 import com.supremainc.biostar2.sdk.volley.Network;
+import com.supremainc.biostar2.sdk.volley.Request;
 import com.supremainc.biostar2.sdk.volley.Request.Method;
+import com.supremainc.biostar2.sdk.volley.Response;
 import com.supremainc.biostar2.sdk.volley.Response.ErrorListener;
 import com.supremainc.biostar2.sdk.volley.Response.Listener;
 import com.supremainc.biostar2.sdk.volley.VolleyError;
@@ -170,6 +176,38 @@ public class CardDataProvider extends BaseDataProvider {
             params.put("text", query);
         }
         sendRequest(tag, SmartCardLayouts.class, Method.GET, url, null, params, null, listener, errorListener, deliverParam);
+    }
+
+    public void getMobileCards(String tag, Response.Listener<MobileCards> listener,
+                                    Response.ErrorListener errorListener,String userID, Object deliverParam) {
+        if (userID == null || userID.isEmpty()) {
+            if (errorListener != null) {
+                errorListener.onErrorResponse(new VolleyError("param is null"), deliverParam);
+            }
+            return;
+        }
+        String url = createUrl(NetWork.PARAM_USERS, userID, NetWork.PARAM_CARDS_MOBILE_CREDENTIAL);
+        sendRequest(tag, MobileCards.class, Request.Method.GET, url, null, null, null, listener, errorListener, deliverParam);
+    }
+
+    public void registerMobileCard(String tag, Response.Listener<MobileCardRaw> listener,
+                                   Response.ErrorListener errorListener,String cardID, Object deliverParam) {
+        if (cardID == null || cardID.isEmpty()) {
+            if (errorListener != null) {
+                errorListener.onErrorResponse(new VolleyError("param is null"), deliverParam);
+            }
+            return;
+        }
+        String udid = Settings.Secure.ANDROID_ID+ Build.SERIAL;
+        if (udid != null && udid.length() > 256) {
+            udid = udid.substring(0,256);
+        }
+
+        String url = createUrl(NetWork.PARAM_USERS, NetWork.PARAM_MYPROFILE, NetWork.PARAM_CARDS_MOBILE_CREDENTIAL,cardID,mNetwork.PARAM_REGISTER);
+        JsonObject object = new JsonObject();
+        object.addProperty("udid", udid);
+        String body = mGson.toJson(object);
+        sendRequest(tag, MobileCardRaw.class, Request.Method.GET, url, null, null, body, listener, errorListener, deliverParam);
     }
 
     public void issueMobileCard(String tag, Listener<ResponseStatus> listener, ErrorListener errorListener,String userID, String cardID, ArrayList<Integer> fingerprint, String layoutID,SmartCardType type, Object deliverParam) {

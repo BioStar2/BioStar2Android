@@ -28,6 +28,7 @@ import com.supremainc.biostar2.sdk.datatype.v2.Permission.PermissionItem;
 import com.supremainc.biostar2.sdk.datatype.v2.User.User;
 import com.supremainc.biostar2.sdk.utils.FileUtil;
 import com.supremainc.biostar2.sdk.utils.PreferenceUtil;
+import com.supremainc.biostar2.sdk.volley.Network;
 import com.supremainc.biostar2.sdk.volley.Request.Method;
 import com.supremainc.biostar2.sdk.volley.RequestQueue;
 import com.supremainc.biostar2.sdk.volley.Response;
@@ -158,9 +159,9 @@ public class BaseDataProvider {
 //            versionListener.onResponse(v,null);
 //            return;
 //        }
-
+        String reUrl = createUrl(url, "v2",NetWork.PARAM_REFERENCE,domain,NetWork.PARAM_BIOSTAR_VERSION);
         try {
-            mNetwork.getVersion(domain,url,listener,errorListener,deliverParam);
+            mNetwork.getVersion(domain,reUrl,versionListener,errorListener,deliverParam);
         } catch (Exception e) {
             onError(e, errorListener, deliverParam);
         }
