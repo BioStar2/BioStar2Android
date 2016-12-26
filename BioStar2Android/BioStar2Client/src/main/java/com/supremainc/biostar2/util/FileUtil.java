@@ -318,7 +318,7 @@ public class FileUtil {
             result = is.readObject();
 
         } catch (Exception e) {
-            Log.e(TAG, "loadFileObj "+e.getMessage());
+            Log.e(TAG, "loadFileObj " + e.getMessage());
         } finally {
             try {
                 if (is != null)
@@ -326,7 +326,7 @@ public class FileUtil {
                 if (fileInputStream != null)
                     fileInputStream.close();
             } catch (IOException e) {
-                Log.e(TAG, "loadFileObj "+e.getMessage());
+                Log.e(TAG, "loadFileObj " + e.getMessage());
                 e.printStackTrace();
             }
         }
@@ -356,7 +356,7 @@ public class FileUtil {
             objectOutputStream.writeObject(data);
             objectOutputStream.close();
         } catch (IOException e) {
-            Log.e(TAG, "saveFileObj "+e.getMessage());
+            Log.e(TAG, "saveFileObj " + e.getMessage());
             e.printStackTrace();
         } finally {
             try {

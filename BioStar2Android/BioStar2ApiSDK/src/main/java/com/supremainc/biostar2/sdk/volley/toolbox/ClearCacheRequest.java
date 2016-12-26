@@ -16,13 +16,13 @@
 
 package com.supremainc.biostar2.sdk.volley.toolbox;
 
+import android.os.Handler;
+import android.os.Looper;
+
 import com.supremainc.biostar2.sdk.volley.Cache;
 import com.supremainc.biostar2.sdk.volley.NetworkResponse;
 import com.supremainc.biostar2.sdk.volley.Request;
 import com.supremainc.biostar2.sdk.volley.Response;
-
-import android.os.Handler;
-import android.os.Looper;
 
 /**
  * A synthetic request used for clearing the cache.
@@ -33,12 +33,13 @@ public class ClearCacheRequest extends Request<Object> {
 
     /**
      * Creates a synthetic request for clearing the cache.
-     * @param cache Cache to clear
+     *
+     * @param cache    Cache to clear
      * @param callback Callback to make on the main thread once the cache is clear,
-     * or null for none
+     *                 or null for none
      */
     public ClearCacheRequest(Cache cache, Runnable callback) {
-        super(Method.GET, null, null,null);
+        super(Method.GET, null, null, null);
         mCache = cache;
         mCallback = callback;
     }

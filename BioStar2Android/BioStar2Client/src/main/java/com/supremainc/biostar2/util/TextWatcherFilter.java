@@ -16,28 +16,49 @@
 package com.supremainc.biostar2.util;
 
 import android.app.Activity;
+import android.content.Context;
+import android.support.design.BuildConfig;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.util.Log;
 import android.widget.EditText;
 
 import com.supremainc.biostar2.R;
-import com.supremainc.biostar2.popup.ToastPopup;
+import com.supremainc.biostar2.sdk.datatype.v2.Common.VersionData;
+import com.supremainc.biostar2.widget.popup.ToastPopup;
 
 public class TextWatcherFilter implements TextWatcher {
     private final String TAG = getClass().getSimpleName();
     private String mBefore;
     private int mBeforeIndex;
     private EditText mEditText;
-    private int mMaxSize;
+    private int mMaxLength;
     private ToastPopup mToastPopup;
     private EDIT_TYPE mType;
     private boolean mIsLock;
+    private int mMaxSize;
 
-    public TextWatcherFilter(EditText editText, EDIT_TYPE type, Activity activity, int maxSize) {
+    private boolean mIsMax = false;
+    private boolean mIsCheckZero = false;
+
+    public TextWatcherFilter(EditText editText, EDIT_TYPE type, Context context, int maxSize) {
         mEditText = editText;
         mType = type;
-        mToastPopup = new ToastPopup(activity);
+        mToastPopup = new ToastPopup(context);
+        mMaxLength = maxSize;
+    }
+
+    public void setMaxSize(int maxSize,boolean set) {
         mMaxSize = maxSize;
+        mIsMax = set;
+    }
+
+    public void setCheckZero(boolean set) {
+        mIsCheckZero = set;
+    }
+
+    public void setMaxlength(int maxLength) {
+        mMaxLength = maxLength;
     }
 
     @Override
@@ -56,14 +77,26 @@ public class TextWatcherFilter implements TextWatcher {
             return;
         }
         String source = s.toString();
-        if (source.length() > mMaxSize) {
+        if (BuildConfig.DEBUG) {
+            Log.e(TAG,"source.length(:"+source.length()+" mMaxLength:"+mMaxLength);
+        }
+        if (source.length() > mMaxLength) {
+            if (BuildConfig.DEBUG) {
+                Log.e(TAG,"onTextChanged:"+s+" mBefore:"+mBefore);
+            }
+            if (mBefore == null || mBefore.length() > mMaxLength) {
+                mBefore = "";
+                mBeforeIndex = 0;
+            }
             restore();
             return;
         }
         switch (mType) {
             case LOGIN_ID:
-            case PASSWORD:
                 filterLoginID(source, start, count);
+                break;
+            case PASSWORD:
+                filterLoginPassword(source, start, count);
                 break;
             case EMAIL:
                 filterEmail(source, start, count);
@@ -76,6 +109,9 @@ public class TextWatcherFilter implements TextWatcher {
                 break;
             case PIN:
                 filterPIN(source, start, count);
+                break;
+            case NUMBER:
+                filterNumber(source, start, count);
                 break;
             case USER_NAME:
                 break;
@@ -106,7 +142,7 @@ public class TextWatcherFilter implements TextWatcher {
             source = source.replace(" ","");
             isWhiteSpace = true;
         }
-        if (!source.matches("[a-zA-Z0-9\\@\\.]+")) {
+        if (!source.matches("[a-zA-Z0-9\\@\\.\\-\\_]+")) {
             restore();
             mToastPopup.show(R.string.invalid_email, -1);
             return;
@@ -137,7 +173,25 @@ public class TextWatcherFilter implements TextWatcher {
             source = source.replace(" ","");
             isWhiteSpace = true;
         }
-        if (!source.matches("[a-zA-Z0-9\\!\\@\\#\\$\\%\\^\\&\\*\\(\\)\\-\\_\\=\\+\\{\\}\\[\\]\\:\\;\\,\\.\\<\\>\\?\\/\\~\\`\\|]+")) {
+        if (!source.matches("[a-zA-Z0-9\\-\\_]+")) {
+            restore();
+            mToastPopup.show(R.string.only_alpha_num_special, -1);
+            return;
+        }
+        if (isWhiteSpace) {
+            mIsLock = true;
+            mEditText.setText(source);
+            mEditText.setSelection(source.length());
+        }
+    }
+
+    private void filterLoginPassword(String source, int start, int count) {
+        boolean isWhiteSpace = false;
+        if (source.contains(" ")) {
+            source = source.replace(" ","");
+            isWhiteSpace = true;
+        }
+        if (!source.matches("[a-zA-Z0-9\\!\\@\\#\\$\\%\\^\\&\\*\\(\\)\\-\\_\\=\\+\\{\\}\\[\\]\\:\\;\\,\\.\\<\\>\\?\\/\\~\\`\\|\\\\]+")) {
             restore();
             mToastPopup.show(R.string.only_alpha_num_special, -1);
             return;
@@ -180,9 +234,9 @@ public class TextWatcherFilter implements TextWatcher {
             source = source.replace(" ","");
             isWhiteSpace = true;
         }
-        if (!source.matches("[a-zA-Z0-9\\.\\@]+")) {
+        if (!source.matches("[a-zA-Z0-9\\-\\_]+")) {
             restore();
-            mToastPopup.show(R.string.only_alpha_num_email, -1);
+            mToastPopup.show(R.string.only_alpha_num_special, -1);
             return;
         }
         if (isWhiteSpace) {
@@ -192,7 +246,42 @@ public class TextWatcherFilter implements TextWatcher {
         }
     }
 
+    private void filterNumber(String source, int start, int count) {
+        boolean isWhiteSpace = false;
+        if (source.contains(" ")) {
+            source = source.replace(" ","");
+            isWhiteSpace = true;
+        }
+        if (!source.matches("[0-9]+")) {
+            restore();
+            mToastPopup.show(R.string.only_number, -1);
+            return;
+        }
+        if (mIsMax) {
+            int value = Integer.valueOf(source);
+            if (value > mMaxSize) {
+                restore();
+                mToastPopup.show(R.string.over_value, String.valueOf(mMaxSize));
+                return;
+            }
+        }
+        if (mIsCheckZero) {
+            if (source.startsWith("0")) {
+                restore();
+                mToastPopup.show(R.string.invalid_card_id, -1);
+                return;
+            }
+        }
+        if (isWhiteSpace) {
+            mIsLock = true;
+            mEditText.setText(source);
+            mEditText.setSelection(source.length());
+        }
+    }
+
+
+
     public enum EDIT_TYPE {
-        LOGIN_ID, EMAIL, TELEPHONE, USER_ID, USER_NAME, PIN, PASSWORD
+        LOGIN_ID, EMAIL, TELEPHONE, USER_ID, USER_NAME, PIN, PASSWORD,NUMBER
     }
 }

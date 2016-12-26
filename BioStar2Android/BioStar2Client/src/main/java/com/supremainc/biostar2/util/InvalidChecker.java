@@ -15,9 +15,9 @@
  */
 package com.supremainc.biostar2.util;
 
-import com.supremainc.biostar2.popup.Popup;
-import com.supremainc.biostar2.popup.Popup.PopupType;
-import com.supremainc.biostar2.widget.StyledEditTextView;
+import com.supremainc.biostar2.view.StyledEditTextView;
+import com.supremainc.biostar2.widget.popup.Popup;
+import com.supremainc.biostar2.widget.popup.Popup.PopupType;
 
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;

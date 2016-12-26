@@ -1,2 +1,2 @@
-include ':BioStar2ApiSDK'
+include ':BioStar2ApiSDK', ':libBioMini1.3'
 include ':BioStar2Client'

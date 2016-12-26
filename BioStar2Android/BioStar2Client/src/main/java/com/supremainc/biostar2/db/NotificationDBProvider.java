@@ -25,10 +25,10 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 import com.supremainc.biostar2.BuildConfig;
-import com.supremainc.biostar2.sdk.datatype.DeviceData.BaseDevice;
-import com.supremainc.biostar2.sdk.datatype.DoorData.BaseDoor;
-import com.supremainc.biostar2.sdk.datatype.NotificationData.PushNotification;
-import com.supremainc.biostar2.sdk.datatype.UserData.BaseUser;
+import com.supremainc.biostar2.sdk.datatype.v2.Device.BaseDevice;
+import com.supremainc.biostar2.sdk.datatype.v2.Door.BaseDoor;
+import com.supremainc.biostar2.sdk.datatype.v2.Login.PushNotification;
+import com.supremainc.biostar2.sdk.datatype.v2.User.BaseUser;
 
 import java.util.ArrayList;
 

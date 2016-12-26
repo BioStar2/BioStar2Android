@@ -31,50 +31,51 @@ import java.net.CookieManager;
 import java.net.CookiePolicy;
 
 public class Volley {
-	/** Default on-disk cache directory. */
-	private static final String DEFAULT_CACHE_DIR = "volley";
-	private static CookieManager mCookieManager;
-	/**
-	 * Creates a default instance of the worker pool and calls
-	 * {@link RequestQueue#start()} on it.
-	 *
-	 * @param context
-	 *            A {@link Context} to use for creating the cache dir.
-	 * @param stack
-	 *            An {@link HttpStack} to use for the network, or null for
-	 *            default.
-	 * @return A started {@link RequestQueue} instance.
-	 */
-	public static RequestQueue newRequestQueue(Context context, HttpStack stack) {
-		File cacheDir = new File(context.getCacheDir(), DEFAULT_CACHE_DIR);
+    /**
+     * Default on-disk cache directory.
+     */
+    private static final String DEFAULT_CACHE_DIR = "volley";
+    private static CookieManager mCookieManager;
 
-		String userAgent = "volley/0";
-		try {
-			String packageName = context.getPackageName();
-			PackageInfo info = context.getPackageManager().getPackageInfo(packageName, 0);
-			userAgent = packageName + "/" + info.versionCode;
-		} catch (NameNotFoundException e) {
-		}
-		OkHttpStack okHttpStack = null;
-		if (stack == null) {
-			switch (ConfigDataProvider.mNetworkType) {
-				case HURL :
-					stack = new HurlStack();
-					break;
-				case HTTP_CLIENT :
-					stack = new HttpClientStack(AndroidHttpClient.newInstance(userAgent));
-					// stack = new HttpClientStack();
-					break;
-				case OK_HTTP :
-					if (mCookieManager == null) {
-						mCookieManager = new CookieManager(new PersistentCookieStore(context), CookiePolicy.ACCEPT_ALL);
-					}
+    /**
+     * Creates a default instance of the worker pool and calls
+     * {@link RequestQueue#start()} on it.
+     *
+     * @param context A {@link Context} to use for creating the cache dir.
+     * @param stack   An {@link HttpStack} to use for the network, or null for
+     *                default.
+     * @return A started {@link RequestQueue} instance.
+     */
+    public static RequestQueue newRequestQueue(Context context, HttpStack stack) {
+        File cacheDir = new File(context.getCacheDir(), DEFAULT_CACHE_DIR);
 
-					okHttpStack = new OkHttpStack(mCookieManager);
-					stack = okHttpStack;
-					break;
-			}
-			/*
+        String userAgent = "volley/0";
+        try {
+            String packageName = context.getPackageName();
+            PackageInfo info = context.getPackageManager().getPackageInfo(packageName, 0);
+            userAgent = packageName + "/" + info.versionCode;
+        } catch (NameNotFoundException e) {
+        }
+        OkHttpStack okHttpStack = null;
+        if (stack == null) {
+            switch (ConfigDataProvider.mNetworkType) {
+                case HURL:
+                    stack = new HurlStack();
+                    break;
+                case HTTP_CLIENT:
+                    stack = new HttpClientStack(AndroidHttpClient.newInstance(userAgent));
+                    // stack = new HttpClientStack();
+                    break;
+                case OK_HTTP:
+                    if (mCookieManager == null) {
+                        mCookieManager = new CookieManager(new PersistentCookieStore(context), CookiePolicy.ACCEPT_ALL);
+                    }
+
+                    okHttpStack = new OkHttpStack(mCookieManager);
+                    stack = okHttpStack;
+                    break;
+            }
+            /*
 			 * if (Build.VERSION.SDK_INT >= 9) { stack = new HurlStack(); } elseqordls
 			 * { // Prior to Gingerbread, HttpUrlConnection was unreliable. //
 			 * See:
@@ -83,54 +84,53 @@ public class Volley {
 			 * HttpClientStack(AndroidHttpClient.newInstance(userAgent)); }
 			 */
 
-			//
-		}
+            //
+        }
 
-		Network network = new BasicNetwork(stack);
+        Network network = new BasicNetwork(stack);
 
-		RequestQueue queue = new RequestQueue(new DiskBasedCache(cacheDir), network);
-		if (ConfigDataProvider.mNetworkType == ConfigDataProvider.NetworkType.OK_HTTP) {
-			queue.setOkHttpClient(okHttpStack.getClient());
-		}
-		queue.start();
+        RequestQueue queue = new RequestQueue(new DiskBasedCache(cacheDir), network);
+        if (ConfigDataProvider.mNetworkType == ConfigDataProvider.NetworkType.OK_HTTP) {
+            queue.setOkHttpClient(okHttpStack.getClient());
+        }
+        queue.start();
 
-		return queue;
-	}
+        return queue;
+    }
 
-	/**
-	 * Creates a default instance of the worker pool and calls
-	 * {@link RequestQueue#start()} on it.
-	 *
-	 * @param context
-	 *            A {@link Context} to use for creating the cache dir.
-	 * @return A started {@link RequestQueue} instance.
-	 */
-	public static RequestQueue newRequestQueue(Context context) {
-		return newRequestQueue(context, null);
-	}
+    /**
+     * Creates a default instance of the worker pool and calls
+     * {@link RequestQueue#start()} on it.
+     *
+     * @param context A {@link Context} to use for creating the cache dir.
+     * @return A started {@link RequestQueue} instance.
+     */
+    public static RequestQueue newRequestQueue(Context context) {
+        return newRequestQueue(context, null);
+    }
 
-	private static PersistentCookieStore getCookieStore(Context context) {
-		PersistentCookieStore cookiestore = null;
-		if (mCookieManager == null) {
-			cookiestore = new PersistentCookieStore(context);
-			mCookieManager = new CookieManager(cookiestore, CookiePolicy.ACCEPT_ALL);
-		} else {
-			cookiestore = (PersistentCookieStore) mCookieManager.getCookieStore();
-			if (cookiestore == null) {
-				cookiestore = new PersistentCookieStore(context);
-				mCookieManager = new CookieManager(cookiestore, CookiePolicy.ACCEPT_ALL);
-			}
-		}
-		return cookiestore;
-	}
+    private static PersistentCookieStore getCookieStore(Context context) {
+        PersistentCookieStore cookiestore = null;
+        if (mCookieManager == null) {
+            cookiestore = new PersistentCookieStore(context);
+            mCookieManager = new CookieManager(cookiestore, CookiePolicy.ACCEPT_ALL);
+        } else {
+            cookiestore = (PersistentCookieStore) mCookieManager.getCookieStore();
+            if (cookiestore == null) {
+                cookiestore = new PersistentCookieStore(context);
+                mCookieManager = new CookieManager(cookiestore, CookiePolicy.ACCEPT_ALL);
+            }
+        }
+        return cookiestore;
+    }
 
-	public static boolean isValid(Context context) {
-		PersistentCookieStore cookiestore = getCookieStore(context);
-		return cookiestore.isValid();
-	}
+    public static boolean isValid(Context context) {
+        PersistentCookieStore cookiestore = getCookieStore(context);
+        return cookiestore.isValid();
+    }
 
-	public static void removeCookie(Context context) {
-		PersistentCookieStore cookiestore = getCookieStore(context);
-		cookiestore.removeAll();
-	}
+    public static void removeCookie(Context context) {
+        PersistentCookieStore cookiestore = getCookieStore(context);
+        cookiestore.removeAll();
+    }
 }

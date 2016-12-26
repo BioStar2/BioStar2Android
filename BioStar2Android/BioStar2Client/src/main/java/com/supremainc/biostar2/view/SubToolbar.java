@@ -19,69 +19,84 @@ import android.app.Activity;
 import android.app.SearchManager;
 import android.content.Context;
 import android.support.v7.widget.SearchView;
+import android.util.AttributeSet;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.ImageView;
 
 import com.supremainc.biostar2.R;
-import com.supremainc.biostar2.widget.OnSingleClickListener;
-import com.supremainc.biostar2.widget.SearchViewEx;
-import com.supremainc.biostar2.widget.StyledTextView;
+import com.supremainc.biostar2.impl.OnSingleClickListener;
 
 import java.text.NumberFormat;
 
-public class SubToolbar {
+public class SubToolbar extends BaseView {
     public final String TAG = getClass().getSimpleName() + String.valueOf(System.currentTimeMillis());
     public View mContainerView;
     public SearchViewEx mSearchViewEx;
     public ImageView mSelectAllView;
     public StyledTextView mSelectedView;
     public StyledTextView mTotalView;
-    private Activity mContext;
     private InputMethodManager mImm;
     private boolean mIsAllViewGone;
-    private SubToolBarEvent mSubToolBarEvent;
+    private SubToolBarListener mListener;
+
     private OnSingleClickListener mOnClickListener = new OnSingleClickListener() {
         @Override
         public void onSingleClick(View v) {
-            if (mSubToolBarEvent != null) {
-                mSubToolBarEvent.onClickSelectAll();
+            if (mListener != null) {
+                mListener.onClickSelectAll();
             }
         }
     };
 
-    public SubToolbar(Activity context, View container, SubToolBarEvent event) {
-        this(context, container, (ImageView) container.findViewById(R.id.all_select), (StyledTextView) container.findViewById(R.id.total), (StyledTextView) container.findViewById(R.id.selected)
-                , (SearchViewEx) container.findViewById(R.id.searchbar));
-        mSubToolBarEvent = event;
+    public SubToolbar(Context context, AttributeSet attrs, int defStyle) {
+        super(context, attrs, defStyle);
+        initView(context);
     }
 
-    public SubToolbar(Activity context, View container, ImageView selectAll, StyledTextView total, StyledTextView selected, SearchViewEx searchViewEx) {
-        mContext = context;
-        mContainerView = container;
-        mSelectAllView = selectAll;
-        if (mSelectAllView != null) {
-            mSelectAllView.setOnClickListener(mOnClickListener);
-        }
-        mTotalView = total;
-        mSelectedView = selected;
-        mSearchViewEx = searchViewEx;
+    public SubToolbar(Context context) {
+        super(context);
+        initView(context);
+    }
+
+    public SubToolbar(Context context, AttributeSet attrs) {
+        super(context, attrs);
+        initView(context);
+    }
+
+    private void initView(Context context) {
+        final LayoutInflater inflater = LayoutInflater.from(context);
+        mContainerView = inflater.inflate(R.layout.view_sub_toolbar, this, true);
+        mSelectAllView = (ImageView) findViewById(R.id.all_select);
+        mSelectAllView.setOnClickListener(mOnClickListener);
+        mTotalView = (StyledTextView) findViewById(R.id.total);
+        mSelectedView = (StyledTextView) findViewById(R.id.selected);
+        mSearchViewEx = (SearchViewEx) findViewById(R.id.searchbar);
+    }
+
+    public void init( Activity activity) {
+        init(null,activity);
+    }
+
+    public void init(SubToolBarListener listener, Activity activity) {
+        mListener = listener;
         mImm = (InputMethodManager) mContext.getSystemService(mContext.INPUT_METHOD_SERVICE);
-        initSearchbar(mSearchViewEx);
+        initSearchbar(mSearchViewEx, activity);
+    }
+
+    private void initSearchbar(SearchViewEx searchView, Activity activity) {
+        SearchManager searchManager = (SearchManager) mContext.getSystemService(Context.SEARCH_SERVICE);
+        if (null != searchManager) {
+            searchView.setSearchableInfo(searchManager.getSearchableInfo(activity.getComponentName()));
+        }
+        searchView.setIconifiedByDefault(true);
     }
 
     public void hideIme() {
         if (mSearchViewEx != null && mImm != null) {
             mImm.hideSoftInputFromWindow(mSearchViewEx.getEditTextView().getWindowToken(), 0);
         }
-    }
-
-    private void initSearchbar(SearchViewEx searchView) {
-        SearchManager searchManager = (SearchManager) mContext.getSystemService(Context.SEARCH_SERVICE);
-        if (null != searchManager) {
-            searchView.setSearchableInfo(searchManager.getSearchableInfo(mContext.getComponentName()));
-        }
-        searchView.setIconifiedByDefault(true);
     }
 
     public void setSelectAllViewGone(boolean gone) {
@@ -130,7 +145,7 @@ public class SubToolbar {
         view.setVisibility(View.GONE);
     }
 
-    public void setVisibleSearch(boolean show,SearchView.OnCloseListener listener) {
+    public void setVisibleSearch(boolean show, SearchView.OnCloseListener listener) {
         if (show) {
             setVisible(mSearchViewEx);
             if (listener != null) {
@@ -138,6 +153,14 @@ public class SubToolbar {
             }
         } else {
             setVisibleGone(mSearchViewEx);
+        }
+    }
+
+    public void showTotal(boolean isShow) {
+        if (isShow) {
+            mTotalView.setVisibility(View.VISIBLE);
+        } else {
+            mTotalView.setVisibility(View.GONE);
         }
     }
 
@@ -198,13 +221,13 @@ public class SubToolbar {
             return;
         }
 //        mSelectedView.setText(mContext.getString(R.string.selected_count) + ": " + selectedCount);
-        mSelectedView.setText(selectedCount+ " / ");
+        mSelectedView.setText(selectedCount + " / ");
         if (selectedCount < 1) {
             setSelectAllViewOff();
         }
     }
 
-    public interface SubToolBarEvent {
+    public interface SubToolBarListener {
         public void onClickSelectAll();
     }
 }

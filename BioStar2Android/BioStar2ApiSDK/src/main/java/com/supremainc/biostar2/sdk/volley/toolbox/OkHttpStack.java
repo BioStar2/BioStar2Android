@@ -34,54 +34,55 @@ import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
 public class OkHttpStack extends HurlStack {
-	private final OkHttpClient client;
-	private OkUrlFactory factory;
-	public OkHttpStack(OkHttpClient client,CookieManager cookieManager) {
-		if (client == null) {
-			throw new NullPointerException("Client must not be null.");
-		}
+    private final OkHttpClient client;
+    private OkUrlFactory factory;
 
-		if (ConfigDataProvider.DEBUG && ConfigDataProvider.SSL_ALL_PASS) {
-			// Create a trust manager that does not validate certificate chains
-			final TrustManager[] trustAllCerts = new TrustManager[]{new X509TrustManager() {
-				@Override
-				public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType) throws CertificateException {
-				}
+    public OkHttpStack(OkHttpClient client, CookieManager cookieManager) {
+        if (client == null) {
+            throw new NullPointerException("Client must not be null.");
+        }
 
-				@Override
-				public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType) throws CertificateException {
-				}
+        if (ConfigDataProvider.DEBUG && ConfigDataProvider.SSL_ALL_PASS) {
+            // Create a trust manager that does not validate certificate chains
+            final TrustManager[] trustAllCerts = new TrustManager[]{new X509TrustManager() {
+                @Override
+                public void checkClientTrusted(java.security.cert.X509Certificate[] chain, String authType) throws CertificateException {
+                }
 
-				@Override
-				public java.security.cert.X509Certificate[] getAcceptedIssuers() {
-					return null;
-				}
-			}};
-			try {
-				// Install the all-trusting trust manager
-				final SSLContext sslContext = SSLContext.getInstance("SSL");
+                @Override
+                public void checkServerTrusted(java.security.cert.X509Certificate[] chain, String authType) throws CertificateException {
+                }
 
-				sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
+                @Override
+                public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+                    return null;
+                }
+            }};
+            try {
+                // Install the all-trusting trust manager
+                final SSLContext sslContext = SSLContext.getInstance("SSL");
 
-				// Create an ssl socket factory with our all-trusting manager
-				final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
+                sslContext.init(null, trustAllCerts, new java.security.SecureRandom());
 
-				client.setSslSocketFactory(sslSocketFactory);
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
+                // Create an ssl socket factory with our all-trusting manager
+                final SSLSocketFactory sslSocketFactory = sslContext.getSocketFactory();
 
-			// client.setSslSocketFactory(fake);
-			client.setHostnameVerifier(new HostnameVerifier() {
-				@Override
-				public boolean verify(String hostname, SSLSession session) {
-					return true;
-				}
-			});
-		}
-		this.client = client;
-		this.client.setCookieHandler(cookieManager);
-		
+                client.setSslSocketFactory(sslSocketFactory);
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+
+            // client.setSslSocketFactory(fake);
+            client.setHostnameVerifier(new HostnameVerifier() {
+                @Override
+                public boolean verify(String hostname, SSLSession session) {
+                    return true;
+                }
+            });
+        }
+        this.client = client;
+        this.client.setCookieHandler(cookieManager);
+
 //		CookieManager cookieManager = new CookieManager();
 //		cookieManager.setCookiePolicy(CookiePolicy.ACCEPT_ALL);
 //		this.client.setCookieHandler(cookieManager);
@@ -89,22 +90,22 @@ public class OkHttpStack extends HurlStack {
 //		this.client.setCookieHandler(new CookieManager(
 //                new PersistentCookieStore(context),
 //                CookiePolicy.ACCEPT_ALL));
-		factory = new OkUrlFactory(client);
-	}
+        factory = new OkUrlFactory(client);
+    }
 
-	public OkHttpStack(CookieManager cookieManager) {
-		this(new OkHttpClient(),cookieManager);
-	}
+    public OkHttpStack(CookieManager cookieManager) {
+        this(new OkHttpClient(), cookieManager);
+    }
 
-	public OkHttpClient getClient() {
-		return client;
-	}
+    public OkHttpClient getClient() {
+        return client;
+    }
 
 
-	@SuppressWarnings("deprecation")
-	@Override
-	protected HttpURLConnection createConnection(URL url) throws IOException {
-		return factory.open(url);
+    @SuppressWarnings("deprecation")
+    @Override
+    protected HttpURLConnection createConnection(URL url) throws IOException {
+        return factory.open(url);
 //		return client.open(url);
-	}
+    }
 }

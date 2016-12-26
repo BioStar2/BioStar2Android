@@ -34,165 +34,227 @@ import java.util.Set;
  */
 // modified by Suprema 2015-09
 public class PersistentCookieStore implements CookieStore {
-	private static final String TAG = PersistentCookieStore.class.getSimpleName();
+    private static final String TAG = PersistentCookieStore.class.getSimpleName();
 
-	// Persistence
-	private static final String SP_COOKIE_STORE = "cookieStore";
-	private static final String SP_KEY_DELIMITER = "|"; // Unusual char in URL
-	private static final String SP_KEY_DELIMITER_REGEX = "\\" + SP_KEY_DELIMITER;
-	private SharedPreferences sharedPreferences;
+    // Persistence
+    private static final String SP_COOKIE_STORE = "cookieStore";
+    private static final String SP_KEY_DELIMITER = "|"; // Unusual char in URL
+    private static final String SP_KEY_DELIMITER_REGEX = "\\" + SP_KEY_DELIMITER;
+    private SharedPreferences sharedPreferences;
 
-	// In memory
-	private Map<URI, Set<HttpCookie>> allCookies;
+    // In memory
+    private Map<URI, Set<HttpCookie>> allCookies;
 
-	public PersistentCookieStore(Context context) {
-		sharedPreferences = context.getSharedPreferences(SP_COOKIE_STORE, Context.MODE_PRIVATE);
-		loadAllFromPersistence();
-	}
+    public PersistentCookieStore(Context context) {
+        sharedPreferences = context.getSharedPreferences(SP_COOKIE_STORE, Context.MODE_PRIVATE);
+        loadAllFromPersistence();
+    }
 
-	public boolean isValid() {
-		if (allCookies != null) {
-			if (allCookies.size() < 1) {
-				return false;
-			}
-			for (URI key : allCookies.keySet()) {
-				Set<HttpCookie> cookie = allCookies.get(key);
-				Iterator<HttpCookie> keys = cookie.iterator();
-				while (keys.hasNext()) {
-					HttpCookie data = keys.next();
-					String t = data.getName();
-					if (t != null && t.indexOf("-cloud-sessi") > -1) {
-						return true;
-					}
-				}
-			}
-		}
-		return false;
-	}
+    /**
+     * Get the real URI from the cookie "domain" and "path" attributes, if they
+     * are not set then uses the URI provided (coming from the response)
+     *
+     * @param uri
+     * @param cookie
+     * @return
+     */
+    private static URI cookieUri(URI uri, HttpCookie cookie) {
+        URI cookieUri = uri;
+        if (cookie.getDomain() != null) {
+            // Remove the starting dot character of the domain, if exists (e.g:
+            // .domain.com -> domain.com)
+            String domain = cookie.getDomain();
+            if (domain.charAt(0) == '.') {
+                domain = domain.substring(1);
+            }
+            try {
+                cookieUri = new URI(uri.getScheme() == null ? "http" : uri.getScheme(), domain, cookie.getPath() == null ? "/" : cookie.getPath(), null);
+            } catch (URISyntaxException e) {
+                Log.w(TAG, e);
+            }
+        }
+        return cookieUri;
+    }
 
-	private void loadAllFromPersistence() {
-		allCookies = new HashMap<URI, Set<HttpCookie>>();
+    public boolean isValid() {
+        if (allCookies != null) {
+            if (allCookies.size() < 1) {
+                return false;
+            }
+            for (URI key : allCookies.keySet()) {
+                Set<HttpCookie> cookie = allCookies.get(key);
+                Iterator<HttpCookie> keys = cookie.iterator();
+                while (keys.hasNext()) {
+                    HttpCookie data = keys.next();
+                    String t = data.getName();
+                    if (t != null && t.indexOf("-cloud-sessi") > -1) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    }
 
-		Map<String, ?> allPairs = sharedPreferences.getAll();
-		for (Entry<String, ?> entry : allPairs.entrySet()) {
-			String[] uriAndName = entry.getKey().split(SP_KEY_DELIMITER_REGEX, 2);
-			try {
-				URI uri = new URI(uriAndName[0]);
-				String encodedCookie = (String) entry.getValue();
-				HttpCookie cookie = new SerializableHttpCookie().decode(encodedCookie);
-				Set<HttpCookie> targetCookies = allCookies.get(uri);
-				if (targetCookies == null) {
-					targetCookies = new HashSet<HttpCookie>();
-					allCookies.put(uri, targetCookies);
-				}
-				// Repeated cookies cannot exist in persistence
-				// targetCookies.remove(cookie)
-				targetCookies.add(cookie);
-			} catch (URISyntaxException e) {
-				Log.w(TAG, e);
-			}
-		}
-	}
+    private void loadAllFromPersistence() {
+        allCookies = new HashMap<URI, Set<HttpCookie>>();
 
-	@Override
-	public synchronized void add(URI uri, HttpCookie cookie) {
-		uri = cookieUri(uri, cookie);
+        Map<String, ?> allPairs = sharedPreferences.getAll();
+        for (Entry<String, ?> entry : allPairs.entrySet()) {
+            String[] uriAndName = entry.getKey().split(SP_KEY_DELIMITER_REGEX, 2);
+            try {
+                URI uri = new URI(uriAndName[0]);
+                String encodedCookie = (String) entry.getValue();
+                HttpCookie cookie = new SerializableHttpCookie().decode(encodedCookie);
+                Set<HttpCookie> targetCookies = allCookies.get(uri);
+                if (targetCookies == null) {
+                    targetCookies = new HashSet<HttpCookie>();
+                    allCookies.put(uri, targetCookies);
+                }
+                // Repeated cookies cannot exist in persistence
+                // targetCookies.remove(cookie)
+                targetCookies.add(cookie);
+            } catch (URISyntaxException e) {
+                Log.w(TAG, e);
+            }
+        }
+    }
 
-		Set<HttpCookie> targetCookies = allCookies.get(uri);
-		if (targetCookies == null) {
-			targetCookies = new HashSet<HttpCookie>();
-			allCookies.put(uri, targetCookies);
-		}
-		targetCookies.remove(cookie);
-		targetCookies.add(cookie);
+    @Override
+    public synchronized void add(URI uri, HttpCookie cookie) {
+        uri = cookieUri(uri, cookie);
 
-		saveToPersistence(uri, cookie);
-	}
+        Set<HttpCookie> targetCookies = allCookies.get(uri);
+        if (targetCookies == null) {
+            targetCookies = new HashSet<HttpCookie>();
+            allCookies.put(uri, targetCookies);
+        }
+        targetCookies.remove(cookie);
+        targetCookies.add(cookie);
 
-	/**
-	 * Get the real URI from the cookie "domain" and "path" attributes, if they
-	 * are not set then uses the URI provided (coming from the response)
-	 *
-	 * @param uri
-	 * @param cookie
-	 * @return
-	 */
-	private static URI cookieUri(URI uri, HttpCookie cookie) {
-		URI cookieUri = uri;
-		if (cookie.getDomain() != null) {
-			// Remove the starting dot character of the domain, if exists (e.g:
-			// .domain.com -> domain.com)
-			String domain = cookie.getDomain();
-			if (domain.charAt(0) == '.') {
-				domain = domain.substring(1);
-			}
-			try {
-				cookieUri = new URI(uri.getScheme() == null ? "http" : uri.getScheme(), domain, cookie.getPath() == null ? "/" : cookie.getPath(), null);
-			} catch (URISyntaxException e) {
-				Log.w(TAG, e);
-			}
-		}
-		return cookieUri;
-	}
+        saveToPersistence(uri, cookie);
+    }
 
-	private void saveToPersistence(URI uri, HttpCookie cookie) {
-		SharedPreferences.Editor editor = sharedPreferences.edit();
+    private void saveToPersistence(URI uri, HttpCookie cookie) {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
 
-		editor.putString(uri.toString() + SP_KEY_DELIMITER + cookie.getName(), new SerializableHttpCookie().encode(cookie));
+        editor.putString(uri.toString() + SP_KEY_DELIMITER + cookie.getName(), new SerializableHttpCookie().encode(cookie));
 
-		editor.apply();
-	}
+        editor.apply();
+    }
 
-	@Override
-	public synchronized List<HttpCookie> get(URI uri) {
-		return getValidCookies(uri);
-	}
+    @Override
+    public synchronized List<HttpCookie> get(URI uri) {
+        return getValidCookies(uri);
+    }
 
-	@Override
-	public synchronized List<HttpCookie> getCookies() {
-		List<HttpCookie> allValidCookies = new ArrayList<HttpCookie>();
-		for (Iterator<URI> it = allCookies.keySet().iterator(); it.hasNext();) {
-			allValidCookies.addAll(getValidCookies(it.next()));
-		}
+    @Override
+    public synchronized List<HttpCookie> getCookies() {
+        List<HttpCookie> allValidCookies = new ArrayList<HttpCookie>();
+        for (Iterator<URI> it = allCookies.keySet().iterator(); it.hasNext(); ) {
+            allValidCookies.addAll(getValidCookies(it.next()));
+        }
 
-		return allValidCookies;
-	}
+        return allValidCookies;
+    }
 
-	private List<HttpCookie> getValidCookies(URI uri) {
-		Set<HttpCookie> targetCookies = new HashSet<HttpCookie>();
-		// If the stored URI does not have a path then it must match any URI in
-		// the same domain
-		for (Iterator<URI> it = allCookies.keySet().iterator(); it.hasNext();) {
-			URI storedUri = it.next();
-			// Check ith the domains match according to RFC 6265
-			if (checkDomainsMatch(storedUri.getHost(), uri.getHost())) {
-				// Check if the paths match according to RFC 6265
-				if (checkPathsMatch(storedUri.getPath(), uri.getPath())) {
-					targetCookies.addAll(allCookies.get(storedUri));
-				}
-			}
-		}
+    private String parseAuthority(String authority) {
+        String tempUserInfo = null;
+        String temp = authority;
+        int index = temp.indexOf('@');
+        int hostIndex = 0;
+        if (index != -1) {
+            // remove user info
+            tempUserInfo = temp.substring(0, index);
+            temp = temp.substring(index + 1); // host[:port] is left
+            hostIndex = index + 1;
+        }
 
-		// Check it there are expired cookies and remove them
-		if (targetCookies != null) {
-			List<HttpCookie> cookiesToRemoveFromPersistence = new ArrayList<HttpCookie>();
-			for (Iterator<HttpCookie> it = targetCookies.iterator(); it.hasNext();) {
-				HttpCookie currentCookie = it.next();
-				if (currentCookie.hasExpired()) {
-					cookiesToRemoveFromPersistence.add(currentCookie);
-					it.remove();
-				}
-			}
+        index = temp.lastIndexOf(':');
+        int endIndex = temp.indexOf(']');
 
-			if (!cookiesToRemoveFromPersistence.isEmpty()) {
-				removeFromPersistence(uri, cookiesToRemoveFromPersistence);
-			}
-		}
-		return new ArrayList<HttpCookie>(targetCookies);
-	}
+        String tempHost;
+        int tempPort = -1;
+        if (index != -1 && endIndex < index) {
+            // determine port and host
+            tempHost = temp.substring(0, index);
+
+            if (index < (temp.length() - 1)) { // port part is not empty
+                try {
+                    char firstPortChar = temp.charAt(index + 1);
+                    if (firstPortChar >= '0' && firstPortChar <= '9') {
+                        // allow only digits, no signs
+                        tempPort = Integer.parseInt(temp.substring(index + 1));
+                    } else {
+                        return null;
+                    }
+                } catch (NumberFormatException e) {
+                    return null;
+                }
+            }
+        } else {
+            tempHost = temp;
+        }
+
+        if (tempHost.isEmpty()) {
+            return null;
+        }
+        //userInfo = tempUserInfo;
+        return tempHost;
+        //port = tempPort;
+    }
+
+    private List<HttpCookie> getValidCookies(URI uri) {
+        Set<HttpCookie> targetCookies = new HashSet<HttpCookie>();
+        // If the stored URI does not have a path then it must match any URI in
+        // the same domain
+        String host = uri.getHost();
+        if (host == null) {
+            host = parseAuthority(uri.getAuthority());
+        }
+
+        for (Iterator<URI> it = allCookies.keySet().iterator(); it.hasNext(); ) {
+            URI storedUri = it.next();
+            String storedHost = storedUri.getHost();
+            String storedPath = null;
+            if (storedHost == null) {
+                storedHost = parseAuthority(storedUri.getAuthority());
+                storedPath = "/";
+            }
+
+            // Check ith the domains match according to RFC 6265
+//			if (checkDomainsMatch(storedUri.getHost(), uri.getHost())) {
+            if (checkDomainsMatch(host, storedHost)) {
+                // Check if the paths match according to RFC 6265
+                if (storedPath == null) {
+                    storedPath = storedUri.getPath();
+                }
+                if (checkPathsMatch(storedPath, uri.getPath())) {
+                    targetCookies.addAll(allCookies.get(storedUri));
+                }
+            }
+        }
+
+        // Check it there are expired cookies and remove them
+        if (targetCookies != null) {
+            List<HttpCookie> cookiesToRemoveFromPersistence = new ArrayList<HttpCookie>();
+            for (Iterator<HttpCookie> it = targetCookies.iterator(); it.hasNext(); ) {
+                HttpCookie currentCookie = it.next();
+                if (currentCookie.hasExpired()) {
+                    cookiesToRemoveFromPersistence.add(currentCookie);
+                    it.remove();
+                }
+            }
+
+            if (!cookiesToRemoveFromPersistence.isEmpty()) {
+                removeFromPersistence(uri, cookiesToRemoveFromPersistence);
+            }
+        }
+        return new ArrayList<HttpCookie>(targetCookies);
+    }
 
 	/*
-	 * http://tools.ietf.org/html/rfc6265#section-5.1.3
+     * http://tools.ietf.org/html/rfc6265#section-5.1.3
 	 * 
 	 * A string domain-matches a given domain string if at least one of the
 	 * following conditions hold:
@@ -211,12 +273,12 @@ public class PersistentCookieStore implements CookieStore {
 	 * The string is a host name (i.e., not an IP address).
 	 */
 
-	private boolean checkDomainsMatch(String cookieHost, String requestHost) {
-		if (cookieHost == null || requestHost == null) {
-			return false;
-		}
-		return requestHost.equals(cookieHost) || requestHost.endsWith("." + cookieHost);
-	}
+    private boolean checkDomainsMatch(String cookieHost, String requestHost) {
+        if (cookieHost == null || requestHost == null) {
+            return false;
+        }
+        return requestHost.equals(cookieHost) || requestHost.endsWith("." + cookieHost);
+    }
 
 	/*
 	 * http://tools.ietf.org/html/rfc6265#section-5.1.4
@@ -234,50 +296,50 @@ public class PersistentCookieStore implements CookieStore {
 	 * a %x2F ("/") character.
 	 */
 
-	private boolean checkPathsMatch(String cookiePath, String requestPath) {
-		return requestPath.equals(cookiePath) || (requestPath.startsWith(cookiePath) && cookiePath.charAt(cookiePath.length() - 1) == '/')
-				|| (requestPath.startsWith(cookiePath) && requestPath.substring(cookiePath.length() - 1).charAt(0) == '/');
-	}
+    private boolean checkPathsMatch(String cookiePath, String requestPath) {
+        return requestPath.equals(cookiePath) || (requestPath.startsWith(cookiePath) && cookiePath.charAt(cookiePath.length() - 1) == '/')
+                || (requestPath.startsWith(cookiePath) && requestPath.substring(cookiePath.length() - 1).charAt(0) == '/');
+    }
 
-	private void removeFromPersistence(URI uri, List<HttpCookie> cookiesToRemove) {
-		SharedPreferences.Editor editor = sharedPreferences.edit();
-		for (HttpCookie cookieToRemove : cookiesToRemove) {
-			editor.remove(uri.toString() + SP_KEY_DELIMITER + cookieToRemove.getName());
-		}
-		editor.apply();
-	}
+    private void removeFromPersistence(URI uri, List<HttpCookie> cookiesToRemove) {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        for (HttpCookie cookieToRemove : cookiesToRemove) {
+            editor.remove(uri.toString() + SP_KEY_DELIMITER + cookieToRemove.getName());
+        }
+        editor.apply();
+    }
 
-	@Override
-	public synchronized List<URI> getURIs() {
-		return new ArrayList<URI>(allCookies.keySet());
-	}
+    @Override
+    public synchronized List<URI> getURIs() {
+        return new ArrayList<URI>(allCookies.keySet());
+    }
 
-	@Override
-	public synchronized boolean remove(URI uri, HttpCookie cookie) {
-		Set<HttpCookie> targetCookies = allCookies.get(uri);
-		boolean cookieRemoved = targetCookies != null ? targetCookies.remove(cookie) : false;
-		if (cookieRemoved) {
-			removeFromPersistence(uri, cookie);
-		}
-		return cookieRemoved;
+    @Override
+    public synchronized boolean remove(URI uri, HttpCookie cookie) {
+        Set<HttpCookie> targetCookies = allCookies.get(uri);
+        boolean cookieRemoved = targetCookies != null ? targetCookies.remove(cookie) : false;
+        if (cookieRemoved) {
+            removeFromPersistence(uri, cookie);
+        }
+        return cookieRemoved;
 
-	}
+    }
 
-	private void removeFromPersistence(URI uri, HttpCookie cookieToRemove) {
-		SharedPreferences.Editor editor = sharedPreferences.edit();
-		editor.remove(uri.toString() + SP_KEY_DELIMITER + cookieToRemove.getName());
-		editor.apply();
-	}
+    private void removeFromPersistence(URI uri, HttpCookie cookieToRemove) {
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.remove(uri.toString() + SP_KEY_DELIMITER + cookieToRemove.getName());
+        editor.apply();
+    }
 
-	@Override
-	public synchronized boolean removeAll() {
-		allCookies.clear();
-		removeAllFromPersistence();
-		return true;
-	}
+    @Override
+    public synchronized boolean removeAll() {
+        allCookies.clear();
+        removeAllFromPersistence();
+        return true;
+    }
 
-	private void removeAllFromPersistence() {
-		sharedPreferences.edit().clear().apply();
-	}
+    private void removeAllFromPersistence() {
+        sharedPreferences.edit().clear().apply();
+    }
 
 }

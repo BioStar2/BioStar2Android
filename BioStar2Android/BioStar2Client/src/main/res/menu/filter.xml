@@ -1,12 +1,11 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-      xmlns:app="http://schemas.android.com/apk/res-auto"
-      xmlns:tools="http://schemas.android.com/tools"
-      tools:context="com.example.tabtest.MainActivity">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    >
 
     <item
         android:id="@+id/action_filter"
         android:icon="@drawable/selector_btn_filter"
         android:orderInCategory="100"
         android:title="@string/filter"
-        app:showAsAction="always"/>
+        app:showAsAction="always" />
 </menu>

@@ -16,17 +16,24 @@
 package com.supremainc.biostar2.provider;
 
 import android.content.Context;
-
-import com.supremainc.biostar2.sdk.provider.UserDataProvider;
 import com.supremainc.biostar2.sdk.utils.PreferenceUtil;
 
 public class AppDataProvider {
-    protected static Context mContext;
-    private static AppDataProvider mSelf = null;
-    private static final String LATEST_DOMAIN = "latest_domain";
-    private static final String LATEST_ID = "latest_id";
     public static final String DOOR_COUNT = "door_count";
     public static final String USER_COUNT = "user_count";
+    private static final String LATEST_DOMAIN = "latest_domain";
+    private static final String LATEST_ID = "latest_id";
+    protected static Context mContext;
+    private static AppDataProvider mSelf = null;
+
+    public enum BooleanType {
+        SHOW_GUIDE_MENU_CARD("SHOW_GUIDE_MENU_CARD"),SHOW_GUIDE_DETAIL_CARD("SHOW_GUIDE_DETAIL_CARD");
+        public final String mName;
+        private BooleanType(String name) {
+            mName = name;
+        }
+    }
+
     private AppDataProvider(Context context) {
         mContext = context;
     }
@@ -46,25 +53,6 @@ public class AppDataProvider {
         PreferenceUtil.putSharedPreference(mContext, DOOR_COUNT, total);
     }
 
-    public String getLatestDomain() {
-        String subDomain = PreferenceUtil.getSharedPreference(mContext, LATEST_DOMAIN);
-        UserDataProvider.getInstance(mContext).setSubDomain(subDomain);
-        return subDomain;
-    }
-
-    public void setLatestDomain(String subDomain) {
-        UserDataProvider.getInstance(mContext).setSubDomain(subDomain);
-        PreferenceUtil.putSharedPreference(mContext, LATEST_DOMAIN, subDomain);
-    }
-
-    public String getLatestUserID() {
-        return PreferenceUtil.getSharedPreference(mContext, LATEST_ID);
-    }
-
-    public void setLatestUserID(String id) {
-        PreferenceUtil.putSharedPreference(mContext, LATEST_ID, id);
-    }
-
     public int getUserCount() {
         return PreferenceUtil.getIntSharedPreference(mContext, USER_COUNT);
     }
@@ -72,4 +60,12 @@ public class AppDataProvider {
     public void setUserCount(int total) {
         PreferenceUtil.putSharedPreference(mContext, USER_COUNT, total);
     }
+
+    public void setBoolean(BooleanType type,boolean set) {
+        PreferenceUtil.putSharedPreference(mContext,type.mName,set);
+    }
+    public boolean getBoolean(BooleanType type) {
+       return  PreferenceUtil.getBooleanSharedPreference(mContext,type.mName,true);
+    }
+
 }

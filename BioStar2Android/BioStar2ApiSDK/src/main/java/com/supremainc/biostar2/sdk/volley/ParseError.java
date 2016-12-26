@@ -16,15 +16,13 @@
 
 package com.supremainc.biostar2.sdk.volley;
 
-import com.supremainc.biostar2.sdk.volley.NetworkResponse;
-import com.supremainc.biostar2.sdk.volley.VolleyError;
-
 /**
  * Indicates that the server's response could not be parsed.
  */
 @SuppressWarnings("serial")
 public class ParseError extends VolleyError {
-    public ParseError() { }
+    public ParseError() {
+    }
 
     public ParseError(NetworkResponse networkResponse) {
         super(networkResponse);

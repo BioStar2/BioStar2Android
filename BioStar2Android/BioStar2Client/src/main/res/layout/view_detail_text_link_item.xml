@@ -1,0 +1,57 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:androidfont="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/item_container"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="left"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="68dp"
+        android:layout_marginLeft="18dp"
+        android:layout_marginRight="18dp"
+        android:gravity="left"
+        android:orientation="horizontal">
+
+        <com.supremainc.biostar2.view.StyledTextView
+            android:id="@+id/item_index"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_marginRight="18dp"
+            android:ellipsize="end"
+            android:gravity="left|center"
+            android:maxLines="2"
+            android:textColor="@color/select_text"
+            android:textSize="16dp"
+            androidfont:typeface="roboto_bold.ttf" />
+
+        <com.supremainc.biostar2.view.StyledTextView
+            android:id="@+id/item_content"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:ellipsize="end"
+            android:gravity="right|center"
+            android:maxLines="2"
+            android:textColor="@color/subtext"
+            android:textSize="14dp"
+            androidfont:typeface="roboto_medium.ttf" />
+
+        <ImageView
+            android:id="@+id/item_arrow"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginLeft="18dp"
+            android:contentDescription="@string/image"
+            android:gravity="center"
+            android:scaleType="fitXY"
+            android:src="@drawable/arrow_01" />
+    </LinearLayout>
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0.8dp"
+        android:background="@color/list_devider" />
+</LinearLayout>

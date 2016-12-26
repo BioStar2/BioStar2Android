@@ -1,18 +1,16 @@
-<!-- <~SCREEN NAME)> {User_Modify} </~SCREEN NAME> -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              xmlns:androidfont="http://schemas.android.com/apk/res-auto"
-              android:layout_width="fill_parent"
-              android:layout_height="fill_parent"
-              android:background="@color/white"
-              android:gravity="center|top"
-              android:orientation="vertical">
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="@color/white"
+    android:gravity="center|top"
+    android:orientation="vertical">
 
     <FrameLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content">
+        android:layout_height="match_parent">
 
         <ScrollView
-            android:id="@+id/detail_scroll"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="@color/white"
@@ -25,509 +23,151 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical">
 
-                <FrameLayout
+                <com.supremainc.biostar2.view.SummaryUserView
+                    android:id="@+id/summray_user"
                     android:layout_width="match_parent"
-                    android:layout_height="220dp">
+                    android:layout_height="wrap_content" />
 
-                    <ImageView
-                        android:id="@+id/background_img"
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <com.supremainc.biostar2.view.DetailEditItemView
+                        android:id="@+id/user_id"
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_gravity="center"
-                        android:contentDescription="@string/image"
-                        android:scaleType="centerCrop"
-                        android:src="@drawable/background1"/>
+                        android:layout_height="wrap_content"
+                        app:edit="true"
+                        app:index="@string/user_id"
+                        app:inputType="numberDecimal"/>
+
+                    <com.supremainc.biostar2.view.DetailEditItemView
+                        android:id="@+id/user_name"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:edit="true"
+                        app:index="@string/name"
+                        app:inputType="textPersonName"/>
+
+                    <com.supremainc.biostar2.view.DetailEditItemView
+                        android:id="@+id/email"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:edit="true"
+                        app:index="@string/email"
+                        app:inputType="textEmailAddress"/>
+
+                    <com.supremainc.biostar2.view.DetailEditItemView
+                        android:id="@+id/telephone"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:edit="true"
+                        app:index="@string/telephone"
+                        app:inputType="phone"/>
+
+                    <com.supremainc.biostar2.view.DetailTextItemView
+                        android:id="@+id/operator"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:index="@string/operator"
+                        app:link="true" />
+
+                    <com.supremainc.biostar2.view.DetailEditItemView
+                        android:id="@+id/login_id"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:edit="true"
+                        app:index="@string/login_id"/>
+
+                    <com.supremainc.biostar2.view.DetailTextItemView
+                        android:id="@+id/login_password"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:index="@string/password"
+                        app:link="true" />
+
+                    <com.supremainc.biostar2.view.DetailTextItemView
+                        android:id="@+id/user_group"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:index="@string/group"
+                        app:inputType="textPersonName"
+                        app:link="true" />
+
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="18dp"
+                        android:background="@color/list_devider" />
+
+                    <com.supremainc.biostar2.view.DetailSwitchItemView
+                        android:id="@+id/status"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:index="@string/status" />
 
                     <LinearLayout
+                        android:id="@+id/date_edit"
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_marginBottom="18dp"
+                        android:layout_height="68dp"
                         android:layout_marginLeft="18dp"
                         android:layout_marginRight="18dp"
-                        android:layout_marginTop="81dp"
+                        android:gravity="left"
                         android:orientation="horizontal">
+
+                        <com.supremainc.biostar2.view.StyledTextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
+                            android:layout_marginRight="18dp"
+                            android:ellipsize="end"
+                            android:gravity="left|center"
+                            android:maxLines="2"
+                            android:text="@string/period"
+                            android:textColor="@color/select_text"
+                            android:textSize="16dp"
+                            app:typeface="roboto_bold.ttf" />
 
                         <LinearLayout
                             android:layout_width="0dp"
                             android:layout_height="match_parent"
                             android:layout_weight="1"
-                            android:orientation="vertical">
+                            android:orientation="vertical" />
 
-                            <com.supremainc.biostar2.widget.StyledTextView
-                                android:id="@+id/title_user_name"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginBottom="9dp"
-                                android:layout_marginRight="12dp"
-                                android:ellipsize="end"
-                                android:gravity="left|center"
-                                android:singleLine="true"
-                                android:text="@string/name"
-                                android:textColor="@color/white"
-                                android:textSize="18dp"
-                                androidfont:typeface="roboto_bold.ttf"/>
-
-                            <com.supremainc.biostar2.widget.StyledTextView
-                                android:id="@+id/title_user_id"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginBottom="9dp"
-                                android:layout_marginRight="12dp"
-                                android:ellipsize="end"
-                                android:gravity="left|center"
-                                android:maxLines="2"
-                                android:text="@string/user_id"
-                                android:textColor="@color/white"
-                                android:textSize="14dp"
-                                androidfont:typeface="roboto_regular.ttf"/>
-
-                            <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:orientation="horizontal">
-
-                                <com.supremainc.biostar2.widget.StyledTextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginRight="4.5dp"
-                                    android:ellipsize="end"
-                                    android:gravity="left|center"
-                                    android:text="@string/fingerprint"
-                                    android:textColor="@color/transparent50_white"
-                                    android:textSize="12dp"
-                                    androidfont:typeface="roboto_regular.ttf"/>
-
-                                <com.supremainc.biostar2.widget.StyledTextView
-                                    android:id="@+id/title_finger_count"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginRight="9dp"
-                                    android:ellipsize="end"
-                                    android:gravity="left|center"
-                                    android:text="0"
-                                    android:textColor="@color/white"
-                                    android:textSize="12dp"
-                                    androidfont:typeface="roboto_regular.ttf"/>
-
-                                <FrameLayout
-                                    android:layout_width="0.8dp"
-                                    android:layout_height="13.5dp"
-                                    android:layout_marginRight="9dp"
-                                    android:background="@color/transparent50_white"/>
-
-                                <com.supremainc.biostar2.widget.StyledTextView
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginRight="4.5dp"
-                                    android:ellipsize="end"
-                                    android:gravity="left|center"
-                                    android:text="@string/card"
-                                    android:textColor="@color/transparent50_white"
-                                    android:textSize="12dp"
-                                    androidfont:typeface="roboto_regular.ttf"/>
-
-                                <com.supremainc.biostar2.widget.StyledTextView
-                                    android:id="@+id/title_card_count"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginRight="9dp"
-                                    android:ellipsize="end"
-                                    android:gravity="left|center"
-                                    android:text="0"
-                                    android:textColor="@color/white"
-                                    android:textSize="12dp"
-                                    androidfont:typeface="roboto_regular.ttf"/>
-
-                                <FrameLayout
-                                    android:id="@+id/title_pin_exist_devider"
-                                    android:layout_width="0.8dp"
-                                    android:layout_height="13.5dp"
-                                    android:layout_marginRight="9dp"
-                                    android:background="@color/transparent50_white"/>
-
-                                <com.supremainc.biostar2.widget.StyledTextView
-                                    android:id="@+id/title_pin_exist"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginRight="4.5dp"
-                                    android:ellipsize="end"
-                                    android:gravity="left|center"
-                                    android:text="@string/pin_upper"
-                                    android:textColor="@color/transparent50_white"
-                                    android:textSize="12dp"
-                                    androidfont:typeface="roboto_regular.ttf"/>
-                            </LinearLayout>
-
-                            <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="0dp"
-                                android:layout_weight="1"
-                                android:orientation="horizontal"/>
-
-                            <LinearLayout
-                                android:id="@+id/user_viewlog"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:orientation="horizontal">
-
-                                <ImageView
-                                    android:layout_width="29dp"
-                                    android:layout_height="29dp"
-                                    android:layout_gravity="left|center"
-                                    android:layout_marginLeft="4dp"
-                                    android:layout_marginRight="6dp"
-                                    android:contentDescription="@string/image"
-                                    android:gravity="left|center"
-                                    android:scaleType="fitXY"
-                                    android:src="@drawable/selector_btn_viewlog_transparent"/>
-
-                                <com.supremainc.biostar2.widget.StyledTextView
-                                    android:layout_width="match_parent"
-                                    android:layout_height="wrap_content"
-                                    android:layout_gravity="left|center"
-                                    android:ellipsize="end"
-                                    android:gravity="left|center"
-                                    android:text="@string/view_log"
-                                    android:textColor="@color/white"
-                                    android:textSize="14dp"
-                                    androidfont:typeface="roboto_regular.ttf"/>
-                            </LinearLayout>
-                        </LinearLayout>
-
-                        <FrameLayout
-                            android:layout_width="108dp"
-                            android:layout_height="108dp"
-                            android:background="@drawable/shape_circle">
-
-                            <ImageView
-                                android:id="@+id/profile_image"
-                                android:layout_width="105.8dp"
-                                android:layout_height="105.8dp"
-                                android:layout_gravity="center"
-                                android:contentDescription="@string/image"
-                                android:gravity="center"
-                                android:scaleType="centerInside"
-                                android:src="@drawable/selector_btn_camera"/>
-                        </FrameLayout>
-                    </LinearLayout>
-                </FrameLayout>
-                <!--  -->
-
-                <LinearLayout
-                    android:id="@+id/user_id_edit"
-                    android:layout_width="match_parent"
-                    android:layout_height="68dp"
-                    android:layout_marginLeft="18dp"
-                    android:layout_marginRight="18dp"
-                    android:gravity="left"
-                    android:orientation="horizontal">
-
-                    <com.supremainc.biostar2.widget.StyledTextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:layout_marginRight="18dp"
-                        android:ellipsize="end"
-                        android:gravity="left|center"
-                        android:maxLines="2"
-                        android:text="@string/user_id"
-                        android:textColor="@color/select_text"
-                        android:textSize="16dp"
-                        androidfont:typeface="roboto_bold.ttf"/>
-
-                    <com.supremainc.biostar2.widget.StyledEditTextView
-                        android:id="@+id/user_id"
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:background="@color/transparent"
-                        android:ellipsize="end"
-                        android:gravity="right|center"
-                        android:imeOptions="actionDone"
-                        android:inputType="numberDecimal"
-                        android:maxLines="2"
-                        android:singleLine="true"
-                        android:textColor="@color/subtext"
-                        android:textSize="14dp"
-                        androidfont:typeface="roboto_medium.ttf"/>
-
-                    <ImageView
-                        android:id="@+id/user_id_arrow"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:layout_marginLeft="18dp"
-                        android:contentDescription="@string/image"
-                        android:gravity="center"
-                        android:scaleType="fitXY"
-                        android:src="@drawable/arrow_01"/>
-                </LinearLayout>
-
-                <FrameLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="0.8dp"
-                    android:background="@color/list_devider"/>
-                <!--  -->
-
-                <LinearLayout
-                    android:id="@+id/name_edit"
-                    android:layout_width="match_parent"
-                    android:layout_height="68dp"
-                    android:layout_marginLeft="18dp"
-                    android:layout_marginRight="18dp"
-                    android:gravity="left"
-                    android:orientation="horizontal">
-
-                    <com.supremainc.biostar2.widget.StyledTextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:layout_marginRight="18dp"
-                        android:ellipsize="end"
-                        android:gravity="left|center"
-                        android:maxLines="2"
-                        android:text="@string/name"
-                        android:textColor="@color/select_text"
-                        android:textSize="16dp"
-                        androidfont:typeface="roboto_bold.ttf"/>
-
-                    <com.supremainc.biostar2.widget.StyledEditTextView
-                        android:id="@+id/name"
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:background="@color/transparent"
-                        android:ellipsize="end"
-                        android:gravity="right|center"
-                        android:imeOptions="actionDone"
-                        android:inputType="textPersonName"
-                        android:maxLines="2"
-                        android:paddingRight="2dp"
-                        android:singleLine="true"
-                        android:textColor="@color/subtext"
-                        android:textSize="14dp"
-                        androidfont:typeface="roboto_medium.ttf"/>
-
-                    <ImageView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:layout_marginLeft="18dp"
-                        android:contentDescription="@string/image"
-                        android:gravity="center"
-                        android:scaleType="fitXY"
-                        android:src="@drawable/arrow_01"/>
-                </LinearLayout>
-
-                <FrameLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="0.8dp"
-                    android:background="@color/list_devider"/>
-                <!-- link -->
-
-                <LinearLayout
-                    android:id="@+id/email_edit"
-                    android:layout_width="match_parent"
-                    android:layout_height="68dp"
-                    android:layout_marginLeft="18dp"
-                    android:layout_marginRight="18dp"
-                    android:gravity="left"
-                    android:orientation="horizontal">
-
-                    <com.supremainc.biostar2.widget.StyledTextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:layout_marginRight="18dp"
-                        android:ellipsize="end"
-                        android:gravity="left|center"
-                        android:maxLines="2"
-                        android:text="@string/email"
-                        android:textColor="@color/select_text"
-                        android:textSize="16dp"
-                        androidfont:typeface="roboto_bold.ttf"/>
-
-                    <com.supremainc.biostar2.widget.StyledEditTextView
-                        android:id="@+id/email"
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:background="@color/transparent"
-                        android:ellipsize="end"
-                        android:gravity="right|center"
-                        android:imeOptions="actionDone"
-                        android:inputType="textEmailAddress"
-                        android:maxLines="2"
-                        android:singleLine="true"
-                        android:textColor="@color/subtext"
-                        android:textSize="14dp"
-                        androidfont:typeface="roboto_medium.ttf"/>
-
-                    <ImageView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:layout_marginLeft="18dp"
-                        android:contentDescription="@string/image"
-                        android:gravity="center"
-                        android:scaleType="fitXY"
-                        android:src="@drawable/arrow_01"/>
-                </LinearLayout>
-
-                <FrameLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="0.8dp"
-                    android:background="@color/list_devider"/>
-                <!-- link -->
-
-                <LinearLayout
-                    android:id="@+id/telephone_edit"
-                    android:layout_width="match_parent"
-                    android:layout_height="68dp"
-                    android:layout_marginLeft="18dp"
-                    android:layout_marginRight="18dp"
-                    android:gravity="left"
-                    android:orientation="horizontal">
-
-                    <com.supremainc.biostar2.widget.StyledTextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:layout_marginRight="18dp"
-                        android:ellipsize="end"
-                        android:gravity="left|center"
-                        android:maxLines="2"
-                        android:text="@string/telephone"
-                        android:textColor="@color/select_text"
-                        android:textSize="16dp"
-                        androidfont:typeface="roboto_bold.ttf"/>
-
-                    <com.supremainc.biostar2.widget.StyledEditTextView
-                        android:id="@+id/telephone"
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:background="@color/transparent"
-                        android:ellipsize="end"
-                        android:gravity="right|center"
-                        android:imeOptions="actionDone"
-                        android:inputType="phone"
-                        android:maxLines="2"
-                        android:singleLine="true"
-                        android:textColor="@color/subtext"
-                        android:textSize="14dp"
-                        androidfont:typeface="roboto_medium.ttf"/>
-
-                    <ImageView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:layout_marginLeft="18dp"
-                        android:contentDescription="@string/image"
-                        android:gravity="center"
-                        android:scaleType="fitXY"
-                        android:src="@drawable/arrow_01"/>
-                </LinearLayout>
-
-                <FrameLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="0.8dp"
-                    android:background="@color/list_devider"/>
-                <!--  -->
-
-                <LinearLayout
-                    android:id="@+id/operator_edit"
-                    android:layout_width="match_parent"
-                    android:layout_height="68dp"
-                    android:layout_marginLeft="18dp"
-                    android:layout_marginRight="18dp"
-                    android:gravity="left"
-                    android:orientation="horizontal">
-
-                    <com.supremainc.biostar2.widget.StyledTextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:layout_marginRight="18dp"
-                        android:ellipsize="end"
-                        android:gravity="left|center"
-                        android:maxLines="2"
-                        android:text="@string/operator"
-                        android:textColor="@color/select_text"
-                        android:textSize="16dp"
-                        androidfont:typeface="roboto_bold.ttf"/>
-
-                    <com.supremainc.biostar2.widget.StyledTextView
-                        android:id="@+id/operator"
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:ellipsize="end"
-                        android:gravity="right|center"
-                        android:maxLines="2"
-                        android:textColor="@color/subtext"
-                        android:textSize="14dp"
-                        androidfont:typeface="roboto_medium.ttf"/>
-
-                    <ImageView
-                        android:id="@+id/operator_arrow"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:layout_marginLeft="18dp"
-                        android:contentDescription="@string/image"
-                        android:gravity="center"
-                        android:scaleType="fitXY"
-                        android:src="@drawable/arrow_01"/>
-                </LinearLayout>
-
-                <FrameLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="0.8dp"
-                    android:background="@color/list_devider"/>
-                <!--  -->
-
-                <LinearLayout
-                    android:id="@+id/operator_expand"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:gravity="left"
-                    android:orientation="vertical"
-                    android:visibility="gone">
-
-                    <LinearLayout
-                        android:id="@+id/login_id_edit"
-                        android:layout_width="match_parent"
-                        android:layout_height="68dp"
-                        android:layout_marginLeft="18dp"
-                        android:layout_marginRight="18dp"
-                        android:gravity="left"
-                        android:orientation="horizontal">
-
-                        <com.supremainc.biostar2.widget.StyledTextView
+                        <com.supremainc.biostar2.view.StyledTextView
+                            android:id="@+id/date_start"
                             android:layout_width="wrap_content"
                             android:layout_height="match_parent"
-                            android:layout_marginRight="18dp"
-                            android:ellipsize="end"
-                            android:gravity="left|center"
-                            android:maxLines="2"
-                            android:text="@string/login_id"
-                            android:textColor="@color/select_text"
-                            android:textSize="16dp"
-                            androidfont:typeface="roboto_bold.ttf"/>
-
-                        <com.supremainc.biostar2.widget.StyledEditTextView
-                            android:id="@+id/login_id"
-                            android:layout_width="0dp"
-                            android:layout_height="match_parent"
-                            android:layout_weight="1"
-                            android:background="@color/transparent"
                             android:ellipsize="end"
                             android:gravity="right|center"
-                            android:imeOptions="actionDone"
-                            android:inputType="textPersonName"
                             android:maxLines="2"
-                            android:singleLine="true"
                             android:textColor="@color/subtext"
                             android:textSize="14dp"
-                            androidfont:typeface="roboto_medium.ttf"/>
+                            app:typeface="roboto_medium.ttf" />
+
+                        <com.supremainc.biostar2.view.StyledTextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
+                            android:layout_marginLeft="1dp"
+                            android:layout_marginRight="1dp"
+                            android:ellipsize="end"
+                            android:gravity="center"
+                            android:text="@string/wave"
+                            android:textColor="@color/subtext"
+                            android:textSize="14dp"
+                            app:typeface="roboto_medium.ttf" />
+
+                        <com.supremainc.biostar2.view.StyledTextView
+                            android:id="@+id/date_end"
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
+                            android:ellipsize="end"
+                            android:gravity="right|center"
+                            android:maxLines="2"
+                            android:textColor="@color/subtext"
+                            android:textSize="14dp"
+                            app:typeface="roboto_medium.ttf" />
 
                         <ImageView
+                            android:id="@+id/date_arrow"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_gravity="center"
@@ -535,465 +175,59 @@
                             android:contentDescription="@string/image"
                             android:gravity="center"
                             android:scaleType="fitXY"
-                            android:src="@drawable/arrow_01"/>
+                            android:src="@drawable/arrow_01" />
                     </LinearLayout>
 
                     <FrameLayout
                         android:layout_width="match_parent"
                         android:layout_height="0.8dp"
-                        android:background="@color/list_devider"/>
-                    <!--  -->
+                        android:background="@color/list_devider" />
 
-                    <LinearLayout
-                        android:id="@+id/password_edit"
-                        android:layout_width="match_parent"
-                        android:layout_height="68dp"
-                        android:layout_marginLeft="18dp"
-                        android:layout_marginRight="18dp"
-                        android:gravity="left"
-                        android:orientation="horizontal">
-
-                        <com.supremainc.biostar2.widget.StyledTextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="match_parent"
-                            android:layout_marginRight="18dp"
-                            android:ellipsize="end"
-                            android:gravity="left|center"
-                            android:maxLines="2"
-                            android:text="@string/password"
-                            android:textColor="@color/select_text"
-                            android:textSize="16dp"
-                            androidfont:typeface="roboto_bold.ttf"/>
-
-                        <com.supremainc.biostar2.widget.StyledTextView
-                            android:id="@+id/password"
-                            android:layout_width="0dp"
-                            android:layout_height="match_parent"
-                            android:layout_weight="1"
-                            android:background="@color/transparent"
-                            android:ellipsize="end"
-                            android:gravity="right|center"
-                            android:singleLine="true"
-                            android:textColor="@color/subtext"
-                            android:textSize="14dp"
-                            androidfont:typeface="roboto_medium.ttf"/>
-
-                        <ImageView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center"
-                            android:layout_marginLeft="18dp"
-                            android:contentDescription="@string/image"
-                            android:gravity="center"
-                            android:scaleType="fitXY"
-                            android:src="@drawable/arrow_01"/>
-                    </LinearLayout>
-
-                    <FrameLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="0.8dp"
-                        android:background="@color/list_devider"/>
-                </LinearLayout>
-                <!--  -->
-
-                <LinearLayout
-                    android:id="@+id/group_edit"
-                    android:layout_width="match_parent"
-                    android:layout_height="68dp"
-                    android:layout_marginLeft="18dp"
-                    android:layout_marginRight="18dp"
-                    android:gravity="left"
-                    android:orientation="horizontal">
-
-                    <com.supremainc.biostar2.widget.StyledTextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:layout_marginRight="18dp"
-                        android:ellipsize="end"
-                        android:gravity="left|center"
-                        android:maxLines="2"
-                        android:text="@string/group"
-                        android:textColor="@color/select_text"
-                        android:textSize="16dp"
-                        androidfont:typeface="roboto_bold.ttf"/>
-
-                    <com.supremainc.biostar2.widget.StyledTextView
-                        android:id="@+id/group"
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:background="@color/transparent"
-                        android:ellipsize="end"
-                        android:gravity="right|center"
-                        android:text="@string/all_users"
-                        android:maxLines="2"
-                        android:textColor="@color/subtext"
-                        android:textSize="14dp"
-                        androidfont:typeface="roboto_medium.ttf"/>
-
-                    <ImageView
-                        android:id="@+id/group_arrow"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:layout_marginLeft="18dp"
-                        android:contentDescription="@string/image"
-                        android:gravity="center"
-                        android:scaleType="fitXY"
-                        android:src="@drawable/arrow_01"/>
-                </LinearLayout>
-
-                <!-- block -->
-
-                <FrameLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="18dp"
-                    android:background="@color/list_devider"/>
-
-                <!--  -->
-
-                <LinearLayout
-                    android:id="@+id/status"
-                    android:layout_width="match_parent"
-                    android:layout_height="68dp"
-                    android:layout_marginLeft="18dp"
-                    android:gravity="left"
-                    android:orientation="horizontal">
-
-                    <com.supremainc.biostar2.widget.StyledTextView
-                        android:id="@+id/status_name"
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:layout_marginRight="18dp"
-                        android:ellipsize="end"
-                        android:gravity="left|center"
-                        android:maxLines="2"
-                        android:text="@string/status"
-                        android:textColor="@color/select_text"
-                        android:textSize="16dp"
-                        androidfont:typeface="roboto_bold.ttf"/>
-
-                    <include
-                        android:id="@+id/status_switch"
-                        layout="@layout/view_switch"/>
-                </LinearLayout>
-
-                <FrameLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="0.8dp"
-                    android:background="@color/list_devider"/>
-                <!--  -->
-
-                <LinearLayout
-                    android:id="@+id/date_edit"
-                    android:layout_width="match_parent"
-                    android:layout_height="68dp"
-                    android:layout_marginLeft="18dp"
-                    android:layout_marginRight="18dp"
-                    android:gravity="left"
-                    android:orientation="horizontal">
-
-                    <com.supremainc.biostar2.widget.StyledTextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:layout_marginRight="18dp"
-                        android:ellipsize="end"
-                        android:gravity="left|center"
-                        android:maxLines="2"
-                        android:text="@string/period"
-                        android:textColor="@color/select_text"
-                        android:textSize="16dp"
-                        androidfont:typeface="roboto_bold.ttf"/>
-
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:orientation="vertical"/>
-
-                    <com.supremainc.biostar2.widget.StyledTextView
-                        android:id="@+id/date_start"
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:ellipsize="end"
-                        android:gravity="right|center"
-                        android:maxLines="2"
-                        android:textColor="@color/subtext"
-                        android:textSize="14dp"
-                        androidfont:typeface="roboto_medium.ttf"/>
-
-                    <com.supremainc.biostar2.widget.StyledTextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:layout_marginLeft="1dp"
-                        android:layout_marginRight="1dp"
-                        android:ellipsize="end"
-                        android:gravity="center"
-                        android:text="@string/wave"
-                        android:textColor="@color/subtext"
-                        android:textSize="14dp"
-                        androidfont:typeface="roboto_medium.ttf"/>
-
-                    <com.supremainc.biostar2.widget.StyledTextView
-                        android:id="@+id/date_end"
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:ellipsize="end"
-                        android:gravity="right|center"
-                        android:maxLines="2"
-                        android:textColor="@color/subtext"
-                        android:textSize="14dp"
-                        androidfont:typeface="roboto_medium.ttf"/>
-
-                    <ImageView
-                        android:id="@+id/date_arrow"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:layout_marginLeft="18dp"
-                        android:contentDescription="@string/image"
-                        android:gravity="center"
-                        android:scaleType="fitXY"
-                        android:src="@drawable/arrow_01"/>
-                </LinearLayout>
-
-                <FrameLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="0.8dp"
-                    android:background="@color/list_devider"/>
-                <!--  -->
-
-                <LinearLayout
-                    android:id="@+id/access_group_edit"
-                    android:layout_width="match_parent"
-                    android:layout_height="68dp"
-                    android:layout_marginLeft="18dp"
-                    android:layout_marginRight="18dp"
-                    android:gravity="left"
-                    android:orientation="horizontal">
-
-                    <com.supremainc.biostar2.widget.StyledTextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:layout_marginRight="18dp"
-                        android:ellipsize="end"
-                        android:gravity="left|center"
-                        android:maxLines="2"
-                        android:text="@string/access_group"
-                        android:textColor="@color/select_text"
-                        android:textSize="16dp"
-                        androidfont:typeface="roboto_bold.ttf"/>
-
-                    <com.supremainc.biostar2.widget.StyledTextView
+                    <com.supremainc.biostar2.view.DetailTextItemView
                         android:id="@+id/access_group"
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:ellipsize="end"
-                        android:gravity="right|center"
-                        android:maxLines="2"
-                        android:textColor="@color/subtext"
-                        android:textSize="14dp"
-                        androidfont:typeface="roboto_medium.ttf"/>
-
-                    <ImageView
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:layout_marginLeft="18dp"
-                        android:contentDescription="@string/image"
-                        android:gravity="center"
-                        android:scaleType="fitXY"
-                        android:src="@drawable/arrow_01"/>
-                </LinearLayout>
+                        app:index="@string/access_group"
+                        app:link="true" />
 
-                <FrameLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="0.8dp"
-                    android:background="@color/list_devider"/>
-                <!-- info -->
-
-                <com.supremainc.biostar2.widget.StyledTextView
-                    android:layout_width="match_parent"
-                    android:layout_height="36dp"
-                    android:background="@color/list_devider"
-                    android:ellipsize="end"
-                    android:gravity="left|center"
-                    android:maxLines="2"
-                    android:paddingLeft="18dp"
-                    android:paddingRight="18dp"
-                    android:text="@string/credential"
-                    android:textColor="@color/user_total"
-                    android:textSize="14dp"
-                    androidfont:typeface="roboto_bold.ttf"/>
-
-                <FrameLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="0.8dp"
-                    android:background="@color/list_devider"/>
-                <!--  -->
-
-                <LinearLayout
-                    android:id="@+id/fingerprint_edit"
-                    android:layout_width="match_parent"
-                    android:layout_height="68dp"
-                    android:layout_marginLeft="18dp"
-                    android:layout_marginRight="18dp"
-                    android:gravity="left"
-                    android:orientation="horizontal">
-
-                    <com.supremainc.biostar2.widget.StyledTextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:layout_marginRight="18dp"
+                    <com.supremainc.biostar2.view.StyledTextView
+                        android:layout_width="match_parent"
+                        android:layout_height="36dp"
+                        android:background="@color/list_devider"
                         android:ellipsize="end"
                         android:gravity="left|center"
                         android:maxLines="2"
-                        android:text="@string/fingerprint"
-                        android:textColor="@color/select_text"
-                        android:textSize="16dp"
-                        androidfont:typeface="roboto_bold.ttf"/>
-
-                    <com.supremainc.biostar2.widget.StyledTextView
-                        android:id="@+id/fingerprint"
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:ellipsize="end"
-                        android:gravity="right|center"
-                        android:maxLines="2"
-                        android:textColor="@color/subtext"
-                        android:textSize="14dp"
-                        androidfont:typeface="roboto_medium.ttf"/>
-
-                    <ImageView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:layout_marginLeft="18dp"
-                        android:contentDescription="@string/image"
-                        android:gravity="center"
-                        android:scaleType="fitXY"
-                        android:src="@drawable/arrow_01"/>
-                </LinearLayout>
-
-                <FrameLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="0.8dp"
-                    android:background="@color/list_devider"/>
-
-                <!--  -->
-
-                <LinearLayout
-                    android:id="@+id/card_edit"
-                    android:layout_width="match_parent"
-                    android:layout_height="68dp"
-                    android:layout_marginLeft="18dp"
-                    android:layout_marginRight="18dp"
-                    android:gravity="left"
-                    android:orientation="horizontal">
-
-                    <com.supremainc.biostar2.widget.StyledTextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:layout_marginRight="18dp"
-                        android:ellipsize="end"
-                        android:gravity="left|center"
-                        android:maxLines="2"
-                        android:text="@string/card"
-                        android:textColor="@color/select_text"
-                        android:textSize="16dp"
-                        androidfont:typeface="roboto_bold.ttf"/>
-
-                    <com.supremainc.biostar2.widget.StyledTextView
-                        android:id="@+id/card"
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_weight="1"
-                        android:ellipsize="end"
-                        android:gravity="right|center"
-                        android:maxLines="2"
-                        android:textColor="@color/subtext"
-                        android:textSize="14dp"
-                        androidfont:typeface="roboto_medium.ttf"/>
-
-                    <ImageView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="center"
-                        android:layout_marginLeft="18dp"
-                        android:contentDescription="@string/image"
-                        android:gravity="center"
-                        android:scaleType="fitXY"
-                        android:src="@drawable/arrow_01"/>
-                </LinearLayout>
-
-                <FrameLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="0.8dp"
-                    android:background="@color/list_devider"/>
-                <!--  -->
-
-                <LinearLayout
-                    android:id="@+id/pin_edit"
-                    android:layout_width="match_parent"
-                    android:layout_height="68dp"
-                    android:layout_marginLeft="18dp"
-                    android:gravity="left"
-                    android:orientation="horizontal">
-
-                    <com.supremainc.biostar2.widget.StyledTextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:layout_marginRight="18dp"
-                        android:ellipsize="end"
-                        android:gravity="left|center"
-                        android:maxLines="2"
-                        android:text="@string/pin_upper"
-                        android:textColor="@color/select_text"
-                        android:textSize="16dp"
-                        androidfont:typeface="roboto_bold.ttf"/>
-
-                    <com.supremainc.biostar2.widget.StyledTextView
-                        android:id="@+id/pin"
-                        android:layout_width="0dp"
-                        android:layout_height="match_parent"
-                        android:layout_marginRight="18dp"
-                        android:layout_weight="1"
-                        android:background="@color/transparent"
-                        android:ellipsize="end"
-                        android:gravity="right|center"
-                        android:singleLine="true"
-                        android:textColor="@color/subtext"
-                        android:textSize="14dp"
-                        androidfont:typeface="roboto_medium.ttf"/>
-
-                    <com.supremainc.biostar2.widget.SwitchView
-                        android:id="@+id/pin_switch"
-                        android:layout_width="wrap_content"
-                        android:layout_height="match_parent"
-                        android:layout_gravity="center|right"
-                        android:gravity="center|right"
-                        android:orientation="vertical"
                         android:paddingLeft="18dp"
-                        android:paddingRight="18dp">
+                        android:paddingRight="18dp"
+                        android:text="@string/credential"
+                        android:textColor="@color/user_total"
+                        android:textSize="14dp"
+                        app:typeface="roboto_bold.ttf" />
 
-                        <ImageView
-                            android:id="@+id/switch_onoff"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center|right"
-                            android:contentDescription="@string/image"
-                            android:gravity="center|right"
-                            android:scaleType="fitXY"
-                            android:src="@drawable/list_btn_off"/>
-                    </com.supremainc.biostar2.widget.SwitchView>
+                    <com.supremainc.biostar2.view.DetailTextItemView
+                        android:id="@+id/fingerprint"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:index="@string/fingerprint"
+                        app:inputType="textPersonName"
+                        app:link="true" />
+
+                    <com.supremainc.biostar2.view.DetailTextItemView
+                        android:id="@+id/card"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:index="@string/card"
+                        app:inputType="textPersonName"
+                        app:link="true" />
+
+                    <com.supremainc.biostar2.view.DetailSwitchItemView
+                        android:id="@+id/pin"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:index="@string/pin_upper" />
+
+
                 </LinearLayout>
-
-                <FrameLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="0.8dp"
-                    android:background="@color/list_devider"/>
             </LinearLayout>
         </ScrollView>
 
@@ -1001,7 +235,7 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:minHeight="?attr/actionBarSize"/>
+            android:minHeight="?attr/actionBarSize" />
     </FrameLayout>
 
 </LinearLayout>

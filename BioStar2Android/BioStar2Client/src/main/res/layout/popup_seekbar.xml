@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?><!-- <~SCREEN NAME)> {Popup} </~SCREEN NAME> -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/main_container"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="298dp"
+        android:layout_height="54dp"
+        android:layout_gravity="center"
+        android:background="@color/actionbar_bg"
+        android:gravity="right|center_vertical"
+        android:orientation="horizontal">
+
+        <com.supremainc.biostar2.view.StyledTextView
+            android:id="@+id/title_text"
+            android:layout_width="0dp"
+            android:layout_height="match_parent"
+            android:layout_gravity="center"
+            android:layout_marginLeft="18dp"
+            android:layout_marginRight="18dp"
+            android:layout_weight="1"
+            android:gravity="center"
+            android:textColor="@color/white"
+            android:textSize="16dp"
+            app:typeface="roboto_bold.ttf" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="298dp"
+        android:layout_height="wrap_content"
+        android:background="@color/white"
+        android:orientation="vertical">
+
+        <com.appyvet.rangebar.RangeBar
+            android:id="@+id/rangebar"
+            android:layout_width="match_parent"
+            android:layout_height="72dp"
+            app:rangeBar="false"
+            app:tickStart="20"
+            app:tickInterval="20"
+            app:tickEnd="100"
+            app:rangeBarColor="#CCCCCC"
+            app:pinColor="#3F51B5"
+            app:tickColor="#000000"
+            app:selectorColor="#3F51B5"
+            android:layout_marginLeft="16dp"
+            android:layout_marginRight="16dp"/>
+
+        <com.supremainc.biostar2.view.StyledTextView
+            android:id="@+id/rangebar_guide"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:gravity="center"
+            android:layout_gravity="center"
+            android:text="80"
+            android:layout_marginBottom="9dp"
+            android:layout_marginTop="9dp"
+            android:textColor="@color/select_text"
+            android:textSize="30dp"
+            app:typeface="roboto_bold.ttf" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginLeft="9dp"
+            android:layout_marginRight="9dp"
+            android:orientation="horizontal">
+
+            <com.supremainc.biostar2.view.StyledTextView
+                android:id="@+id/negative"
+                android:layout_width="0dp"
+                android:layout_height="45dp"
+                android:layout_marginBottom="9dp"
+                android:layout_marginTop="9dp"
+                android:layout_weight="1"
+                android:background="@drawable/selector_btn_negative"
+                android:gravity="center"
+                android:singleLine="true"
+                android:text="@string/cancel"
+                android:textColor="@color/white"
+                android:textSize="16dp"
+                app:typeface="roboto_bold.ttf" />
+
+            <LinearLayout
+                android:id="@+id/devider"
+                android:layout_width="8dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:orientation="vertical" />
+
+            <com.supremainc.biostar2.view.StyledTextView
+                android:id="@+id/positive"
+                android:layout_width="0dp"
+                android:layout_height="45dp"
+                android:layout_marginBottom="9dp"
+                android:layout_marginTop="9dp"
+                android:layout_weight="1"
+                android:background="@drawable/selector_btn_round_ok"
+                android:gravity="center"
+                android:singleLine="true"
+                android:text="@string/ok"
+                android:textColor="@color/white"
+                android:textSize="16dp"
+                app:typeface="roboto_bold.ttf" />
+        </LinearLayout>
+    </LinearLayout>
+
+</LinearLayout>

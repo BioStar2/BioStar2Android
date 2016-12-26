@@ -16,79 +16,78 @@
 package com.supremainc.biostar2.sdk.provider;
 
 import android.content.Context;
-
-import com.supremainc.biostar2.sdk.datatype.DoorData.Door;
-import com.supremainc.biostar2.sdk.datatype.DoorData.Doors;
-import com.supremainc.biostar2.sdk.datatype.ResponseStatus;
+import com.supremainc.biostar2.sdk.datatype.v2.Common.ResponseStatus;
+import com.supremainc.biostar2.sdk.datatype.v2.Door.Door;
+import com.supremainc.biostar2.sdk.datatype.v2.Door.Doors;
 import com.supremainc.biostar2.sdk.volley.Request.Method;
 import com.supremainc.biostar2.sdk.volley.Response.ErrorListener;
 import com.supremainc.biostar2.sdk.volley.Response.Listener;
 
 public class DoorDataProvider extends BaseDataProvider {
-	@SuppressWarnings("unused")
-	private final String TAG = getClass().getSimpleName();
-	private static DoorDataProvider mSelf = null;
+    private static DoorDataProvider mSelf = null;
+    @SuppressWarnings("unused")
+    private final String TAG = getClass().getSimpleName();
 
-	private DoorDataProvider(Context context) {
-		super(context);
-	}
+    private DoorDataProvider(Context context) {
+        super(context);
+    }
 
-	public static DoorDataProvider getInstance(Context context) {
-		if (mSelf == null) {
-			mSelf = new DoorDataProvider(context);
-		}
-		return mSelf;
-	}
+    public static DoorDataProvider getInstance(Context context) {
+        if (mSelf == null) {
+            mSelf = new DoorDataProvider(context);
+        }
+        return mSelf;
+    }
 
-	public static DoorDataProvider getInstance() {
-		if (mSelf != null) {
-			return mSelf;
-		}
-		if (mContext != null) {
-			mSelf = new DoorDataProvider(mContext);
-			return mSelf;
-		}
-		return null;
-	}
+    public static DoorDataProvider getInstance() {
+        if (mSelf != null) {
+            return mSelf;
+        }
+        if (mContext != null) {
+            mSelf = new DoorDataProvider(mContext);
+            return mSelf;
+        }
+        return null;
+    }
 
-	public void getDoors(String tag, Listener<Doors> listener, ErrorListener errorListener, int offset, int limit, String groupId, String query, Object deliverParam) {
-		sendRequest(tag, Doors.class, Method.GET, NetWork.PARAM_DOORS, null, createParams(offset, limit, groupId, query), null, listener, errorListener, deliverParam);
-	}
+    public void getDoors(String tag, Listener<Doors> listener, ErrorListener errorListener, int offset, int limit, String groupId, String query, Object deliverParam) {
+        sendRequest(tag, Doors.class, Method.GET, NetWork.PARAM_DOORS, null, createParams(offset, limit, groupId, query), null, listener, errorListener, deliverParam);
+    }
 
-	public void getDoor(String tag, String id, Listener<Door> listener, ErrorListener errorListener, Object deliverParam) {
-		sendRequest(tag, Door.class, Method.GET, createUrl(NetWork.PARAM_DOORS, id), null, null, null, listener, errorListener, deliverParam);
-	}
+    public void getDoor(String tag, String id, Listener<Door> listener, ErrorListener errorListener, Object deliverParam) {
+        sendRequest(tag, Door.class, Method.GET, createUrl(NetWork.PARAM_DOORS, id), null, null, null, listener, errorListener, deliverParam);
+    }
 
-	public void openDoor(String tag, String id, Listener<ResponseStatus> listener, ErrorListener errorListener, Object deliverParam) {
-		sendRequest(tag, ResponseStatus.class, Method.POST, createUrl(NetWork.PARAM_DOORS, id,NetWork.PARAM_OPEN), null, null, null, listener, errorListener, deliverParam);
-	}
+    public void openDoor(String tag, String id, Listener<ResponseStatus> listener, ErrorListener errorListener, Object deliverParam) {
+        sendRequest(tag, ResponseStatus.class, Method.POST, createUrl(NetWork.PARAM_DOORS, id, NetWork.PARAM_OPEN), null, null, null, listener, errorListener, deliverParam);
+    }
 
-	public void unlockDoor(String tag, String id, Listener<ResponseStatus> listener, ErrorListener errorListener, Object deliverParam) {
-		sendRequest(tag, ResponseStatus.class, Method.POST, createUrl(NetWork.PARAM_DOORS, id,NetWork.PARAM_UNLOCK), null, null, null, listener, errorListener, deliverParam);
-	}
+    public void unlockDoor(String tag, String id, Listener<ResponseStatus> listener, ErrorListener errorListener, Object deliverParam) {
+        sendRequest(tag, ResponseStatus.class, Method.POST, createUrl(NetWork.PARAM_DOORS, id, NetWork.PARAM_UNLOCK), null, null, null, listener, errorListener, deliverParam);
+    }
 
-	public void lockDoor(String tag, String id, Listener<ResponseStatus> listener, ErrorListener errorListener, Object deliverParam) {
-		sendRequest(tag, ResponseStatus.class, Method.POST, createUrl(NetWork.PARAM_DOORS, id,NetWork.PARAM_LOCK), null, null, null, listener, errorListener, deliverParam);
-	}
+    public void lockDoor(String tag, String id, Listener<ResponseStatus> listener, ErrorListener errorListener, Object deliverParam) {
+        sendRequest(tag, ResponseStatus.class, Method.POST, createUrl(NetWork.PARAM_DOORS, id, NetWork.PARAM_LOCK), null, null, null, listener, errorListener, deliverParam);
+    }
 
-	public void releaseDoor(String tag, String id, Listener<ResponseStatus> listener, ErrorListener errorListener, Object deliverParam) {
-		sendRequest(tag, ResponseStatus.class, Method.POST, createUrl(NetWork.PARAM_DOORS, id,NetWork.PARAM_RELEASE), null, null, null, listener, errorListener, deliverParam);
-	}
+    public void releaseDoor(String tag, String id, Listener<ResponseStatus> listener, ErrorListener errorListener, Object deliverParam) {
+        sendRequest(tag, ResponseStatus.class, Method.POST, createUrl(NetWork.PARAM_DOORS, id, NetWork.PARAM_RELEASE), null, null, null, listener, errorListener, deliverParam);
+    }
 
-	public void clearAlarm(String tag, String id, Listener<ResponseStatus> listener, ErrorListener errorListener, Object deliverParam) {
-		sendRequest(tag, ResponseStatus.class, Method.POST, createUrl(NetWork.PARAM_DOORS, id,NetWork.PARAM_CLEAR_ALARM), null, null, null, listener, errorListener, deliverParam);
-	}
+    public void clearAlarm(String tag, String id, Listener<ResponseStatus> listener, ErrorListener errorListener, Object deliverParam) {
+        sendRequest(tag, ResponseStatus.class, Method.POST, createUrl(NetWork.PARAM_DOORS, id, NetWork.PARAM_CLEAR_ALARM), null, null, null, listener, errorListener, deliverParam);
+    }
 
-	public void clearAntiPassback(String tag, String id, Listener<ResponseStatus> listener, ErrorListener errorListener, Object deliverParam) {
-		sendRequest(tag, ResponseStatus.class, Method.POST, createUrl(NetWork.PARAM_DOORS, id,NetWork.PARAM_CLEAR_APB), null, null, null, listener, errorListener, deliverParam);
-	}
-	
-	public void openRequestDoor(String tag, String id,String phone, Listener<ResponseStatus> listener, ErrorListener errorListener, Object deliverParam) {
-		String body = null;
-		if (phone != null) {
-			body = "{\"phone_number\":\""+phone+"\"}";
-		}
-				
-		sendRequest(tag, ResponseStatus.class, Method.POST, createUrl(NetWork.PARAM_DOORS, id,NetWork.PARAM_OPEN_REQUEST), null, null, body, listener, errorListener, deliverParam);
-	}
+    public void clearAntiPassback(String tag, String id, Listener<ResponseStatus> listener, ErrorListener errorListener, Object deliverParam) {
+        sendRequest(tag, ResponseStatus.class, Method.POST, createUrl(NetWork.PARAM_DOORS, id, NetWork.PARAM_CLEAR_APB), null, null, null, listener, errorListener, deliverParam);
+    }
+
+    public void openRequestDoor(String tag, String id, String phone, Listener<ResponseStatus> listener, ErrorListener errorListener, Object deliverParam) {
+        String body = null;
+        if (phone != null) {
+            body = "{\"phone_number\":\"" + phone + "\"}";
+        }
+
+        sendRequest(tag, ResponseStatus.class, Method.POST, createUrl(NetWork.PARAM_DOORS, id, NetWork.PARAM_OPEN_REQUEST), null, null, body, listener, errorListener, deliverParam);
+    }
 }

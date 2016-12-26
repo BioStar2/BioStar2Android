@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?><!-- <~SCREEN NAME)> {Door_List} </~SCREEN NAME> -->
-<LinearLayout
-    android:id="@+id/user_container"
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:androidfont="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/user_container"
     android:layout_width="match_parent"
     android:layout_height="68dp"
     android:gravity="center"
@@ -25,7 +24,7 @@
             android:contentDescription="@string/image"
             android:gravity="center"
             android:scaleType="fitXY"
-            android:src="@drawable/door_ic_3"/>
+            android:src="@drawable/door_ic_3" />
 
         <LinearLayout
             android:layout_width="0dp"
@@ -36,7 +35,7 @@
             android:gravity="left|center"
             android:orientation="vertical">
 
-            <com.supremainc.biostar2.widget.StyledTextView
+            <com.supremainc.biostar2.view.StyledTextView
                 android:id="@+id/name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -45,9 +44,9 @@
                 android:singleLine="true"
                 android:textColor="@color/select_text"
                 android:textSize="16dp"
-                androidfont:typeface="roboto_bold.ttf"/>
+                androidfont:typeface="roboto_bold.ttf" />
 
-            <com.supremainc.biostar2.widget.StyledTextView
+            <com.supremainc.biostar2.view.StyledTextView
                 android:id="@+id/content"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -57,10 +56,10 @@
                 android:maxLines="2"
                 android:textColor="@color/actionbar_bg"
                 android:textSize="14dp"
-                androidfont:typeface="roboto_medium.ttf"/>
+                androidfont:typeface="roboto_medium.ttf" />
         </LinearLayout>
 
-        <com.supremainc.biostar2.widget.StyledTextView
+        <com.supremainc.biostar2.view.StyledTextView
             android:id="@+id/unread"
             android:layout_width="44dp"
             android:layout_height="30dp"
@@ -70,7 +69,7 @@
             android:text="@string/unread"
             android:textColor="@color/white"
             android:textSize="11dp"
-            androidfont:typeface="roboto_regular.ttf"/>
+            androidfont:typeface="roboto_regular.ttf" />
 
         <FrameLayout
             android:layout_width="22.67dp"
@@ -83,13 +82,13 @@
                 android:layout_gravity="center|right"
                 android:contentDescription="@string/image"
                 android:gravity="center|right"
-                android:scaleType="fitXY"/>
+                android:scaleType="fitXY" />
         </FrameLayout>
     </LinearLayout>
 
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0.8dp"
-        android:background="@color/list_devider"/>
+        android:background="@color/list_devider" />
 
 </LinearLayout>

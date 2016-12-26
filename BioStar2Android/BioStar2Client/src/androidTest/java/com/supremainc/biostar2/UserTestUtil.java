@@ -24,9 +24,9 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.widget.ListView;
 
-import com.supremainc.biostar2.popup.Popup;
-import com.supremainc.biostar2.sdk.datatype.PermissionData;
-import com.supremainc.biostar2.sdk.datatype.UserData;
+import com.supremainc.biostar2.sdk.datatype.v1.Permission.CloudRole;
+import com.supremainc.biostar2.sdk.datatype.v2.User.ListUser;
+import com.supremainc.biostar2.widget.popup.Popup;
 
 import org.hamcrest.Description;
 import org.hamcrest.Matchers;
@@ -53,12 +53,12 @@ public class UserTestUtil {
             public boolean matchesSafely(View view) {
                 ListView listView = (ListView) view;
                 try {
-                    UserData.ListUser user = (UserData.ListUser) listView.getItemAtPosition(0);
+                    ListUser user = (ListUser) listView.getItemAtPosition(0);
                 } catch (Exception e) {
                     Log.e(TAG, "fail Not match UserList");
                     return false;
                 }
-                //  UserData.ListUser user = (UserData.ListUser) listView.getItemAtPosition(0);
+                //  ListUser user = (ListUser) listView.getItemAtPosition(0);
                 return true;
             }
 
@@ -69,9 +69,9 @@ public class UserTestUtil {
         }));
     }
 
-    public static void userDelete( ) {
+    public static void userDelete() {
         onView(withId(R.id.action_delete)).perform(ViewActions.click());
-        onData(Matchers.allOf(Matchers.is(Matchers.instanceOf(UserData.ListUser.class))))
+        onData(Matchers.allOf(Matchers.is(Matchers.instanceOf(ListUser.class))))
                 .atPosition(0)
                 .perform(ViewActions.click());
         onView(withId(R.id.action_delete_confirm)).perform(ViewActions.click());
@@ -81,7 +81,7 @@ public class UserTestUtil {
 
     public static void saveTelephone() {
         w(1000);
-        onView(withId(R.id.telephone_edit)).perform(ViewActions.click());
+//        onView(withId(R.id.telephone_edit)).perform(ViewActions.click());
         w(1000);
         onView(withId(R.id.user_id))
                 .check((ViewAssertions.matches(ExtTest.hasImeInputType(InputType.TYPE_CLASS_PHONE))));
@@ -91,7 +91,7 @@ public class UserTestUtil {
         w(1000);
     }
 
-    public static void searchDeleteUserID(String content,boolean checkEmailTelephone) {
+    public static void searchDeleteUserID(String content, boolean checkEmailTelephone) {
         ExtTest.waitSwipyRefresh();
         w(1000);
         if (content == null) {
@@ -99,16 +99,16 @@ public class UserTestUtil {
         }
         Log.e(TAG, "case: User/" + content + "를 가진 유져를 찾는다.");
         if (ExtTest.search(content)) {
-            onData(Matchers.allOf(Matchers.is(Matchers.instanceOf(UserData.ListUser.class))))
+            onData(Matchers.allOf(Matchers.is(Matchers.instanceOf(ListUser.class))))
                     .atPosition(0)
                     .perform(ViewActions.click());
             if (checkEmailTelephone) {
-                ExtTest.waitId(R.id.email_go, 60000);
+//                ExtTest.waitId(R.id.email_go, 60000);
                 String emailContent = ExtTest.getTextFromTextView(R.id.email);
                 String phoneContent = ExtTest.getTextFromTextView(R.id.telephone);
                 if (emailContent == null || emailContent.isEmpty() || phoneContent == null || phoneContent.isEmpty()) {
-                    onView(withId(R.id.email_go))
-                            .check((ViewAssertions.matches(ExtTest.setResult(false))));
+//                    onView(withId(R.id.email_go))
+//                            .check((ViewAssertions.matches(ExtTest.setResult(false))));
                 }
 //                if (telephoneContent != null) {
 //                    onView(withId(R.id.telephone_go)).perform(ViewActions.click());
@@ -129,7 +129,7 @@ public class UserTestUtil {
             Log.e(TAG, "result: Search창을 닫았다.");
             Log.e(TAG, "case: User/삭제모드에서 나온다");
             pressBack();
-            ExtTest.waitId(R.id.action_add,3000);
+            ExtTest.waitId(R.id.action_add, 3000);
             Log.e(TAG, "result: 삭제모드에서 나왔다");
         } else {
             onView(withId(R.id.listview))
@@ -152,7 +152,7 @@ public class UserTestUtil {
             Log.e(TAG, "result: Search창을 닫았다.");
             Log.e(TAG, "case: User/삭제모드에서 나온다");
             pressBack();
-            ExtTest.waitId(R.id.action_add,3000);
+            ExtTest.waitId(R.id.action_add, 3000);
             Log.e(TAG, "result: 삭제모드에서 나왔다");
         } else {
             w(1000);
@@ -182,6 +182,7 @@ public class UserTestUtil {
         w(1000);
         onView(withId(R.id.user_id)).perform(ViewActions.closeSoftKeyboard());
     }
+
     public static void saveName() {
         Log.e(TAG, "case: User/User 등록/Name입력/1~4 해당 데이터를 입력한다./영문+국문+숫자+특수문자 혼용 9부터 49자");
         w(1000);
@@ -201,7 +202,7 @@ public class UserTestUtil {
 
     public static void saveEmail(String content) {
         w(1000);
-        onView(withId(R.id.email_edit)).perform(ViewActions.click());
+//        onView(withId(R.id.email_edit)).perform(ViewActions.click());
         ExtTest.delEditText(R.id.email);
         onView(withId(R.id.email)).perform(ViewActions.typeText(content));
         onView(withId(R.id.email)).perform(ViewActions.closeSoftKeyboard());
@@ -219,10 +220,10 @@ public class UserTestUtil {
     public static void selectOperation(int position) {
         if (position == -1) {
             Log.e(TAG, "case: User/User 등록/operator/BioStar Operator none선택.");
-            onView(withId(R.id.operator_edit)).perform(ViewActions.click());
+//            onView(withId(R.id.operator_edit)).perform(ViewActions.click());
             w(1000);
             onView(withId(R.id.action_delete)).perform(ViewActions.click());
-            onData(Matchers.allOf(Matchers.is(Matchers.instanceOf(PermissionData.CloudRole.class))))
+            onData(Matchers.allOf(Matchers.is(Matchers.instanceOf(CloudRole.class))))
                     .atPosition(0)
                     .perform(ViewActions.click());
             onView(withId(R.id.action_delete_confirm)).perform(ViewActions.click());
@@ -238,11 +239,11 @@ public class UserTestUtil {
             return;
         }
         Log.e(TAG, "case: User/User 등록/operator/BioStar Operator 권한선택.");
-        onView(withId(R.id.operator_edit)).perform(ViewActions.click());
+//        onView(withId(R.id.operator_edit)).perform(ViewActions.click());
         w(1000);
         onView(withId(R.id.action_add)).perform(ViewActions.click());
         //TODO checking? receive data? or onData is process?
-        onData(Matchers.allOf(Matchers.is(Matchers.instanceOf(PermissionData.CloudRole.class))))
+        onData(Matchers.allOf(Matchers.is(Matchers.instanceOf(CloudRole.class))))
                 .atPosition(position)
                 .perform(ViewActions.click());
         ExtTest.checkPopup(true);
@@ -253,7 +254,7 @@ public class UserTestUtil {
         Log.e(TAG, "result: login_id와 password가 나오는걸 확인한다.");
     }
 
-    public static void checkMaxLenght(int resID,int maxCount) {
+    public static void checkMaxLenght(int resID, int maxCount) {
         int length = ExtTest.getTextFromEditTextView(resID).length();
         if (length > maxCount || length < 1) {
             onView(withId(resID))
@@ -265,7 +266,7 @@ public class UserTestUtil {
 
     public static void inputPassword() {
         w(1000);
-        onView(withId(R.id.detail_scroll)).perform(ViewActions.swipeUp());
+//        onView(withId(R.id.detail_scroll)).perform(ViewActions.swipeUp());
         w(1000);
         onView(withId(R.id.password_edit)).perform(ViewActions.click());
         ExtTest.waitId(R.id.main_container, 60000);
@@ -364,7 +365,7 @@ public class UserTestUtil {
         ExtTest.delEditText(R.id.login_id);
         onView(withId(R.id.login_id)).perform(ViewActions.typeText("Eabcde1234556667"));
         onView(withId(R.id.login_id)).perform(ViewActions.typeText("FGHIJKLMNOPQRSTUWXYZfghijklmnopqrstuwxyz"));
-        checkMaxLenght(R.id.login_id,32);
+        checkMaxLenght(R.id.login_id, 32);
         onView(withId(R.id.login_id)).perform(ViewActions.closeSoftKeyboard());
     }
 
@@ -386,7 +387,7 @@ public class UserTestUtil {
     }
 
 
-    public static void inputEdit(int resID, int maxCount,int clickResID) {
+    public static void inputEdit(int resID, int maxCount, int clickResID) {
         Log.e(TAG, "case: User/User 등록//1~4 해당 데이터를 입력한다.대문자");
         w(1000);
 

@@ -48,7 +48,7 @@ import java.io.File;
 
 public class ImageUtil {
 
-    public static byte[] bitmapToByteArray(Bitmap bitmap,int quality) {
+    public static byte[] bitmapToByteArray(Bitmap bitmap, int quality) {
         ByteArrayOutputStream stream = new ByteArrayOutputStream();
         if (quality < 0) {
             quality = 0;
@@ -299,7 +299,7 @@ public class ImageUtil {
         return (bitmap);
     }
 
-    public static Intent getImageActionIntent(String action, boolean inputImage,int w,int h) {
+    public static Intent getImageActionIntent(String action, boolean inputImage, int w, int h) {
         Intent intent = new Intent(action);
         if (inputImage) {
             intent.setDataAndType(getTempFileUri(), "image/*");

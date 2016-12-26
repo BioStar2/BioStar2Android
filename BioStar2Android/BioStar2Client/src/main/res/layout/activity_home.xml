@@ -14,16 +14,15 @@
   limitations under the License.
 --><!-- <~SCREEN NAME)> {Main} </~SCREEN NAME> -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              android:layout_width="match_parent"
-              android:layout_height="match_parent"
-              android:gravity="center"
-              android:orientation="vertical">
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:orientation="vertical">
 
     <!-- A DrawerLayout is intended to be used as the top-level content view using match_parent for both width and height to consume the full space available. -->
 
-    <android.support.v4.widget.DrawerLayout
+    <android.support.v4.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/drawer_layout"
-        xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="match_parent"
         android:layout_height="match_parent">
 
@@ -36,7 +35,7 @@
             android:id="@+id/content_frame"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_weight="1"/>
+            android:layout_weight="1" />
 
 
         <!--
@@ -48,7 +47,7 @@
          with the content view.
         -->
 
-        <com.supremainc.biostar2.widget.DrawLayerMenuView
+        <com.supremainc.biostar2.view.DrawLayerMenuView
             android:id="@+id/drawer_menu"
             android:layout_width="255dp"
             android:layout_height="match_parent"
@@ -58,7 +57,7 @@
             android:choiceMode="none"
             android:clickable="true"
             android:divider="#000000"
-            android:dividerHeight="1dp"/>
+            android:dividerHeight="1dp" />
     </android.support.v4.widget.DrawerLayout>
 
 </LinearLayout>

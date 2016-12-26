@@ -24,15 +24,17 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.net.Uri;
+
 import java.sql.SQLException;
 
 public abstract class SqlDB extends ContentProvider {
     private static UriMatcher mUriMatcher;
-    public SQLiteOpenHelper mSQLiteOpenHelper;
 
     static {
         mUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
     }
+
+    public SQLiteOpenHelper mSQLiteOpenHelper;
 
     private void Notify(Uri uri) {
         getContext().getContentResolver().notifyChange(uri, null);

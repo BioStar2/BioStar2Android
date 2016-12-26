@@ -59,7 +59,7 @@ public class DateTimePicker {
         cal.set(Calendar.YEAR, y);
         cal.set(Calendar.MONTH, m);
         cal.set(Calendar.DAY_OF_MONTH, d);
-        return mTimeConvertProvider.convertCalendarToFormatter(cal,TimeConvertProvider.DATE_TYPE.FORMAT_DATE);
+        return mTimeConvertProvider.convertCalendarToFormatter(cal, TimeConvertProvider.DATE_TYPE.FORMAT_DATE);
     }
 
     public boolean isErrorSetDate(int sYear, int sMonth, int sDay, int eYear, int eMonth, int eDay) {

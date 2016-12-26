@@ -18,18 +18,18 @@ package com.supremainc.biostar2.sdk.volley;
 
 import android.content.Intent;
 
-import com.supremainc.biostar2.sdk.volley.NetworkResponse;
-import com.supremainc.biostar2.sdk.volley.VolleyError;
-
 /**
  * Error indicating that there was an authentication failure when performing a Request.
  */
 @SuppressWarnings("serial")
 public class AuthFailureError extends VolleyError {
-    /** An intent that can be used to resolve this exception. (Brings up the password dialog.) */
+    /**
+     * An intent that can be used to resolve this exception. (Brings up the password dialog.)
+     */
     private Intent mResolutionIntent;
 
-    public AuthFailureError() { }
+    public AuthFailureError() {
+    }
 
     public AuthFailureError(Intent intent) {
         mResolutionIntent = intent;

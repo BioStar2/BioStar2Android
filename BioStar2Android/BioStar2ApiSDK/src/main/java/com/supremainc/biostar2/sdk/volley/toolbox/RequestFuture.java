@@ -27,7 +27,7 @@ import java.util.concurrent.TimeoutException;
 
 /**
  * A Future that represents a Volley request.
- *
+ * <p/>
  * Used by providing as your response and error listeners. For example:
  * <pre>
  * RequestFuture&lt;JSONObject&gt; future = RequestFuture.newFuture();
@@ -52,17 +52,18 @@ import java.util.concurrent.TimeoutException;
  * @param <T> The type of parsed response this future expects.
  */
 public class RequestFuture<T> implements Future<T>, Response.Listener<T>,
-       Response.ErrorListener {
+        Response.ErrorListener {
     private Request<?> mRequest;
     private boolean mResultReceived = false;
     private T mResult;
     private VolleyError mException;
 
+    private RequestFuture() {
+    }
+
     public static <E> RequestFuture<E> newFuture() {
         return new RequestFuture<E>();
     }
-
-    private RequestFuture() {}
 
     public void setRequest(Request<?> request) {
         mRequest = request;
@@ -138,14 +139,14 @@ public class RequestFuture<T> implements Future<T>, Response.Listener<T>,
     }
 
     @Override
-    public synchronized void onResponse(T response,Object deliverParam) {
+    public synchronized void onResponse(T response, Object deliverParam) {
         mResultReceived = true;
         mResult = response;
         notifyAll();
     }
 
     @Override
-    public synchronized void onErrorResponse(VolleyError error,Object deliverParam) {
+    public synchronized void onErrorResponse(VolleyError error, Object deliverParam) {
         mException = error;
         notifyAll();
     }

@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:androidfont="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/main_menu_container"
+    android:layout_width="0dp"
+    android:layout_height="wrap_content"
+    android:layout_weight="1"
+    android:gravity="top|center"
+    android:orientation="vertical">
+
+    <FrameLayout
+        android:layout_width="65dp"
+        android:layout_height="65dp"
+        android:layout_marginBottom="11.59dp">
+
+        <ImageView
+            android:id="@+id/item_image"
+            android:layout_width="65dp"
+            android:layout_height="65dp"
+            android:layout_gravity="center"
+            android:contentDescription="@string/image"
+            android:gravity="center"
+            android:scaleType="fitXY" />
+
+        <com.supremainc.biostar2.view.StyledTextView
+            android:id="@+id/item_badge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center|top"
+            android:layout_marginLeft="20dp"
+            android:background="@drawable/alarm_badge"
+            android:gravity="center"
+            android:maxLines="1"
+            android:padding="2dp"
+            android:text="0"
+            android:textColor="@color/white"
+            android:textSize="10dp"
+            android:visibility="gone"
+            androidfont:typeface="roboto_medium.ttf" />
+
+        <ImageView
+            android:id="@+id/item_badge_alert"
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_gravity="center|top"
+            android:layout_marginLeft="20dp"
+            android:background="@drawable/badge_alert"
+            android:gravity="center"
+            android:visibility="gone" />
+    </FrameLayout>
+
+    <com.supremainc.biostar2.view.StyledTextView
+        android:id="@+id/item_text"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:maxLines="2"
+        android:textColor="@drawable/selector_color_white_yellow"
+        android:textSize="12dp"
+        androidfont:typeface="roboto_medium.ttf" />
+
+</LinearLayout>

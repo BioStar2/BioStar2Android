@@ -19,7 +19,8 @@ package com.supremainc.biostar2.widget;
 import android.content.Context;
 import android.os.Bundle;
 
-import com.supremainc.biostar2.base.BaseFragment;
+import com.supremainc.biostar2.fragment.BaseFragment;
+import com.supremainc.biostar2.view.DrawLayerMenuView;
 
 public class ScreenControl {
     private static DrawLayerMenuView.OnSelectionListener mDrawMenuSelectionListener;
@@ -87,7 +88,6 @@ public class ScreenControl {
             return;
         }
         mDrawMenuSelectionListener.onResume(baseFragment);
-
     }
 
     public void setScreenSelectionListeneer(DrawLayerMenuView.OnSelectionListener mDrawMenuSelectionListener) {
@@ -95,7 +95,7 @@ public class ScreenControl {
     }
 
     public enum ScreenType {
-        INIT, MAIN, USER, USER_MODIFY, USER_INQURIY, USER_ACCESS_GROUP, DOOR_LIST, DOOR, MONITOR, CARD_RIGISTER,
+        INIT, MAIN, USER, USER_MODIFY, USER_INQURIY, USER_ACCESS_GROUP, DOOR_LIST, DOOR, MONITOR, CARD,CARD_RIGISTER, MOBILE_CARD_LIST,MOBILE_CARD_GUIDE,
         FINGERPRINT_REGISTER, ALARM, ALARM_LIST, TA, LOG_OUT, ACCESS_CONTROL, ACCESS_GROUP_MODIFY, ACCESS_LEVEL_MODIFY, OPEN_MENU, PREFERENCE, ACCESS_GROUP_SELECT, MYPROFILE, USER_PERMISSION
     }
 

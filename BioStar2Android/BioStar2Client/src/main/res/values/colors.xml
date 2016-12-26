@@ -119,6 +119,7 @@
     <!-- Module Name:list_item_monitor.xml -->
 
     <color name="drawer_top">#594b4f</color>
+    <color name="drawer_top_50">#80594b4f</color>
     <!-- Module Name:view_drawlayer_menu.xml -->
 
     <color name="login">#8b43a3</color>

@@ -18,41 +18,108 @@ package com.supremainc.biostar2.sdk.provider;
 import android.content.Context;
 
 import com.supremainc.biostar2.sdk.BuildConfig;
+import com.supremainc.biostar2.sdk.datatype.v2.Common.VersionData;
+import com.supremainc.biostar2.sdk.utils.PreferenceUtil;
 
-public class ConfigDataProvider extends BaseDataProvider {
-	// private final String TAG = getClass().getSimpleName();
-	public static final boolean TEST_RELEASE_DELETE = true;
-	public static final boolean TEST_DELETE = false;
-	public static final boolean DEBUG = false;
-	public static final boolean DEBUG_SDCARD = false;
-	public static final boolean SSL_ALL_PASS = false;
-	public static final NetworkType mNetworkType = NetworkType.OK_HTTP;
-	public static final String URL = "https://api.biostar2.com/v1/";
+public class ConfigDataProvider  {
+    private final String TAG = getClass().getSimpleName();
+    public static final boolean TEST_RELEASE_DELETE = true;
+    public static final boolean TEST_DELETE = true;
+    public static final boolean DEBUG = true;
+    public static final boolean DEBUG_SDCARD = false;
+    public static final boolean SSL_ALL_PASS = false;
+    public static final NetworkType mNetworkType = NetworkType.OK_HTTP;
+    public static final String URL = "https://api.biostar2.com/";
+    public static final String V1 = "v1/";
+    public static final String V2 = "v2/";
+    private static final String LATEST_DOMAIN = "save_domain";
+    private static final String LATEST_URL = "save_url";
+    private static final String LATEST_USERID = "save_userid";
 
-	public enum NetworkType {
-		HURL, HTTP_CLIENT, OK_HTTP
-	};
-	protected ConfigDataProvider(Context context) {
-		super(context);
-	}
+    private static String mSubDomain;
+    private static String mURL;
+    private static String mUserID;
+    private static int mComplie = 2;
 
-	public static String getDebugFlag() {
-		String result = "";
-		if (TEST_DELETE) {
-			result = result + "TEST CODE\n";
-		}
-		if (DEBUG) {
-			result = result + "DEBUG\n";
-		}
-		if (DEBUG_SDCARD) {
-			result = result + "SDCARD\n";
-		}
-		if (SSL_ALL_PASS) {
-			result = result + "SSL_ALL_PASS\n";
-		}
-		if (BuildConfig.DEBUG) {
-			result = result + "DEBUG BUILD\n";
-		}
-		return result;
-	}
+    public static String getDebugFlag() {
+        String result = "";
+        if (TEST_DELETE) {
+            result = result + "TEST CODE\n";
+        }
+        if (DEBUG) {
+            result = result + "DEBUG\n";
+            result = result + mComplie+ "\n";
+        }
+        if (DEBUG_SDCARD) {
+            result = result + "SDCARD\n";
+        }
+        if (SSL_ALL_PASS) {
+            result = result + "SSL_ALL_PASS\n";
+        }
+        if (BuildConfig.DEBUG) {
+            result = result + "DEBUG BUILD\n";
+        }
+        return result;
+    }
+
+    public enum NetworkType {
+        HURL, HTTP_CLIENT, OK_HTTP
+    }
+
+    public static  String getLatestDomain(Context context) {
+        if (mSubDomain == null || mSubDomain.isEmpty()) {
+             mSubDomain = PreferenceUtil.getSharedPreference(context, LATEST_DOMAIN);
+            if (mSubDomain == null) {
+                return null;
+            }
+            setLatestDomain(context,mSubDomain);
+        }
+        return mSubDomain;
+    }
+
+    public static void setLatestDomain(Context context,String subDomain) {
+        mSubDomain = subDomain;
+        PreferenceUtil.putSharedPreference(context, LATEST_DOMAIN, subDomain);
+    }
+
+    public static String getLatestUserID(Context context) {
+        if (mUserID == null) {
+            mUserID = PreferenceUtil.getSharedPreference(context, LATEST_USERID);
+            if (mUserID == null) {
+                return null;
+            }
+            setLatestUserID(context,mUserID);
+        }
+        return mUserID;
+    }
+
+    public static void setLatestUserID(Context context,String id) {
+        mUserID = id;
+        PreferenceUtil.putSharedPreference(context, LATEST_USERID, mUserID);
+    }
+
+    public static String getLatestURL(Context context) {
+        String url = PreferenceUtil.getSharedPreference(context, LATEST_URL);
+        if (url == null || url.isEmpty()) {
+            return ConfigDataProvider.URL;
+        }
+        return url;
+    }
+
+    public static void setLatestURL(Context context,String url) {
+        PreferenceUtil.putSharedPreference(context,LATEST_URL,url);
+    }
+
+    public static String getFullURL(Context context) {
+        if (getLatestURL(context) == null || VersionData.getCloudVersionString(context) == null) {
+            return null;
+        }
+        String url = getLatestURL(context);
+
+        if (url.endsWith("/")) {
+           return  url +VersionData.getCloudVersionString(context);
+        } else {
+           return  url +"/"+VersionData.getCloudVersionString(context);
+        }
+    }
 }

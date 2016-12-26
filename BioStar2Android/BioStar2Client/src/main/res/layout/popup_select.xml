@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?><!-- <~SCREEN NAME)> {Popup} </~SCREEN NAME> -->
-<LinearLayout
-    android:id="@+id/main_container"
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/main_container"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:orientation="vertical">
@@ -25,7 +24,7 @@
         android:gravity="right|center_vertical"
         android:orientation="vertical">
 
-        <com.supremainc.biostar2.widget.StyledTextView
+        <com.supremainc.biostar2.view.StyledTextView
             android:id="@+id/title_text"
             android:layout_width="match_parent"
             android:layout_height="54dp"
@@ -33,9 +32,12 @@
             android:gravity="center"
             android:textColor="@color/white"
             android:textSize="16dp"
-            app:typeface="roboto_bold.ttf"/>
+            app:typeface="roboto_bold.ttf" />
 
-        <include layout="@layout/view_sub_toolbar"/>
+        <com.supremainc.biostar2.view.SubToolbar
+            android:id="@+id/subtoolbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
     </LinearLayout>
 
     <!--
@@ -64,7 +66,7 @@
             android:scrollbarDefaultDelayBeforeFade="5000"
             android:scrollbarSize="4dp"
             android:scrollbarThumbVertical="@drawable/shape_scrollbar_thumb"
-            android:smoothScrollbar="true"/>
+            android:smoothScrollbar="true" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -72,7 +74,7 @@
             android:layout_gravity="center"
             android:orientation="horizontal">
 
-            <com.supremainc.biostar2.widget.StyledTextView
+            <com.supremainc.biostar2.view.StyledTextView
                 android:id="@+id/negative"
                 android:layout_width="0dp"
                 android:layout_height="45dp"
@@ -86,16 +88,16 @@
                 android:text="@string/cancel"
                 android:textColor="@color/white"
                 android:textSize="16dp"
-                app:typeface="roboto_bold.ttf"/>
+                app:typeface="roboto_bold.ttf" />
 
             <LinearLayout
                 android:id="@+id/devider"
                 android:layout_width="8dp"
                 android:layout_height="wrap_content"
                 android:layout_gravity="center"
-                android:orientation="vertical"/>
+                android:orientation="vertical" />
 
-            <com.supremainc.biostar2.widget.StyledTextView
+            <com.supremainc.biostar2.view.StyledTextView
                 android:id="@+id/positive"
                 android:layout_width="0dp"
                 android:layout_height="45dp"
@@ -109,7 +111,7 @@
                 android:text="@string/ok"
                 android:textColor="@color/white"
                 android:textSize="16dp"
-                app:typeface="roboto_bold.ttf"/>
+                app:typeface="roboto_bold.ttf" />
         </LinearLayout>
     </LinearLayout>
 

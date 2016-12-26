@@ -353,7 +353,9 @@ class MaterialProgressDrawable extends Drawable implements Animatable {
             }
         }
         return false;
-    }    @Override
+    }
+
+    @Override
     public int getIntrinsicHeight() {
         return (int) mHeight;
     }
@@ -374,6 +376,31 @@ class MaterialProgressDrawable extends Drawable implements Animatable {
                     ARROW_WIDTH, ARROW_HEIGHT);
         }
     }
+
+    @Override
+    public int getIntrinsicWidth() {
+        return (int) mWidth;
+    }
+
+    public int getAlpha() {
+        return mRing.getAlpha();
+    }
+
+    @Override
+    public void setAlpha(int alpha) {
+        mRing.setAlpha(alpha);
+    }
+
+    @Override
+    public void setColorFilter(ColorFilter colorFilter) {
+        mRing.setColorFilter(colorFilter);
+    }
+
+    @Override
+    public int getOpacity() {
+        return PixelFormat.TRANSLUCENT;
+    }
+
 
     @Retention(RetentionPolicy.CLASS)
     @IntDef({LARGE, DEFAULT})
@@ -693,36 +720,6 @@ class MaterialProgressDrawable extends Drawable implements Animatable {
         public float getInterpolation(float input) {
             return super.getInterpolation(Math.min(1, input * 2.0f));
         }
-    }
-
-    @Override
-    public int getIntrinsicWidth() {
-        return (int) mWidth;
-    }
-
-
-
-
-    public int getAlpha() {
-        return mRing.getAlpha();
-    }
-
-
-    @Override
-    public void setAlpha(int alpha) {
-        mRing.setAlpha(alpha);
-    }
-
-
-    @Override
-    public void setColorFilter(ColorFilter colorFilter) {
-        mRing.setColorFilter(colorFilter);
-    }
-
-
-    @Override
-    public int getOpacity() {
-        return PixelFormat.TRANSLUCENT;
     }
 
 

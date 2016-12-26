@@ -16,9 +16,6 @@
 
 package com.supremainc.biostar2.sdk.volley;
 
-import com.supremainc.biostar2.sdk.volley.NetworkResponse;
-import com.supremainc.biostar2.sdk.volley.VolleyError;
-
 /**
  * Indicates that there was a network error when performing a Volley request.
  */

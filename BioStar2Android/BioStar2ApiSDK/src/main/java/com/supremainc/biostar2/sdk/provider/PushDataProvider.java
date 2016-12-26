@@ -18,76 +18,76 @@ package com.supremainc.biostar2.sdk.provider;
 import android.content.Context;
 import android.util.Log;
 
-import com.supremainc.biostar2.sdk.datatype.LoginData.NotificationToken;
-import com.supremainc.biostar2.sdk.datatype.ResponseStatus;
+
+import com.supremainc.biostar2.sdk.datatype.v2.Common.ResponseStatus;
+import com.supremainc.biostar2.sdk.datatype.v2.Login.NotificationToken;
 import com.supremainc.biostar2.sdk.utils.PreferenceUtil;
 import com.supremainc.biostar2.sdk.volley.Request.Method;
 import com.supremainc.biostar2.sdk.volley.Response;
 
 public class PushDataProvider extends BaseDataProvider {
-	private final String TAG = getClass().getSimpleName();
-	private static PushDataProvider mSelf = null;
-	private static boolean mIsRunning = false;
-	private static String mToken;
+    private static final String NOTIFICATION_TOKEN = "notifytoken";
+    private static PushDataProvider mSelf = null;
+    private static boolean mIsRunning = false;
+    private static String mToken;
+    private final String TAG = getClass().getSimpleName();
 
-	private static final String NOTIFICATION_TOKEN = "notifytoken";
+    private PushDataProvider(Context context) {
+        super(context);
+    }
 
-	private PushDataProvider(Context context) {
-		super(context);
-	}
+    public static PushDataProvider getInstance(Context context) {
+        if (mSelf == null) {
+            mSelf = new PushDataProvider(context);
+        }
+        return mSelf;
+    }
 
-	public static PushDataProvider getInstance(Context context) {
-		if (mSelf == null) {
-			mSelf = new PushDataProvider(context);
-		}
-		return mSelf;
-	}
+    public void setNeedUpdateNotificationToken(final String token) {
+        NotificationToken notificationToken = new NotificationToken(mContext, token);
+        String json = null;
+        try {
+            json = mGson.toJson(notificationToken);
+        } catch (Exception e) {
+            return;
+        }
+        final String body = json;
+        mIsRunning = true;
+        final Response.Listener<ResponseStatus> listener = new Response.Listener<ResponseStatus>() {
+            @Override
+            public void onResponse(ResponseStatus response, Object param) {
+                mIsRunning = false;
+                String tempToken = mToken;
+                mToken = null;
 
-	public void setNeedUpdateNotificationToken(final String token) {
-		NotificationToken notificationToken = new NotificationToken(mContext, token);
-		String json = null;
-		try {
-			json = mGson.toJson(notificationToken);
-		} catch (Exception e) {
-			return;
-		}
-		final String body = json;
-		mIsRunning = true;
-		final Response.Listener<ResponseStatus> listener = new Response.Listener<ResponseStatus>() {
-			@Override
-			public void onResponse(ResponseStatus response, Object param) {
-				mIsRunning = false;
-				String tempToken = mToken;
-				mToken = null;
+                if (response != null) {
+                    PreferenceUtil.putSharedPreference(mContext, NOTIFICATION_TOKEN, token);
+                } else {
+                    if (ConfigDataProvider.DEBUG) {
+                        Log.e(TAG, "setNeedUpdateNotificationToken null");
+                    }
+                }
 
-				if (response != null) {
-					PreferenceUtil.putSharedPreference(mContext, NOTIFICATION_TOKEN, token);
-				} else {
-					if (ConfigDataProvider.DEBUG) {
-						Log.e(TAG, "setNeedUpdateNotificationToken null");
-					}
-				}
+                if (tempToken != null && !tempToken.equals(token)) {
+                    sendRequest(null, ResponseStatus.class, Method.PUT, NetWork.PARAM_SETTING_NOTIFICATIONTOKEN, null, null, body, this, null, null);
+                }
+            }
+        };
+        sendRequest(null, ResponseStatus.class, Method.PUT, NetWork.PARAM_SETTING_NOTIFICATIONTOKEN, null, null, body, listener, null, null);
+    }
 
-				if (tempToken != null && !tempToken.equals(token)) {
-					sendRequest(null, ResponseStatus.class, Method.PUT, NetWork.PARAM_SETTING_NOTIFICATIONTOKEN, null, null, body, this, null, null);
-				}
-			}
-		};
-		sendRequest(null, ResponseStatus.class, Method.PUT, NetWork.PARAM_SETTING_NOTIFICATIONTOKEN, null, null, body, listener, null, null);
-	}
-
-	public void checkUpdateNotificationToken(String token) {
-		if (token == null || token.length() < 1) {
-			return;
-		}
-		String savedToken = PreferenceUtil.getSharedPreference(mContext, NOTIFICATION_TOKEN);
-		if (savedToken != null && savedToken.equals(token)) {
-			return;
-		}
-		if (mIsRunning) {
-			mToken = token;
-			return;
-		}
-		setNeedUpdateNotificationToken(token);
-	}
+    public void checkUpdateNotificationToken(String token) {
+        if (token == null || token.length() < 1) {
+            return;
+        }
+        String savedToken = PreferenceUtil.getSharedPreference(mContext, NOTIFICATION_TOKEN);
+        if (savedToken != null && savedToken.equals(token)) {
+            return;
+        }
+        if (mIsRunning) {
+            mToken = token;
+            return;
+        }
+        setNeedUpdateNotificationToken(token);
+    }
 }

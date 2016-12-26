@@ -19,60 +19,62 @@ import android.content.Context;
 import android.content.SharedPreferences;
 
 public class PreferenceUtil {
-	private static final String SETTING_PREF = "prefStore";
-	public static void putSharedPreference(Context context, String key, String value) {
-		SharedPreferences preferences = context.getSharedPreferences(SETTING_PREF, Context.MODE_PRIVATE);
-		SharedPreferences.Editor editor = preferences.edit();
-		editor.putString(key, value);
-		editor.commit();
-	}
+    private static final String SETTING_PREF = "prefStore";
 
-	public static void putSharedPreference(Context context, String key, boolean value) {
-		SharedPreferences preferences = context.getSharedPreferences(SETTING_PREF, Context.MODE_PRIVATE);
-		SharedPreferences.Editor editor = preferences.edit();
-		editor.putBoolean(key, value);
-		editor.commit();
-	}
+    public static void putSharedPreference(Context context, String key, String value) {
+        SharedPreferences preferences = context.getSharedPreferences(SETTING_PREF, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putString(key, value);
+        editor.commit();
+    }
 
-	public static void putSharedPreference(Context context, String key, int value) {
-		SharedPreferences preferences = context.getSharedPreferences(SETTING_PREF, Context.MODE_PRIVATE);
-		SharedPreferences.Editor editor = preferences.edit();
-		editor.putInt(key, value);
-		editor.commit();
-	}
+    public static void putSharedPreference(Context context, String key, boolean value) {
+        SharedPreferences preferences = context.getSharedPreferences(SETTING_PREF, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putBoolean(key, value);
+        editor.commit();
+    }
 
-	public static String getSharedPreference(Context context, String key) {
-		SharedPreferences preferences = context.getSharedPreferences(SETTING_PREF, Context.MODE_PRIVATE);
-		try {
-			return preferences.getString(key, null);
-		} catch (Exception e) {
-			return null;
-		}
-	}
+    public static void putSharedPreference(Context context, String key, int value) {
+        SharedPreferences preferences = context.getSharedPreferences(SETTING_PREF, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.putInt(key, value);
+        editor.commit();
+    }
 
-	public static boolean getBooleanSharedPreference(Context context, String key) {
-		return getBooleanSharedPreference(context,key,false);
-	}
+    public static String getSharedPreference(Context context, String key) {
+        SharedPreferences preferences = context.getSharedPreferences(SETTING_PREF, Context.MODE_PRIVATE);
+        try {
+            return preferences.getString(key, null);
 
-	public static int getIntSharedPreference(Context context, String key) {
-		return getIntSharedPreference(context,key,-1);
-	}
+        } catch (Exception e) {
+            return null;
+        }
+    }
 
-	public static boolean getBooleanSharedPreference(Context context, String key,boolean defaultValue) {
-		SharedPreferences preferences = context.getSharedPreferences(SETTING_PREF, Context.MODE_PRIVATE);
-		try {
-			return preferences.getBoolean(key, defaultValue);
-		} catch (Exception e) {
-			return false;
-		}
-	}
+    public static boolean getBooleanSharedPreference(Context context, String key) {
+        return getBooleanSharedPreference(context, key, false);
+    }
 
-	public static int getIntSharedPreference(Context context, String key,int defaultValue) {
-		SharedPreferences preferences = context.getSharedPreferences(SETTING_PREF, Context.MODE_PRIVATE);
-		try {
-			return preferences.getInt(key,defaultValue);
-		} catch (Exception e) {
-			return -1;
-		}
-	}
+    public static int getIntSharedPreference(Context context, String key) {
+        return getIntSharedPreference(context, key, -1);
+    }
+
+    public static boolean getBooleanSharedPreference(Context context, String key, boolean defaultValue) {
+        SharedPreferences preferences = context.getSharedPreferences(SETTING_PREF, Context.MODE_PRIVATE);
+        try {
+            return preferences.getBoolean(key, defaultValue);
+        } catch (Exception e) {
+            return false;
+        }
+    }
+
+    public static int getIntSharedPreference(Context context, String key, int defaultValue) {
+        SharedPreferences preferences = context.getSharedPreferences(SETTING_PREF, Context.MODE_PRIVATE);
+        try {
+            return preferences.getInt(key, defaultValue);
+        } catch (Exception e) {
+            return -1;
+        }
+    }
 }

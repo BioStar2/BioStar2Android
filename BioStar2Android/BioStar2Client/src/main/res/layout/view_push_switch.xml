@@ -1,9 +1,9 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-              xmlns:androidfont="http://schemas.android.com/apk/res-auto"
-              android:layout_width="wrap_content"
-              android:layout_height="wrap_content"
-              android:gravity="center"
-              android:orientation="vertical">
+    xmlns:androidfont="http://schemas.android.com/apk/res-auto"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:gravity="center"
+    android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -11,11 +11,13 @@
         android:layout_gravity="center_vertical|left"
         android:gravity="center_vertical|left"
         android:orientation="horizontal"
+        android:layout_marginRight="18dp"
         android:paddingLeft="18dp">
 
-        <com.supremainc.biostar2.widget.StyledTextView
+        <com.supremainc.biostar2.view.StyledTextView
             android:id="@+id/descrption"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
+            android:layout_weight="1"
             android:layout_height="match_parent"
             android:ellipsize="end"
             android:gravity="left|center_vertical"
@@ -23,16 +25,17 @@
             android:singleLine="true"
             android:textColor="@color/select_text"
             android:textSize="18dp"
-            androidfont:typeface="roboto_medium.ttf"/>
+            androidfont:typeface="roboto_medium.ttf" />
 
-        <include
-            android:id="@+id/push_switch"
-            layout="@layout/view_switch"/>
+        <com.supremainc.biostar2.view.SwitchView
+            android:id="@+id/onoff"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
     </LinearLayout>
 
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0.8dp"
-        android:background="@color/list_devider"/>
+        android:background="@color/list_devider" />
 
 </LinearLayout>

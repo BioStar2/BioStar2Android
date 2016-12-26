@@ -17,7 +17,7 @@
 package com.supremainc.biostar2.sdk.volley;
 
 import com.google.gson.Gson;
-import com.supremainc.biostar2.sdk.datatype.ResponseStatus;
+import com.supremainc.biostar2.sdk.datatype.v2.Common.ResponseStatus;
 import com.supremainc.biostar2.sdk.volley.toolbox.HttpHeaderParser;
 
 /**
@@ -25,71 +25,88 @@ import com.supremainc.biostar2.sdk.volley.toolbox.HttpHeaderParser;
  */
 @SuppressWarnings("serial")
 public class VolleyError extends Exception {
-	public final NetworkResponse networkResponse;
-	public String responseString;
-	public ResponseStatus responseClass;
-	private static Gson mGson = new Gson();
-	private boolean isSessionExpire = false;
+    private static Gson mGson = new Gson();
+    public final NetworkResponse networkResponse;
+    public String responseString;
+    public ResponseStatus responseClass;
+    private boolean isSessionExpire = false;
 
-	public VolleyError() {
-		networkResponse = null;
-	}
+    public VolleyError() {
+        networkResponse = null;
+    }
 
-	public VolleyError(NetworkResponse response) {
-		networkResponse = response;
-		try {
-			responseString = new String(response.data, HttpHeaderParser.parseCharset(response.headers));
-			responseClass = (ResponseStatus) mGson.fromJson(responseString, ResponseStatus.class);
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-	}
+    public VolleyError(NetworkResponse response) {
+        networkResponse = response;
+        try {
+            responseString = new String(response.data, HttpHeaderParser.parseCharset(response.headers));
+            responseClass = (ResponseStatus) mGson.fromJson(responseString, ResponseStatus.class);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
 
-	public void setSessionExpire() {
-		isSessionExpire = true;
-	}
+    public VolleyError(String exceptionMessage) {
+        super(exceptionMessage);
+        networkResponse = null;
+        responseClass = new ResponseStatus();
+        responseClass.message = exceptionMessage;
+    }
 
-	public boolean getSessionExpire() {
-		return isSessionExpire;
-	}
+    public VolleyError(ResponseStatus responseStatus,String message) {
+        networkResponse = null;
+        if (responseStatus != null) {
+            try {
+                responseClass = responseStatus.clone();
+            } catch (Exception e) {
 
-	@Override
-	public String getMessage() {
-		String message;
-		message = super.getMessage();
-		if (responseClass != null && responseClass.message != null) {
-			message = responseClass.message;
-			message = message.replace("<br/>","\n");
-		}
+            }
+        }
+        if (responseClass == null) {
+            responseClass = new ResponseStatus();
+            responseClass.message = message;
+        }
+    }
 
-		if (message == null) {
-			return "";
-		}
-		return message;
-	}
+    public VolleyError(String exceptionMessage, Throwable reason) {
+        super(exceptionMessage, reason);
+        networkResponse = null;
+    }
 
-	public String getCode() {
-		if (responseClass != null) {
-			if (responseClass.statusCode == null) {
-				return "";
-			}
-			return responseClass.statusCode;
-		}
-		return "";
-	}
+    public VolleyError(Throwable cause) {
+        super(cause);
+        networkResponse = null;
+    }
 
-	public VolleyError(String exceptionMessage) {
-		super(exceptionMessage);
-		networkResponse = null;
-	}
+    public void setSessionExpire() {
+        isSessionExpire = true;
+    }
 
-	public VolleyError(String exceptionMessage, Throwable reason) {
-		super(exceptionMessage, reason);
-		networkResponse = null;
-	}
+    public boolean getSessionExpire() {
+        return isSessionExpire;
+    }
 
-	public VolleyError(Throwable cause) {
-		super(cause);
-		networkResponse = null;
-	}
+    @Override
+    public String getMessage() {
+        String message;
+        message = super.getMessage();
+        if (responseClass != null && responseClass.message != null) {
+            message = responseClass.message;
+            message = message.replace("<br/>", "\n");
+        }
+
+        if (message == null) {
+            return "";
+        }
+        return message;
+    }
+
+    public String getCode() {
+        if (responseClass != null) {
+            if (responseClass.statusCode == null) {
+                return "";
+            }
+            return responseClass.statusCode;
+        }
+        return "";
+    }
 }

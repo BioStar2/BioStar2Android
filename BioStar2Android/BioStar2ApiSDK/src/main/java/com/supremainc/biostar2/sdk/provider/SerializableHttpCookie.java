@@ -21,6 +21,8 @@ package com.supremainc.biostar2.sdk.provider;
  * Modifications in the structure of the class and addition of serialization of httpOnly attribute
  */
 
+import android.util.Log;
+
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -29,8 +31,6 @@ import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.net.HttpCookie;
-
-import android.util.Log;
 
 public class SerializableHttpCookie implements Serializable {
     private static final String TAG = SerializableHttpCookie.class

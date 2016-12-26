@@ -34,124 +34,126 @@ import java.util.Map;
 /**
  * A request for retrieving a T type response body at a given URL that also
  * optionally sends along a JSON body in the request specified.
- * 
- * @param <T>
- *            JSON type of response expected
+ *
+ * @param <T> JSON type of response expected
  */
 public abstract class JsonRequest<T> extends Request<T> {
-	private static final String TAG = "JsonRequest";
-	/** Charset for request. */
-	private static final String PROTOCOL_CHARSET = "utf-8";
+    private static final String TAG = "JsonRequest";
+    /**
+     * Charset for request.
+     */
+    private static final String PROTOCOL_CHARSET = "utf-8";
 
-	/** Content type for request. */
-	public static final String PROTOCOL_CONTENT_TYPE = String.format(
-			"application/json; charset=%s", PROTOCOL_CHARSET);
+    /**
+     * Content type for request.
+     */
+    public static final String PROTOCOL_CONTENT_TYPE = String.format(
+            "application/json; charset=%s", PROTOCOL_CHARSET);
 
-	private final Listener<T> mListener;
-	private SimpleDateFormat formatter = new SimpleDateFormat("hh:mm:ss.SSS",
-			Locale.ENGLISH);
-	private Date date;
-	protected String session = "";
+    private final Listener<T> mListener;
+    protected String session = "";
+    private SimpleDateFormat formatter = new SimpleDateFormat("hh:mm:ss.SSS",
+            Locale.ENGLISH);
+    private Date date;
 
 
-	public JsonRequest(int method, String url, Map<String, String> headers,
-			Map<String, String> params, String requestBody,
-			Listener<T> listener, ErrorListener errorListener,Object deliverParam) {
-		super(method, url, errorListener,deliverParam);
-		setHeader(headers);
-		setparam(params);
-		mListener = listener;
-		date = new Date();
-		
-		if (ConfigDataProvider.DEBUG) {
-			logRequestinfo(null, null, false);
-			Log.i(TAG,"requestBody: "+requestBody);
-		}
-	}
+    public JsonRequest(int method, String url, Map<String, String> headers,
+                       Map<String, String> params, String requestBody,
+                       Listener<T> listener, ErrorListener errorListener, Object deliverParam) {
+        super(method, url, errorListener, deliverParam);
+        setHeader(headers);
+        setparam(params);
+        mListener = listener;
+        date = new Date();
 
-	@Override
-	protected void deliverResponse(T response) {
-		if (ConfigDataProvider.DEBUG) {
-			logRequestinfo(response, null, true);
-		}
-		if (mListener != null) {
-			mListener.onResponse(response,mDeliverParam);
-		}
-		mDeliverParam = null;
-		
-	}
+        if (ConfigDataProvider.DEBUG) {
+            logRequestinfo(null, null, false);
+            Log.i(TAG, "requestBody: " + requestBody);
+        }
+    }
 
-	/**
-	 * Delivers error message to the ErrorListener that the Request was
-	 * initialized with.
-	 * 
-	 * @param error
-	 *            Error details
-	 */
-	@Override
-	public void deliverError(VolleyError error) {
-		if (ConfigDataProvider.DEBUG) {
-			if (error == null) {
-				error = new VolleyError("null error");
-			}
-			logRequestinfo(null, error, true);
-		}
-		if (mErrorListener != null) {
-			mErrorListener.onErrorResponse(error,mDeliverParam);
-		}
-		mDeliverParam = null;
-	}
+    @Override
+    protected void deliverResponse(T response) {
+        if (ConfigDataProvider.DEBUG) {
+            logRequestinfo(response, null, true);
+        }
+        if (mListener != null) {
+            mListener.onResponse(response, mDeliverParam);
+        }
+        mDeliverParam = null;
 
-	@Override
-	abstract protected Response<T> parseNetworkResponse(NetworkResponse response);
+    }
 
-	private void innerlogRequestinfo(String tag, String content, VolleyError error) {
-		if (ConfigDataProvider.DEBUG) {
-			if (error != null) {
-				Log.e(tag, content);
-			} else {
-				Log.i(tag, content);
-			}
-		}
-	}
+    /**
+     * Delivers error message to the ErrorListener that the Request was
+     * initialized with.
+     *
+     * @param error Error details
+     */
+    @Override
+    public void deliverError(VolleyError error) {
+        if (ConfigDataProvider.DEBUG) {
+            if (error == null) {
+                error = new VolleyError("null error");
+            }
+            logRequestinfo(null, error, true);
+        }
+        if (mErrorListener != null) {
+            mErrorListener.onErrorResponse(error, mDeliverParam);
+        }
+        mDeliverParam = null;
+    }
 
-	private void logRequestinfo(T reponse, VolleyError error, boolean isResponse) {
-		if (ConfigDataProvider.DEBUG) {
-			String isType = " Send: ";
-			if (isResponse) {
-				isType = " Receive: ";
-			}
-			if (error != null) {
-				isType = isType+"fail";				
-			} else {
-				isType = isType+"success";
-			}
-			String content = "";
+    @Override
+    abstract protected Response<T> parseNetworkResponse(NetworkResponse response);
 
-			switch (mMethod) {
-			case Method.GET:
-				content = "GET: " + getUrl();
-				break;
-			case Method.PUT:
-				content = "PUT: " + getUrl();
-				break;
-			case Method.DELETE:
-				content = "DELETE: " + getUrl();
-				break;
-			case Method.POST:
-				content = "POST: " + getUrl();
-				break;
-			default:
-				break;
-			}
-			String tag = TAG + isType + formatter.format(date);
-			
-			innerlogRequestinfo(tag, content, error);
+    private void innerlogRequestinfo(String tag, String content, VolleyError error) {
+        if (ConfigDataProvider.DEBUG) {
+            if (error != null) {
+                Log.e(tag, content);
+            } else {
+                Log.i(tag, content);
+            }
+        }
+    }
 
-			if (error != null) {				
-				Log.e(tag,"request body:"+mRequestBody);
-				Log.e(tag,"has error reponse body:"+error.responseString);
-			}
-		}
-	}
+    private void logRequestinfo(T reponse, VolleyError error, boolean isResponse) {
+        if (ConfigDataProvider.DEBUG) {
+            String isType = " Send: ";
+            if (isResponse) {
+                isType = " Receive: ";
+            }
+            if (error != null) {
+                isType = isType + "fail";
+            } else {
+                isType = isType + "success";
+            }
+            String content = "";
+
+            switch (mMethod) {
+                case Method.GET:
+                    content = "GET: " + getUrl();
+                    break;
+                case Method.PUT:
+                    content = "PUT: " + getUrl();
+                    break;
+                case Method.DELETE:
+                    content = "DELETE: " + getUrl();
+                    break;
+                case Method.POST:
+                    content = "POST: " + getUrl();
+                    break;
+                default:
+                    break;
+            }
+            String tag = TAG + isType + formatter.format(date);
+
+            innerlogRequestinfo(tag, content, error);
+
+            if (error != null) {
+                Log.e(tag, "request body:" + mRequestBody);
+                Log.e(tag, "has error reponse body:" + error.responseString);
+            }
+        }
+    }
 }

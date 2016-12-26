@@ -34,7 +34,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout;
-import com.supremainc.biostar2.popup.Popup;
+import com.supremainc.biostar2.widget.popup.Popup;
 
 import org.hamcrest.Description;
 import org.hamcrest.Matcher;
@@ -64,19 +64,20 @@ public class ExtTest {
         }
     }
 
-    public static void checkPopupType(boolean positive,boolean reverse,Popup.PopupType type) {
+    public static void checkPopupType(boolean positive, boolean reverse, Popup.PopupType type) {
         waitId(R.id.main_container, 60000);
         if (ExtTest.isExist(R.id.main_container)) {
-            if (reverse && (Popup.PopupType)getTag(R.id.main_container) == type) {
+            if (reverse && (Popup.PopupType) getTag(R.id.main_container) == type) {
                 onView(withId(R.id.main_container))
                         .check((ViewAssertions.matches(setResult(false))));
-            } else if (!reverse && (Popup.PopupType)getTag(R.id.main_container) != type) {
+            } else if (!reverse && (Popup.PopupType) getTag(R.id.main_container) != type) {
                 onView(withId(R.id.main_container))
                         .check((ViewAssertions.matches(setResult(false))));
             }
             checkPopup(positive);
         }
     }
+
     public static void checkPopup(boolean positive) {
         w(500);
         if (ExtTest.isExist(R.id.waitpopup_container)) {
@@ -130,6 +131,7 @@ public class ExtTest {
         waitIdle();
         pressBack();
     }
+
     public static void waitIdle() {
         w(1000);
         onView(isRoot()).perform(new ViewAction() {
@@ -150,6 +152,7 @@ public class ExtTest {
             }
         });
     }
+
     public static boolean isExist(final int viewId) {
         final Boolean[] result = {false};
         onView(isRoot()).perform(new ViewAction() {
@@ -308,7 +311,7 @@ public class ExtTest {
 //                          Log.e("test","original view id:"+viewId+" child view id:"+child.getId());
                         if (viewMatcher.matches(child)) {
                             find = child;
-                            Log.e("test","macthch  visible: "+child.getVisibility());
+                            Log.e("test", "macthch  visible: " + child.getVisibility());
                         }
 
                     }
@@ -437,7 +440,7 @@ public class ExtTest {
                 if (inputConnection == null) {
                     return false;
                 }
-                int result =  editorInfo.inputType & inputType;
+                int result = editorInfo.inputType & inputType;
                 if (result != inputType) {
                     return false;
                 }
@@ -504,16 +507,16 @@ public class ExtTest {
     }
 
     public static boolean search(String content) {
-        Log.e(TAG, "case: User/" + content+"를 찾는다.");
-                onView(withId(R.id.searchbar)).perform(ViewActions.click());
+        Log.e(TAG, "case: User/" + content + "를 찾는다.");
+        onView(withId(R.id.searchbar)).perform(ViewActions.click());
         onView(withId(R.id.search_src_text)).perform(ViewActions.typeText("4294967294"));
         onView(withId(R.id.searchbar)).perform(ViewActions.pressKey(KeyEvent.KEYCODE_ENTER));
         ExtTest.waitSwipyRefresh();
         if (ExtTest.checkListCount(R.id.listview) > 0) {
-            Log.e(TAG, "result: "+content+"를 찾았다");
+            Log.e(TAG, "result: " + content + "를 찾았다");
             return true;
         } else {
-            Log.e(TAG, "result: "+content+"를 찾지못했다");
+            Log.e(TAG, "result: " + content + "를 찾지못했다");
             return false;
         }
     }

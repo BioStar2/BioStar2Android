@@ -17,9 +17,9 @@ package com.supremainc.biostar2.sdk.provider;
 
 import android.content.Context;
 
-import com.supremainc.biostar2.sdk.datatype.PreferenceData.Preference;
-import com.supremainc.biostar2.sdk.datatype.ResponseStatus;
-import com.supremainc.biostar2.sdk.datatype.UpdateData;
+import com.supremainc.biostar2.sdk.datatype.v2.Common.ResponseStatus;
+import com.supremainc.biostar2.sdk.datatype.v2.Common.UpdateData;
+import com.supremainc.biostar2.sdk.datatype.v2.Preferrence.Preference;
 import com.supremainc.biostar2.sdk.utils.PreferenceUtil;
 import com.supremainc.biostar2.sdk.volley.Request.Method;
 import com.supremainc.biostar2.sdk.volley.Response.ErrorListener;
@@ -34,258 +34,254 @@ import java.util.Map;
 import java.util.TimeZone;
 
 public class CommonDataProvider extends BaseDataProvider {
-	@SuppressWarnings("unused")
-	private final String TAG = getClass().getSimpleName();
-	private static CommonDataProvider mSelf = null;
-	Map<String, String> mMssageTable = new HashMap<String, String>();
+    public static final String PREF_DATE_FORMAT = "date_format";
+    public static final String PREF_TIME_FORMAT = "time_format";
+    public static final String PREF_LANGUAGE = "language";
+    public static final SimpleDateFormat mFormatterServer = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SS'Z'", Locale.ENGLISH);
+    /**
+     * yyyy-MM-dd'T'HH:mm:ss.SS'Z'
+     */
+    protected static SimpleDateFormat mFormmaterWeek = new SimpleDateFormat("EEE");
+    private static CommonDataProvider mSelf = null;
+    @SuppressWarnings("unused")
+    private final String TAG = getClass().getSimpleName();
+    /**
+     * a hh:mm:ss : default
+     * HH:mm:ss
+     * hh:mm:ss a
+     */
+    protected SimpleDateFormat mFormmaterHourMinSec;
+    /**
+     * a hh:mm : default
+     * HH:mm
+     * hh:mm a
+     */
+    protected SimpleDateFormat mFormmaterHourMin;
+    /**
+     * Date + a hh:mm:ss : default
+     * Date + HH:mm:ss
+     * Date + hh:mm:ss a
+     */
+    protected SimpleDateFormat mFormmaterDateHourMinSec;
+    /**
+     * Date + a hh:mm : default
+     * Date + HH:mm
+     * Date + hh:mm a
+     */
+    protected SimpleDateFormat mFormmaterDateHourMin;
+    /**
+     * yyyy/MM/dd : default
+     * MM/dd/yyyy
+     */
+    protected SimpleDateFormat mFormmaterDate;
+    Map<String, String> mMssageTable = new HashMap<String, String>();
+    private long TIME_ZONE_ADJUST = -1;
+    private int TIME_ZONE_INDEX = -1;
+    private String DATE_FORMAT;
+    private String TIME_FORMAT;
 
-	public static final String PREF_DATE_FORMAT = "date_format";
-	public static final String PREF_TIME_FORMAT = "time_format";
-	public static final String PREF_LANGUAGE = "language";
+    private CommonDataProvider(Context context) {
+        super(context);
+    }
 
-	private long TIME_ZONE_ADJUST = -1;
-	private int TIME_ZONE_INDEX = -1;
-	private String DATE_FORMAT;
-	private String TIME_FORMAT;
+    public static CommonDataProvider getInstance(Context context) {
+        if (mSelf == null) {
+            mSelf = new CommonDataProvider(context);
+        }
+        return mSelf;
+    }
 
-	/**
-	 * a hh:mm:ss : default
-	 * HH:mm:ss
-	 * hh:mm:ss a
-	 */
-	protected SimpleDateFormat mFormmaterHourMinSec;
-	/**
-	 * a hh:mm : default
-	 * HH:mm
-	 * hh:mm a
-	 */
-	protected SimpleDateFormat mFormmaterHourMin;
+    public static CommonDataProvider getInstance() {
+        if (mSelf != null) {
+            return mSelf;
+        }
+        if (mContext != null) {
+            mSelf = new CommonDataProvider(mContext);
+            return mSelf;
+        }
+        return null;
+    }
 
-	/**
-	 * Date + a hh:mm:ss : default
-	 * Date + HH:mm:ss
-	 * Date + hh:mm:ss a
-	 */
-	protected SimpleDateFormat mFormmaterDateHourMinSec;
-	/**
-	 * Date + a hh:mm : default
-	 * Date + HH:mm
-	 * Date + hh:mm a
-	 */
-	protected SimpleDateFormat mFormmaterDateHourMin;
-	/**
-	 * 	yyyy/MM/dd : default
-	 *  MM/dd/yyyy
-	 */
-	protected SimpleDateFormat mFormmaterDate;
-	/**
-	 * yyyy-MM-dd'T'HH:mm:ss.SS'Z'
-	 */
-	protected static SimpleDateFormat mFormmaterWeek = new SimpleDateFormat("EEE");
-	public static final SimpleDateFormat mFormatterServer = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SS'Z'",Locale.ENGLISH);
+    public ArrayList<String> getDateFormatList() {
+        ArrayList<String> list = new ArrayList<String>();
+        list.add("yyyy/MM/dd");
+        list.add("MM/dd/yyyy");
+        return list;
+    }
 
-	private CommonDataProvider(Context context) {
-		super(context);
-	}
+    public ArrayList<String> getTimeFormatList() {
+        ArrayList<String> list = new ArrayList<String>();
+        list.add("HH:mm");
+        list.add("a hh:mm");
+        list.add("hh:mm a");
+        return list;
+    }
 
-	public static CommonDataProvider getInstance(Context context) {
-		if (mSelf == null) {
-			mSelf = new CommonDataProvider(context);
-		}
-		return mSelf;
-	}
+    public void getAppVersion(String tag, Listener<UpdateData> listener, ErrorListener errorListener, String appName, Object deliverParam) {
+        Map<String, String> params = new HashMap<String, String>();
+        params.put("mobile_device_type", "ANDROID");
+        sendRequest(tag, UpdateData.class, Method.GET, NetWork.PARAM_VERSION + "/" + appName, null, params, null, listener, errorListener, deliverParam);
+    }
 
-	public static CommonDataProvider getInstance() {
-		if (mSelf != null) {
-			return mSelf;
-		}
-		if (mContext != null) {
-			mSelf = new CommonDataProvider(mContext);
-			return mSelf;
-		}
-		return null;
-	}
+    public void setPreference(Preference content, final Listener<ResponseStatus> listener, ErrorListener errorListener, final Object deliverParam) {
+        if (getLoginUserInfo() == null || content == null) {
+            if (errorListener != null) {
+                errorListener.onErrorResponse(new VolleyError(), deliverParam);
+            }
+            return;
+        }
 
-	public ArrayList<String> getDateFormatList() {
-		ArrayList<String> list = new ArrayList<String>();
-		list.add("yyyy/MM/dd");
-		list.add("MM/dd/yyyy");
-		return list;
-	}
+        final String json = mGson.toJson(content);
+        String url = NetWork.PARAM_SETTING;
 
-	public ArrayList<String> getTimeFormatList() {
-		ArrayList<String> list = new ArrayList<String>();
-		list.add("HH:mm");
-		list.add("a hh:mm");
-		list.add("hh:mm a");
-		return list;
-	}
+        final Listener<ResponseStatus> innerListener = new Listener<ResponseStatus>() {
+            @Override
+            public void onResponse(ResponseStatus response, Object param) {
+                Preference content = (Preference) param;
+                setDateTimeFormat(mContext, content.date_format, content.time_format);
+                if (listener != null) {
+                    listener.onResponse(response, deliverParam);
+                }
+            }
+        };
 
-	public void getAppVersion(String tag, Listener<UpdateData> listener, ErrorListener errorListener, String appName, Object deliverParam) {
-		Map<String, String> params = new HashMap<String, String>();
-		params.put("mobile_device_type", "ANDROID");
-		sendRequest(tag, UpdateData.class, Method.GET, NetWork.PARAM_VERSION + "/"+appName, null, params, null, listener, errorListener, deliverParam);
-	}
+        // ErrorListener inErrorListerner = new ErrorListener() {
+        // @Override
+        // public void onErrorResponse(VolleyError error, Object param) {
+        // if (error.getCode().equals(608)) {
+        // Preference content = (Preference)param;
+        // mNetwork.sendRequest(null, ResponseStatus.class, Method.POST,
+        // NetWork.PARAM_SETTING, null, null, json, innerListener,
+        // errorListener, content);
+        // } else if (errorListener != null){
+        // errorListener.onErrorResponse(error, deliverParam);
+        // }
+        // }
+        // };
 
-	public void setPreference(Preference content, final Listener<ResponseStatus> listener, ErrorListener errorListener, final Object deliverParam) {
-		if (getLoginUserInfo() == null || content == null) {
-			if (errorListener != null) {
-				errorListener.onErrorResponse(new VolleyError(), deliverParam);
-			}
-			return;
-		}
+        mNetwork.sendRequest(null, ResponseStatus.class, Method.PUT, url, null, null, json, innerListener, errorListener, content);
+    }
 
-		final String json = mGson.toJson(content);
-		String url = NetWork.PARAM_SETTING;
+    public void getPreference(final Listener<Preference> listener, final ErrorListener errorListener, Object deliverParam) {
+        Listener<Preference> inListener = new Listener<Preference>() {
+            @Override
+            public void onResponse(Preference response, Object param) {
+                if (response == null) {
+                    errorListener.onErrorResponse(new VolleyError(""), param);
+                    return;
+                }
+                setDateTimeFormat(mContext, response.date_format, response.time_format);
+                listener.onResponse(response, param);
+            }
+        };
+        if (getLoginUserInfo() == null) {
+            if (errorListener != null) {
+                errorListener.onErrorResponse(new VolleyError(), deliverParam);
+            }
+            return;
+        }
+        String url = NetWork.PARAM_SETTING;
+        mNetwork.sendRequest(null, Preference.class, Method.GET, url, null, null, null, inListener, errorListener, deliverParam);
+    }
 
-		final Listener<ResponseStatus> innerListener = new Listener<ResponseStatus>() {
-			@Override
-			public void onResponse(ResponseStatus response, Object param) {
-				Preference content = (Preference) param;
-				setDateTimeFormat(mContext, content.date_format, content.time_format);
-				if (listener != null) {
-					listener.onResponse(response, deliverParam);
-				}
-			}
-		};
+    public boolean getSavedPrefrence() {
+        Preference content = new Preference();
+        getTimeZoneAdjust();
+        content.date_format = "yyyy/MM/dd";
+        content.time_format = "a hh:mm";
+        setDateTimeFormat(mContext, content.date_format, content.time_format);
 
-		// ErrorListener inErrorListerner = new ErrorListener() {
-		// @Override
-		// public void onErrorResponse(VolleyError error, Object param) {
-		// if (error.getCode().equals(608)) {
-		// Preference content = (Preference)param;
-		// mNetwork.sendRequest(null, ResponseStatus.class, Method.POST,
-		// NetWork.PARAM_SETTING, null, null, json, innerListener,
-		// errorListener, content);
-		// } else if (errorListener != null){
-		// errorListener.onErrorResponse(error, deliverParam);
-		// }
-		// }
-		// };
+        if (!generatorFormatter()) {
+            return false;
+        }
+        return true;
+    }
 
-		mNetwork.sendRequest(null, ResponseStatus.class, Method.PUT, url, null, null, json, innerListener, errorListener, content);
-	}
+    public long getTimeZoneAdjust() {
+        if (TIME_ZONE_ADJUST == -1) {
+            setTimeZoneAdjust();
+        }
+        return TIME_ZONE_ADJUST;
+    }
 
-	public void getPreference(final Listener<Preference> listener, final ErrorListener errorListener, Object deliverParam) {
-		Listener<Preference> inListener = new Listener<Preference>() {
-			@Override
-			public void onResponse(Preference response, Object param) {
-				if (response == null) {
-					errorListener.onErrorResponse(new VolleyError(""), param);
-					return;
-				}
-				setDateTimeFormat(mContext, response.date_format, response.time_format);
-				listener.onResponse(response, param);
-			}
-		};
-		if (getLoginUserInfo() == null) {
-			if (errorListener != null) {
-				errorListener.onErrorResponse(new VolleyError(), deliverParam);
-			}
-			return;
-		}
-		String url = NetWork.PARAM_SETTING;
-		mNetwork.sendRequest(null, Preference.class, Method.GET, url, null, null, null, inListener, errorListener, deliverParam);
-	}
-	public boolean getSavedPrefrence() {
-		Preference content = new Preference();
-		getTimeZoneAdjust();
-		content.date_format = "yyyy/MM/dd";
-		content.time_format = "a hh:mm";
-		setDateTimeFormat(mContext, content.date_format, content.time_format);
+    public String getTimeZoneName() {
+        TimeZone tz = TimeZone.getDefault();
+        TIME_ZONE_ADJUST = tz.getRawOffset();
+        return tz.getDisplayName();
+    }
 
-		if (!generatorFormatter()) {
-			return false;
-		}
-		return true;
-	}
+    public void setTimeZoneAdjust() {
+        TimeZone tz = TimeZone.getDefault();
+        TIME_ZONE_ADJUST = tz.getRawOffset();
+    }
 
-	public long getTimeZoneAdjust() {
-		if (TIME_ZONE_ADJUST == -1) {
-			setTimeZoneAdjust();
-		}
-		return TIME_ZONE_ADJUST;
-	}
+    public String getDateFormat() {
+        if (DATE_FORMAT == null) {
+            DATE_FORMAT = PreferenceUtil.getSharedPreference(mContext, PREF_DATE_FORMAT);
+        }
+        return DATE_FORMAT;
+    }
 
-	public String getTimeZoneName() {
-		TimeZone tz = TimeZone.getDefault();
-		TIME_ZONE_ADJUST = tz.getRawOffset();
-		return tz.getDisplayName();
-	}
+    public String getTimeFormat() {
+        if (TIME_FORMAT == null) {
+            TIME_FORMAT = PreferenceUtil.getSharedPreference(mContext, PREF_TIME_FORMAT);
+        }
+        return TIME_FORMAT;
+    }
 
-	public void setTimeZoneAdjust() {
-		TimeZone tz = TimeZone.getDefault();
-		TIME_ZONE_ADJUST = tz.getRawOffset();
-	}
+    public void setDateTimeFormat(Context context, String date, String time) {
+        DATE_FORMAT = date;
+        TIME_FORMAT = time;
+        PreferenceUtil.putSharedPreference(context, PREF_DATE_FORMAT, date);
+        PreferenceUtil.putSharedPreference(context, PREF_TIME_FORMAT, time);
+        mFormmaterDate = null;
+        mFormmaterHourMin = null;
+        mFormmaterHourMinSec = null;
+        mFormmaterHourMin = null;
+        mFormmaterHourMinSec = null;
+        generatorFormatter();
+    }
 
-	public String getDateFormat() {
-		if (DATE_FORMAT == null) {
-			DATE_FORMAT = PreferenceUtil.getSharedPreference(mContext, PREF_DATE_FORMAT);
-		}
-		return DATE_FORMAT;
-	}
+    protected boolean generatorFormatter() {
+        getTimeZoneAdjust();
+        getDateFormat();
+        getTimeFormat();
 
-	public String getTimeFormat() {
-		if (TIME_FORMAT == null) {
-			TIME_FORMAT = PreferenceUtil.getSharedPreference(mContext, PREF_TIME_FORMAT);
-		}
-		return TIME_FORMAT;
-	}
-
-	public void setDateTimeFormat(Context context, String date, String time) {
-		DATE_FORMAT = date;
-		TIME_FORMAT = time;
-		PreferenceUtil.putSharedPreference(context, PREF_DATE_FORMAT, date);
-		PreferenceUtil.putSharedPreference(context, PREF_TIME_FORMAT, time);
-		mFormmaterDate = null;
-		mFormmaterHourMin = null;
-		mFormmaterHourMinSec = null;
-		mFormmaterHourMin = null;
-		mFormmaterHourMinSec = null;
-		generatorFormatter();
-	}
-
-	protected boolean generatorFormatter() {
-		getTimeZoneAdjust();
-		getDateFormat();
-		getTimeFormat();
-
-		if (DATE_FORMAT == null || TIME_FORMAT == null) {
-			return false;
-		}
-		if (mFormmaterDate == null) {
-			mFormmaterDate = new SimpleDateFormat(DATE_FORMAT);
-		}
-		if (mFormmaterDateHourMin == null || mFormmaterHourMin == null) {
-			String format = TIME_FORMAT;
-			format = format.replaceAll(" ", "");
-			if (format.startsWith("a")) {
-				format = format.replace("a", "");
-				format = "a " + format;
-			} else if (format.endsWith("a")) {
-				format = format.replace("a", "");
-				format = format + " a";
-			}
-			mFormmaterDateHourMin = new SimpleDateFormat(DATE_FORMAT + " " + format);
-			mFormmaterHourMin = new SimpleDateFormat(format);
-		}
-		if (mFormmaterDateHourMinSec == null || mFormmaterHourMinSec == null) {
-			String format = TIME_FORMAT;
-			if (format.startsWith("a")) {
-				format = format.replace("a", "");
-				format = "a " + format + ":ss";
-			} else if (format.endsWith("a")) {
-				format = format.replace("a", "");
-				format = format + ":ss" + " a";
-			} else {
-				format = format + ":ss";
-			}
-			mFormmaterDateHourMinSec = new SimpleDateFormat(DATE_FORMAT + " " + format);
-			mFormmaterHourMinSec = new SimpleDateFormat(format);
-		}
-		return true;
-	}
-
+        if (DATE_FORMAT == null || TIME_FORMAT == null) {
+            return false;
+        }
+        if (mFormmaterDate == null) {
+            mFormmaterDate = new SimpleDateFormat(DATE_FORMAT);
+        }
+        if (mFormmaterDateHourMin == null || mFormmaterHourMin == null) {
+            String format = TIME_FORMAT;
+            format = format.replaceAll(" ", "");
+            if (format.startsWith("a")) {
+                format = format.replace("a", "");
+                format = "a " + format;
+            } else if (format.endsWith("a")) {
+                format = format.replace("a", "");
+                format = format + " a";
+            }
+            mFormmaterDateHourMin = new SimpleDateFormat(DATE_FORMAT + " " + format);
+            mFormmaterHourMin = new SimpleDateFormat(format);
+        }
+        if (mFormmaterDateHourMinSec == null || mFormmaterHourMinSec == null) {
+            String format = TIME_FORMAT;
+            if (format.startsWith("a")) {
+                format = format.replace("a", "");
+                format = "a " + format + ":ss";
+            } else if (format.endsWith("a")) {
+                format = format.replace("a", "");
+                format = format + ":ss" + " a";
+            } else {
+                format = format + ":ss";
+            }
+            mFormmaterDateHourMinSec = new SimpleDateFormat(DATE_FORMAT + " " + format);
+            mFormmaterHourMinSec = new SimpleDateFormat(format);
+        }
+        return true;
+    }
 
 
 //	@SuppressWarnings("deprecation")

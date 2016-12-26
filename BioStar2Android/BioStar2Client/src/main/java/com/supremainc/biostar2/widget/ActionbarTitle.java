@@ -24,6 +24,8 @@ import android.widget.ImageView;
 import android.widget.LinearLayout;
 
 import com.supremainc.biostar2.R;
+import com.supremainc.biostar2.impl.OnSingleClickListener;
+import com.supremainc.biostar2.view.StyledTextView;
 
 public class ActionbarTitle {
     private ActionBar mActionBar;
@@ -138,6 +140,7 @@ public class ActionbarTitle {
         }
         mContext.setSupportActionBar(mToolbar);
         mActionBar = mContext.getSupportActionBar();
+
     }
 
 }

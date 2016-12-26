@@ -23,7 +23,8 @@ import android.support.test.rule.ActivityTestRule;
 import android.support.test.runner.AndroidJUnit4;
 import android.util.Log;
 
-import com.supremainc.biostar2.popup.Popup;
+import com.supremainc.biostar2.activity.LoginActivity;
+import com.supremainc.biostar2.widget.popup.Popup;
 
 import org.junit.Rule;
 import org.junit.Test;
@@ -33,6 +34,7 @@ import static android.support.test.espresso.Espresso.onView;
 import static android.support.test.espresso.Espresso.pressBack;
 import static android.support.test.espresso.matcher.ViewMatchers.isRoot;
 import static android.support.test.espresso.matcher.ViewMatchers.withId;
+
 @RunWith(AndroidJUnit4.class)
 public class UserTest {
     public static final String TAG = "AutoTest";
@@ -43,6 +45,7 @@ public class UserTest {
     public void w(int time) {
         onView(isRoot()).perform(ExtTest.waitTime(time));
     }
+
     /**
      * User / User 등록
      */
@@ -51,7 +54,7 @@ public class UserTest {
         ExtTest.checkLogin();
         w(1000);
         Log.e(TAG, "case: User/User 등록/UserID입력/1/1. User를 선택한다.");
-        onView(withId(R.id.main_user)).perform(ViewActions.click());
+//        onView(withId(R.id.main_user)).perform(ViewActions.click());
         //inputTest();
 
         w(1000);
@@ -66,8 +69,6 @@ public class UserTest {
 //        inputUserID();
 //        inputUserName();
         inputOperator();
-
-
 
 
 //        Log.e(TAG, "result: User 추가 화면으로 이동한다.");
@@ -100,7 +101,7 @@ public class UserTest {
         UserTestUtil.addUserCheck(mActivityRule.getActivity().getResources().getString(R.string.new_user));
         UserTestUtil.selectOperation(0);
         w(1000);
-        onView(withId(R.id.detail_scroll)).perform(ViewActions.swipeUp());
+        //   onView(withId(R.id.detail_scroll)).perform(ViewActions.swipeUp());
         w(5000);
         onView(withId(R.id.password_edit)).perform(ViewActions.click());
         ExtTest.waitId(R.id.main_container, 60000);
@@ -121,7 +122,6 @@ public class UserTest {
         Log.e(TAG, "result:User/User 등록/Name입력/1.  User 정보, User 검색 시 정상 동작됨을 확인한다.");
         Log.e(TAG, "end: inputUserName");
     }
-
 
 
     private void inputUserID() {
@@ -165,7 +165,7 @@ public class UserTest {
 
         pressBack();
         Log.e(TAG, "case: User/User 등록/UserID입력/5/1. 입력한 ID가 정상적으로 등록됨을 확인한다.");
-        UserTestUtil.searchDeleteUserID("4294967294",false);
+        UserTestUtil.searchDeleteUserID("4294967294", false);
         Log.e(TAG, "result: User/User 등록/UserID입력/5/1. 입력한 ID가 정상적으로 등록됨을 확인한다.");
         Log.e(TAG, "end: inputUserID");
     }
@@ -189,7 +189,7 @@ public class UserTest {
         ExtTest.checkPopupType(false, true, Popup.PopupType.ALERT);
         Log.e(TAG, "result: User/User 등록/email 입력/ 입력한 Email이 정상적으로 등록됨을 확인한다.");
         w(1000);
-        UserTestUtil.searchDeleteUserID("test@suprema.co.kr",true);
+        UserTestUtil.searchDeleteUserID("test@suprema.co.kr", true);
         Log.e(TAG, "end: inputEmail");
     }
 
@@ -201,7 +201,7 @@ public class UserTest {
         UserTestUtil.saveTelephone();
         onView(withId(R.id.action_save)).perform(ViewActions.click());
         ExtTest.checkPopupType(false, true, Popup.PopupType.ALERT);
-        UserTestUtil.searchDeleteUserID("4294967294",true);
+        UserTestUtil.searchDeleteUserID("4294967294", true);
         Log.e(TAG, "end: inputTelephone");
     }
 
@@ -210,7 +210,7 @@ public class UserTest {
         UserTestUtil.addUserCheck(mActivityRule.getActivity().getResources().getString(R.string.new_user));
         Log.e(TAG, "case: User/User 등록/operator/BioStar Operator 초기값을 확인한다.");
         onView(withId(R.id.operator)).check(ViewAssertions.matches(ViewMatchers.withText(mActivityRule.getActivity().getResources().getString(R.string.none))));
-        onView(isRoot()).perform(ExtTest.waitInvisibleGoneId(R.id.operator_expand, 3000));
+//        onView(isRoot()).perform(ExtTest.waitInvisibleGoneId(R.id.operator_expand, 3000));
         Log.e(TAG, "result: 초기값은 None으로 출력된다.");
 
         UserTestUtil.selectOperation(0);
@@ -218,7 +218,7 @@ public class UserTest {
         UserTestUtil.selectOperation(0);
 
         UserTestUtil.saveUserID();
-        UserTestUtil.inputEdit(R.id.login_id, 32, R.id.login_id_edit);
+//        UserTestUtil.inputEdit(R.id.login_id, 32, R.id.login_id_edit);
         UserTestUtil.inputPassword();
         onView(withId(R.id.action_save)).perform(ViewActions.click());
         w(1000);
@@ -235,7 +235,7 @@ public class UserTest {
 
         Log.e(TAG, "case: User/User 등록/operator/BioStar Operator 초기값을 확인한다.");
         onView(withId(R.id.operator)).check(ViewAssertions.matches(ViewMatchers.withText(mActivityRule.getActivity().getResources().getString(R.string.none))));
-        onView(isRoot()).perform(ExtTest.waitInvisibleGoneId(R.id.operator_expand, 3000));
+//        onView(isRoot()).perform(ExtTest.waitInvisibleGoneId(R.id.operator_expand, 3000));
         Log.e(TAG, "result: 초기값은 None으로 출력된다.");
 
         UserTestUtil.selectOperation(0);
@@ -243,7 +243,7 @@ public class UserTest {
         UserTestUtil.selectOperation(0);
 
         UserTestUtil.saveUserID();
-        UserTestUtil.inputEdit(R.id.login_id, 32, R.id.login_id_edit);
+//        UserTestUtil.inputEdit(R.id.login_id, 32, R.id.login_id_edit);
         UserTestUtil.inputPassword();
         onView(withId(R.id.action_save)).perform(ViewActions.click());
         w(1000);

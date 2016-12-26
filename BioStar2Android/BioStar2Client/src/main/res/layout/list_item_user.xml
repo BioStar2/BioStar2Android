@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?><!-- <~SCREEN NAME)> {User_List} </~SCREEN NAME> -->
-<LinearLayout
-    android:id="@+id/user_container"
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:androidfont="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/user_container"
     android:layout_width="match_parent"
     android:layout_height="68dp"
     android:gravity="center"
@@ -25,7 +24,7 @@
             android:contentDescription="@string/image"
             android:gravity="center"
             android:scaleType="fitXY"
-            android:src="@drawable/user_06"/>
+            android:src="@drawable/user_06" />
 
         <LinearLayout
             android:layout_width="0dp"
@@ -35,7 +34,7 @@
             android:gravity="left|center"
             android:orientation="vertical">
 
-            <com.supremainc.biostar2.widget.StyledTextView
+            <com.supremainc.biostar2.view.StyledTextView
                 android:id="@+id/user_name"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
@@ -44,7 +43,7 @@
                 android:singleLine="true"
                 android:textColor="@color/select_text"
                 android:textSize="16dp"
-                androidfont:typeface="roboto_bold.ttf"/>
+                androidfont:typeface="roboto_bold.ttf" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -52,8 +51,8 @@
                 android:layout_marginRight="9dp"
                 android:orientation="horizontal">
 
-                <com.supremainc.biostar2.widget.StyledTextView
-                    android:id="@+id/user_date"
+                <com.supremainc.biostar2.view.StyledTextView
+                    android:id="@+id/user_id"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginRight="9dp"
@@ -62,13 +61,13 @@
                     android:maxLines="2"
                     android:textColor="@color/actionbar_bg"
                     android:textSize="14dp"
-                    androidfont:typeface="roboto_medium.ttf"/>
+                    androidfont:typeface="roboto_medium.ttf" />
 
                 <LinearLayout
                     android:layout_width="0dp"
                     android:layout_height="match_parent"
                     android:layout_weight="1"
-                    android:orientation="vertical"/>
+                    android:orientation="vertical" />
 
                 <ImageView
                     android:layout_width="wrap_content"
@@ -77,10 +76,10 @@
                     android:layout_marginRight="4.5dp"
                     android:contentDescription="@string/image"
                     android:gravity="center"
-                    android:scaleType="fitXY"
-                    android:src="@drawable/user_ic_fingerprint"/>
+                    android:scaleType="centerCrop"
+                    android:src="@drawable/user_ic_fingerprint" />
 
-                <com.supremainc.biostar2.widget.StyledTextView
+                <com.supremainc.biostar2.view.StyledTextView
                     android:id="@+id/user_finger"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -91,7 +90,7 @@
                     android:singleLine="true"
                     android:textColor="@color/actionbar_bg"
                     android:textSize="16.67dp"
-                    androidfont:typeface="roboto_medium.ttf"/>
+                    androidfont:typeface="roboto_medium.ttf" />
 
                 <ImageView
                     android:layout_width="wrap_content"
@@ -101,9 +100,9 @@
                     android:contentDescription="@string/image"
                     android:gravity="center"
                     android:scaleType="fitXY"
-                    android:src="@drawable/user_ic_card"/>
+                    android:src="@drawable/user_ic_card" />
 
-                <com.supremainc.biostar2.widget.StyledTextView
+                <com.supremainc.biostar2.view.StyledTextView
                     android:id="@+id/user_card"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -113,7 +112,7 @@
                     android:singleLine="true"
                     android:textColor="@color/actionbar_bg"
                     android:textSize="16.67dp"
-                    androidfont:typeface="roboto_medium.ttf"/>
+                    androidfont:typeface="roboto_medium.ttf" />
 
                 <ImageView
                     android:id="@+id/user_ic_pin"
@@ -124,7 +123,7 @@
                     android:contentDescription="@string/image"
                     android:gravity="center"
                     android:scaleType="fitXY"
-                    android:src="@drawable/user_ic_pin"/>
+                    android:src="@drawable/user_ic_pin" />
             </LinearLayout>
         </LinearLayout>
 
@@ -139,13 +138,13 @@
                 android:layout_gravity="center|right"
                 android:contentDescription="@string/image"
                 android:gravity="center|right"
-                android:scaleType="fitXY"/>
+                android:scaleType="fitXY" />
         </FrameLayout>
     </LinearLayout>
 
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0.8dp"
-        android:background="@color/list_devider"/>
+        android:background="@color/list_devider" />
 
 </LinearLayout>

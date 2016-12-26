@@ -1,0 +1,25 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="@color/main_bg"
+    android:gravity="center|top"
+    android:orientation="vertical">
+
+    <android.support.v7.widget.Toolbar
+        android:id="@+id/toolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="?attr/actionBarSize" />
+
+    <com.supremainc.biostar2.view.SubToolbar
+        android:id="@+id/subtoolbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+    <com.supremainc.biostar2.view.MobileCardListView
+        android:id="@+id/mobile_card_list"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+
+
+</LinearLayout>

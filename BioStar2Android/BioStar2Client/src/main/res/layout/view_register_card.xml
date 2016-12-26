@@ -1,0 +1,165 @@
+<ScrollView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/white"
+    android:fadingEdge="none"
+    android:fillViewport="true">
+
+    <LinearLayout
+        android:id="@+id/detail"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+        <com.supremainc.biostar2.view.DetailTextItemView
+            android:id="@+id/card_type"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:index="@string/card_type"
+            app:link="true" />
+
+        <!-- csn,wiegand -->
+        <com.supremainc.biostar2.view.DetailTextItemView
+            android:id="@+id/register_method"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:index="@string/register_method"
+            app:link="true" />
+
+
+        <com.supremainc.biostar2.view.DetailTextItemView
+            android:id="@+id/device"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:index="@string/device"
+            app:link="true" />
+
+        <!-- wiegand -->
+        <com.supremainc.biostar2.view.DetailTextItemView
+            android:id="@+id/card_wigand_format"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:index="@string/card_data_format"
+            app:link="false" />
+
+
+        <!-- smartcard -->
+        <com.supremainc.biostar2.view.DetailTextItemView
+            android:id="@+id/card_layout_format"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:index="@string/card_layout_format"
+            app:link="true" />
+
+        <!-- smartcard -->
+        <com.supremainc.biostar2.view.DetailTextItemView
+            android:id="@+id/smartcard_type"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:index="@string/smartcard_type"
+            app:link="true" />
+
+        <com.supremainc.biostar2.view.DetailTextItemView
+            android:id="@+id/card_action"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:index="@string/read_card"
+            app:link="true" />
+
+        <!-- info -->
+        <com.supremainc.biostar2.view.StyledTextView
+            android:layout_width="match_parent"
+            android:layout_height="36dp"
+            android:background="@color/list_devider"
+            android:ellipsize="end"
+            android:gravity="left|center"
+            android:maxLines="2"
+            android:paddingLeft="18dp"
+            android:paddingRight="18dp"
+            android:text="@string/info"
+            android:textColor="@color/user_total"
+            android:textSize="14dp"
+            app:typeface="roboto_bold.ttf" />
+
+
+
+        <com.supremainc.biostar2.view.DetailEditItemView
+            android:id="@+id/card_id"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:edit="true"
+            app:index="@string/card_id"
+            app:inputType="numberDecimal"
+            />
+
+        <com.supremainc.biostar2.view.DetailEditItemView
+            android:id="@+id/wigand_card_id1"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:edit="true"
+            app:index="@string/card_id"
+            app:inputType="numberDecimal"
+            />
+        <com.supremainc.biostar2.view.DetailEditItemView
+            android:id="@+id/wigand_card_id2"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:edit="true"
+            app:index="@string/card_id"
+            app:inputType="numberDecimal"
+            />
+        <com.supremainc.biostar2.view.DetailEditItemView
+            android:id="@+id/wigand_card_id3"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:edit="true"
+            app:index="@string/card_id"
+            app:inputType="numberDecimal"
+            />
+        <com.supremainc.biostar2.view.DetailEditItemView
+            android:id="@+id/wigand_card_id4"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:edit="true"
+            app:index="@string/card_id"
+            app:inputType="numberDecimal"
+            />
+        <!-- smartcard -->
+        <com.supremainc.biostar2.view.DetailTextItemView
+            android:id="@+id/fingerprint"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:index="@string/fingerprint"
+            app:link="true" />
+
+        <!-- smartcard -->
+        <com.supremainc.biostar2.view.DetailTextItemView
+            android:id="@+id/pin"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:index="@string/pin_upper"
+            app:link="false" />
+
+        <!-- smartcard -->
+        <com.supremainc.biostar2.view.DetailTextItemView
+            android:id="@+id/access_group"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:index="@string/access_group"
+            app:link="false" />
+
+        <!-- smartcard -->
+        <com.supremainc.biostar2.view.DetailTextItemView
+            android:id="@+id/period"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:index="@string/period"
+            app:link="false" />
+
+
+
+
+
+    </LinearLayout>
+</ScrollView>

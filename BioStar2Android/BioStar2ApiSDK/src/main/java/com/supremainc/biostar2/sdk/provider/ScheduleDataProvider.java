@@ -17,46 +17,47 @@ package com.supremainc.biostar2.sdk.provider;
 
 import android.content.Context;
 
-import com.supremainc.biostar2.sdk.datatype.ScheduleData.Schedule;
-import com.supremainc.biostar2.sdk.datatype.ScheduleData.Schedules;
+
+import com.supremainc.biostar2.sdk.datatype.v2.AccessControl.Schedule;
+import com.supremainc.biostar2.sdk.datatype.v2.AccessControl.Schedules;
 import com.supremainc.biostar2.sdk.volley.Request.Method;
 import com.supremainc.biostar2.sdk.volley.Response.ErrorListener;
 import com.supremainc.biostar2.sdk.volley.Response.Listener;
 
 public class ScheduleDataProvider extends BaseDataProvider {
-	@SuppressWarnings("unused")
-	private final String TAG = getClass().getSimpleName();
-	private static ScheduleDataProvider mSelf = null;
+    private static ScheduleDataProvider mSelf = null;
+    @SuppressWarnings("unused")
+    private final String TAG = getClass().getSimpleName();
 
-	private ScheduleDataProvider(Context context) {
-		super(context);
-	}
+    private ScheduleDataProvider(Context context) {
+        super(context);
+    }
 
-	public static ScheduleDataProvider getInstance(Context context) {
-		if (mSelf == null) {
-			mSelf = new ScheduleDataProvider(context);
-		}
-		return mSelf;
-	}
+    public static ScheduleDataProvider getInstance(Context context) {
+        if (mSelf == null) {
+            mSelf = new ScheduleDataProvider(context);
+        }
+        return mSelf;
+    }
 
-	public static ScheduleDataProvider getInstance() {
-		if (mSelf != null) {
-			return mSelf;
-		}
-		if (mContext != null) {
-			mSelf = new ScheduleDataProvider(mContext);
-			return mSelf;
-		}
-		return null;
-	}
+    public static ScheduleDataProvider getInstance() {
+        if (mSelf != null) {
+            return mSelf;
+        }
+        if (mContext != null) {
+            mSelf = new ScheduleDataProvider(mContext);
+            return mSelf;
+        }
+        return null;
+    }
 
-	public void getSchedules(String tag, final Listener<Schedules> listener, ErrorListener errorListener, Object deliverParam) {
-		sendRequest(tag, Schedules.class, Method.GET, NetWork.PARAM_SCHEDULES, null, null, null, listener, errorListener, deliverParam);
-	}
+    public void getSchedules(String tag, final Listener<Schedules> listener, ErrorListener errorListener, Object deliverParam) {
+        sendRequest(tag, Schedules.class, Method.GET, NetWork.PARAM_SCHEDULES, null, null, null, listener, errorListener, deliverParam);
+    }
 
-	public void getSchedule(String tag, String id, Listener<Schedule> listener, ErrorListener errorListener, Object deliverParam) {
-		String url = NetWork.PARAM_SCHEDULES + "/" + String.valueOf(id);
+    public void getSchedule(String tag, String id, Listener<Schedule> listener, ErrorListener errorListener, Object deliverParam) {
+        String url = NetWork.PARAM_SCHEDULES + "/" + String.valueOf(id);
 
-		sendRequest(tag, Schedule.class, Method.GET, url, null, null, null, listener, errorListener, deliverParam);
-	}
+        sendRequest(tag, Schedule.class, Method.GET, url, null, null, null, listener, errorListener, deliverParam);
+    }
 }
