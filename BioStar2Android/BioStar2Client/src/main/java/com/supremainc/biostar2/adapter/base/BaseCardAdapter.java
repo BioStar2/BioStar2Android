@@ -16,6 +16,7 @@
 package com.supremainc.biostar2.adapter.base;
 
 import android.app.Activity;
+import android.util.Log;
 import android.widget.AbsListView;
 import android.widget.AbsListView.OnScrollListener;
 import android.widget.AdapterView.OnItemClickListener;
@@ -23,6 +24,7 @@ import android.widget.ListView;
 
 import com.supremainc.biostar2.R;
 import com.supremainc.biostar2.meta.Setting;
+import com.supremainc.biostar2.sdk.BuildConfig;
 import com.supremainc.biostar2.sdk.datatype.v2.Card.Card;
 import com.supremainc.biostar2.sdk.datatype.v2.Card.Cards;
 import com.supremainc.biostar2.sdk.datatype.v2.Card.ListCard;
@@ -52,13 +54,24 @@ public abstract class BaseCardAdapter extends BaseListAdapter<ListCard> {
     Listener<Cards> mItemListener = new Response.Listener<Cards>() {
         @Override
         public void onResponse(Cards response, Object deliverParam) {
+            if (mPopup != null) {
+                mPopup.dismiss();
+            }
             if (isDestroy()) {
                 return;
             }
-            mPopup.dismiss();
+            if (mSwipyRefreshLayout != null) {
+                mSwipyRefreshLayout.setRefreshing(false);
+            }
             if (response == null || response.records == null || response.records.size() < 1) {
                 if (mOnItemsListener != null) {
-                    mOnItemsListener.onSuccessNull();
+                    if (mItems == null || mItems.size() < 1) {
+                        mTotal =0;
+                        mOnItemsListener.onNoMoreData();
+                    } else {
+                        mTotal = mItems.size();
+                        mOnItemsListener.onSuccessNull(mItems.size());
+                    }
                 }
                 return;
             }
@@ -69,6 +82,7 @@ public abstract class BaseCardAdapter extends BaseListAdapter<ListCard> {
             mOffset = mOffset + response.records.size();
             for (; i >= 0; i--) {
                 ListCard card = response.records.get(i);
+//                Log.e(TAG,"card:"+card.type);
                 switch (mType) {
                     case CARD_CSN:
                         if (!Card.CSN.equals(card.type)) {
@@ -100,11 +114,17 @@ public abstract class BaseCardAdapter extends BaseListAdapter<ListCard> {
             }
             setData(mItems);
             mTotal = response.total-mRemovedCount;
+//            Log.e(TAG,"mRemovedCount:"+mRemovedCount+" mTotal:"+mTotal+" mAddedCount:"+mAddedCount);
             if (mTotal < 0) {
                 mTotal = 0;
             }
-            if (mAddedCount < mLimit) {
-                mPopup.showWait(mCancelExitListener);
+            if (mTotal < mItems.size()) {
+                mTotal = mItems.size();
+            }
+            if (mAddedCount < mLimit && mTotal !=0) {
+                if (mPopup != null) {
+                    mPopup.showWait(mCancelExitListener);
+                }
                 mHandler.removeCallbacks(mRunGetItems);
                 mHandler.postDelayed(mRunGetItems, 100);
             }
@@ -116,30 +136,42 @@ public abstract class BaseCardAdapter extends BaseListAdapter<ListCard> {
     Response.ErrorListener mItemErrorListener = new Response.ErrorListener() {
         @Override
         public void onErrorResponse(VolleyError error, Object deliverParam) {
+            if (mPopup != null) {
+                mPopup.dismiss();
+            }
             if (isDestroy(error)) {
                 return;
             }
-            mPopup.dismiss();
-            mPopup.show(PopupType.ALERT, mActivity.getString(R.string.fail_retry), Setting.getErrorMessage(error, mActivity), new OnPopupClickListener() {
-                @Override
-                public void OnNegative() {
-                    mCancelExitListener.onCancel(null);
-                }
+            if (mSwipyRefreshLayout != null) {
+                mSwipyRefreshLayout.setRefreshing(false);
+            }
+            if (mPopup != null) {
+                mPopup.show(PopupType.ALERT, mActivity.getString(R.string.fail_retry), Setting.getErrorMessage(error, mActivity), new OnPopupClickListener() {
+                    @Override
+                    public void OnNegative() {
+                        mCancelExitListener.onCancel(null);
+                    }
 
-                @Override
-                public void OnPositive() {
-                    mHandler.removeCallbacks(mRunGetItems);
-                    mHandler.post(mRunGetItems);
-                }
-            }, mActivity.getString(R.string.ok), mActivity.getString(R.string.cancel), false);
+                    @Override
+                    public void OnPositive() {
+                        mHandler.removeCallbacks(mRunGetItems);
+                        mHandler.post(mRunGetItems);
+                    }
+                }, mActivity.getString(R.string.ok), mActivity.getString(R.string.cancel), false);
+            }
         }
     };
 
     Runnable mRunGetItems = new Runnable() {
         @Override
         public void run() {
+            if (isDestroy()) {
+                return;
+            }
             if (isMemoryPoor()) {
-                mPopup.dismiss();
+                if (mPopup != null) {
+                    mPopup.dismiss();
+                }
                 if (mSwipyRefreshLayout != null) {
                     mSwipyRefreshLayout.setRefreshing(false);
                 }
@@ -157,11 +189,15 @@ public abstract class BaseCardAdapter extends BaseListAdapter<ListCard> {
             @Override
             public void onScrollStateChanged(AbsListView view, int scrollState) {
                 if (scrollState == OnScrollListener.SCROLL_STATE_IDLE && mIsLastItemVisible && mTotal - 1 > mOffset) {
-                    mPopup.showWait(mCancelExitListener);
+                    if (mPopup != null) {
+                        mPopup.showWait(mCancelExitListener);
+                    }
                     mHandler.removeCallbacks(mRunGetItems);
                     mHandler.postDelayed(mRunGetItems, 100);
                 } else {
-                    mPopup.dismissWiat();
+                    if (mPopup != null) {
+                        mPopup.dismissWiat();
+                    }
                 }
             }
 
@@ -182,12 +218,38 @@ public abstract class BaseCardAdapter extends BaseListAdapter<ListCard> {
         mLimit = FIRST_LIMIT;
         mHandler.removeCallbacks(mRunGetItems);
         mCardDataProvider.cancelAll(TAG);
-        mPopup.showWait(mCancelExitListener);
+        if (mPopup != null) {
+            mPopup.showWait(mCancelExitListener);
+        }
         if (mItems != null) {
             mItems.clear();
             notifyDataSetChanged();
         }
         mHandler.postDelayed(mRunGetItems, 500);
+    }
+
+    @Override
+    public boolean selectChoices() {
+        if (mListView == null) {
+            return false;
+        }
+        ListCard card=null;
+        if (mListView.getChoiceMode() == ListView.CHOICE_MODE_NONE) {
+            return false;
+        }
+        for (int i = 0; i < getCount(); i++) {
+            if (mItems != null) {
+                card =  mItems.get(i);
+                if (card != null && Card.ACCESS_ON.equals(card.type) && !card.is_blocked) {
+                    mListView.setItemChecked(i, false);
+                    continue;
+                }
+            }
+            mListView.setItemChecked(i, true);
+        }
+        notifyDataSetChanged();
+        return true;
+        // mListView.invalidate();
     }
 
     public void setShowType(ShowType type) {

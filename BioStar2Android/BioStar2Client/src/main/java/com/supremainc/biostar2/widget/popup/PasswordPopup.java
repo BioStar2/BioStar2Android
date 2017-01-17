@@ -54,6 +54,10 @@ public class PasswordPopup {
     private Handler mHandler;
     private boolean mIsPin;
     private boolean mIsStrong;
+    private TextWatcherFilter mPasswordTextWatcherFilterNumber;
+    private TextWatcherFilter mPasswordConfirmTextWatcherFilterNumber;
+    private TextWatcherFilter mPasswordTextWatcherFilter;
+    private TextWatcherFilter mPasswordConfirmTextWatcherFilter;
     private OnCancelListener cancelListener = new OnCancelListener() {
         @Override
         public void onCancel(DialogInterface mDialog) {
@@ -244,19 +248,38 @@ public class PasswordPopup {
         if (title != null) {
             titleView.setText(title);
         }
-
+        if (mPasswordTextWatcherFilterNumber == null) {
+            mPasswordTextWatcherFilterNumber = new TextWatcherFilter(mPassword, EDIT_TYPE.PIN, mContext, 16);
+        }
+        if (mPasswordConfirmTextWatcherFilterNumber == null) {
+            mPasswordConfirmTextWatcherFilterNumber = new TextWatcherFilter(mPasswordConfirm, EDIT_TYPE.PIN, mContext, 16);
+        }
+        if (mPasswordTextWatcherFilter == null) {
+            mPasswordTextWatcherFilter = new TextWatcherFilter(mPassword, EDIT_TYPE.PASSWORD, mContext, 32);
+        }
+        if (mPasswordConfirmTextWatcherFilter == null) {
+            mPasswordConfirmTextWatcherFilter = new TextWatcherFilter(mPasswordConfirm, EDIT_TYPE.PASSWORD, mContext, 32);
+        }
         if (isPin) {
             mPassword.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_VARIATION_PASSWORD);
+            mPassword.removeTextChangedListener(mPasswordTextWatcherFilter);
+            mPassword.removeTextChangedListener(mPasswordTextWatcherFilterNumber);
+            mPassword.addTextChangedListener(mPasswordTextWatcherFilterNumber);
             mPasswordConfirm.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_VARIATION_PASSWORD);
-            mPassword.addTextChangedListener(new TextWatcherFilter(mPassword, EDIT_TYPE.PIN, mContext, 16));
-            mPasswordConfirm.addTextChangedListener(new TextWatcherFilter(mPasswordConfirm, EDIT_TYPE.PIN, mContext, 16));
+            mPasswordConfirm.removeTextChangedListener(mPasswordConfirmTextWatcherFilter);
+            mPasswordConfirm.removeTextChangedListener(mPasswordConfirmTextWatcherFilterNumber);
+            mPasswordConfirm.addTextChangedListener(mPasswordConfirmTextWatcherFilterNumber);
 //			mPassword.setFilters(new InputFilter[]{UtilProvider.getInstance().mFiltePin, new InputFilter.LengthFilter(16)});
 //			mPasswordConfirm.setFilters(new InputFilter[]{UtilProvider.getInstance().mFiltePin, new InputFilter.LengthFilter(16)});
         } else {
             mPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
+            mPassword.removeTextChangedListener(mPasswordTextWatcherFilter);
+            mPassword.removeTextChangedListener(mPasswordTextWatcherFilterNumber);
+            mPassword.addTextChangedListener(mPasswordTextWatcherFilter);
             mPasswordConfirm.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-            mPassword.addTextChangedListener(new TextWatcherFilter(mPassword, EDIT_TYPE.PASSWORD, mContext, 32));
-            mPasswordConfirm.addTextChangedListener(new TextWatcherFilter(mPasswordConfirm, EDIT_TYPE.PASSWORD, mContext, 32));
+            mPasswordConfirm.removeTextChangedListener(mPasswordConfirmTextWatcherFilter);
+            mPasswordConfirm.removeTextChangedListener(mPasswordConfirmTextWatcherFilterNumber);
+            mPasswordConfirm.addTextChangedListener(mPasswordConfirmTextWatcherFilter);
 //			mPassword.setFilters(new InputFilter[]{UtilProvider.getInstance().mFilterPassword, new InputFilter.LengthFilter(32)});
 //			mPasswordConfirm.setFilters(new InputFilter[]{UtilProvider.getInstance().mFilterPassword, new InputFilter.LengthFilter(32)});
         }

@@ -55,7 +55,7 @@ public class LoginTest {
             ExtTest.delEditText(R.id.input);
 
             w(1100);
-            onView(withId(R.id.input)).perform(ViewActions.typeText("alpha")); // subdomain
+            onView(withId(R.id.input)).perform(ViewActions.typeText("subdomain")); // subdomain
             onView(withId(R.id.input)).perform(ViewActions.closeSoftKeyboard());
 
             w(1100);
@@ -65,11 +65,11 @@ public class LoginTest {
             ExtTest.delEditText(R.id.login_id);
 
             w(1100);
-            onView(withId(R.id.login_id)).perform(ViewActions.typeText("isbaek1")); //id
+            onView(withId(R.id.login_id)).perform(ViewActions.typeText("id")); //id
             onView(withId(R.id.login_id)).perform(ViewActions.closeSoftKeyboard());
 
             w(1100);
-            onView(withId(R.id.password)).perform(ViewActions.typeText("1234qwer+")); //password
+            onView(withId(R.id.password)).perform(ViewActions.typeText("password")); //password
             onView(withId(R.id.login_id)).perform(ViewActions.closeSoftKeyboard());
 
             w(1100);

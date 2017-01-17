@@ -52,13 +52,14 @@ public class NewCardAdapter extends BaseCardAdapter {
             if (isDestroy()) {
                 return;
             }
+            mPopup.dismiss();
             Integer position = (Integer)param;
             if (position == null) {
                 return;
             }
             ListCard item = mItems.get(position);
             item.is_blocked = false;
-//            notifyDataSetChanged();
+            notifyDataSetChanged();
         }
     };
 
@@ -68,14 +69,15 @@ public class NewCardAdapter extends BaseCardAdapter {
             if (isDestroy()) {
                 return;
             }
+            mPopup.dismiss();
             Integer position = (Integer)param;
             if (position == null) {
                 return;
             }
             ListCard item = mItems.get(position);
             item.is_registered = false;
-            item.issue_count++;
-//            notifyDataSetChanged();
+//            item.issue_count++;
+            notifyDataSetChanged();
         }
     };
     private Response.Listener<ResponseStatus> mBlockListener = new  Response.Listener<ResponseStatus>() {
@@ -84,13 +86,14 @@ public class NewCardAdapter extends BaseCardAdapter {
             if (isDestroy()) {
                 return;
             }
+            mPopup.dismiss();
             Integer position = (Integer)param;
             if (position == null) {
                 return;
             }
             ListCard item = mItems.get(position);
             item.is_blocked = true;
-//            notifyDataSetChanged();
+            notifyDataSetChanged();
         }
     };
     private Response.ErrorListener mErrorListener = new Response.ErrorListener() {
@@ -132,7 +135,8 @@ public class NewCardAdapter extends BaseCardAdapter {
                            @Override
                            public void OnPositive() {
                                if (mUserID != null) {
-                                   mCardDataProvider.reissue(TAG, mReIssueListener, mErrorListener,mUserID, item.card_id, position);
+                                   mPopup.showWait(false);
+                                   mCardDataProvider.reissue(TAG, mReIssueListener, mErrorListener,mUserID, item.id, position);
                                }
                            }
                        }, mActivity.getString(R.string.ok), mActivity.getString(R.string.cancel), false);
@@ -147,6 +151,7 @@ public class NewCardAdapter extends BaseCardAdapter {
 
                         @Override
                         public void OnPositive() {
+                            mPopup.showWait(false);
                             mCardDataProvider.unblock(TAG,mUnBlockListener,mErrorListener,item.id,position);
                         }
                     }, mActivity.getString(R.string.ok), mActivity.getString(R.string.cancel), false);
@@ -160,6 +165,7 @@ public class NewCardAdapter extends BaseCardAdapter {
 
                         @Override
                         public void OnPositive() {
+                            mPopup.showWait(false);
                             mCardDataProvider.block(TAG,mBlockListener,mErrorListener,item.id,position);
                         }
                     }, mActivity.getString(R.string.ok), mActivity.getString(R.string.cancel), false);
@@ -167,8 +173,9 @@ public class NewCardAdapter extends BaseCardAdapter {
             }
         }
     };
-    public NewCardAdapter(Activity activity, ArrayList<ListCard> items, ListView listView, OnItemClickListener itemClickListener, Popup popup, OnItemsListener onItemsListener, boolean editDisable) {
+    public NewCardAdapter(Activity activity,String userID, ArrayList<ListCard> items, ListView listView, OnItemClickListener itemClickListener, Popup popup, OnItemsListener onItemsListener, boolean editDisable) {
         super(activity, items, listView, itemClickListener, popup, onItemsListener);
+        mUserID = userID;
         mIsEditDisable = editDisable;
         if (mIsEditDisable) {
             mDefaultSelectColor = mActivity.getResources().getColor(R.color.gray_10);
@@ -179,6 +186,14 @@ public class NewCardAdapter extends BaseCardAdapter {
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         if (mIsEditDisable) {
             return;
+        }
+        ListCard card=null;
+        if (mItems != null) {
+            card =  mItems.get(position);
+        }
+        if (card != null && Card.ACCESS_ON.equals(card.type) && !card.is_blocked) {
+            mListView.setItemChecked(position,false);
+            mToastPopup.show(-1,mActivity.getString(R.string.non_blocked));
         }
         ItemViewHolder vh = (ItemViewHolder) view.getTag();
         setSelector(vh,position);
@@ -220,6 +235,8 @@ public class NewCardAdapter extends BaseCardAdapter {
                 vh.mID.setText(item.card_id+" ("+mActivity.getString(R.string.issue_card_count)+" "+item.issue_count+")");
             }
         } else if (Card.WIEGAND.equals(item.type)) {
+            vh.mCardType.setText( mActivity.getString(R.string.wiegand));
+        } else if (Card.CSN_WIEGAND.equals(item.type)) {
             vh.mCardType.setText( mActivity.getString(R.string.wiegand));
         }
 

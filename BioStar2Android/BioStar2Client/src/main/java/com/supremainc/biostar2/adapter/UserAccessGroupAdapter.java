@@ -36,9 +36,7 @@ public class UserAccessGroupAdapter extends BaseListAdapter<ListAccessGroup> {
     public UserAccessGroupAdapter(Activity activity, ArrayList<ListAccessGroup> items, ListView listView, OnItemClickListener itemClickListener, Popup popup, OnItemsListener onItemsListener, boolean editEnable) {
         super(activity, items, listView, itemClickListener, popup, onItemsListener);
         mIsEditEnable = editEnable;
-        if (mIsEditEnable) {
-            mDefaultSelectColor = mActivity.getResources().getColor(R.color.gray_10);
-        }
+//        mDefaultSelectColor = mActivity.getResources().getColor(R.color.gray_10);
     }
 
 
@@ -109,6 +107,9 @@ public class UserAccessGroupAdapter extends BaseListAdapter<ListAccessGroup> {
             setSelector(vh.mRoot, vh.mLink, position, false);
         } else {
             setSelector(vh.mRoot, vh.mLink, position, !item.isIncludedByUserGroup());
+        }
+        if (mListView.getChoiceMode() !=  ListView.CHOICE_MODE_NONE && item.isIncludedByUserGroup()) {
+            vh.mRoot.setBackgroundResource(R.drawable.selector_list_gray);
         }
         return vh.mRoot;
     }

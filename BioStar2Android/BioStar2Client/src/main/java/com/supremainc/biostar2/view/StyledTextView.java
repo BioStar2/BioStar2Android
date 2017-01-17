@@ -75,6 +75,7 @@ public class StyledTextView extends TextView {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        arr.recycle();
     }
 
     private void loadFont(Context context) {

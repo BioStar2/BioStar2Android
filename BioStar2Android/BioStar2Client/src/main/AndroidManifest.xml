@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.supremainc.biostar2"
-    android:versionCode="38"
+    android:versionCode="43"
     android:versionName="@string/app_version">
 
     <uses-sdk
@@ -128,7 +128,7 @@
         </activity>
 
         <service
-            android:name="com.supremainc.biostar2.smartcard.CardService"
+            android:name="com.supremainc.biostar2.service.CardService"
             android:exported="true"
             android:permission="android.permission.BIND_NFC_SERVICE">
 

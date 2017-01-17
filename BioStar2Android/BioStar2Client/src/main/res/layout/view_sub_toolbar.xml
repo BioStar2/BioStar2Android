@@ -20,6 +20,7 @@
         android:visibility="gone" />
 
     <com.supremainc.biostar2.view.StyledTextView
+        android:id="@+id/total_index"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"

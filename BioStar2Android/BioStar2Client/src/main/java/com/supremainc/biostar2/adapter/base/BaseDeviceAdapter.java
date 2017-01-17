@@ -52,13 +52,22 @@ public abstract class BaseDeviceAdapter extends BaseListAdapter<ListDevice> {
     Listener<Devices> mItemListener = new Listener<Devices>() {
         @Override
         public void onResponse(Devices response, Object deliverParam) {
+            if (mPopup != null) {
+                mPopup.dismiss();
+            }
             if (isDestroy()) {
                 return;
             }
-            mPopup.dismiss();
+
             if (response == null || response.records == null || response.records.size() < 1) {
                 if (mOnItemsListener != null) {
-                    mOnItemsListener.onSuccessNull();
+                    if (mItems == null || mItems.size() < 1) {
+                        mTotal =0;
+                        mOnItemsListener.onNoMoreData();
+                    } else {
+                        mTotal = mItems.size();
+                        mOnItemsListener.onSuccessNull(mItems.size());
+                    }
                 }
                 return;
             }
@@ -80,16 +89,16 @@ public abstract class BaseDeviceAdapter extends BaseListAdapter<ListDevice> {
                 }
                 switch (mType) {
                     case  DEVICE_CARD_CSN:
-                        if (device.wiegand_format != null) {
+                        if (device.isSupportCSNWiegand()) {
                             response.records.remove(i);
                             mRemovedCount++;
                             continue;
                         }
-                        if (device.wiegand_format_list  != null && device.wiegand_format_list.size() > 0) {
-                            response.records.remove(i);
-                            mRemovedCount++;
-                            continue;
-                        }
+//                        if (device.wiegand_format_list  != null && device.wiegand_format_list.size() > 0) {
+//                            response.records.remove(i);
+//                            mRemovedCount++;
+//                            continue;
+//                        }
                         break;
                     case DEVICE_CARD_SMARTCARD:
                         if (device.smart_card_layout == null) {
@@ -99,7 +108,7 @@ public abstract class BaseDeviceAdapter extends BaseListAdapter<ListDevice> {
                         }
                         break;
                     case DEVICE_CARD_WIEGAND:
-                        if (device.wiegand_format == null && (device.wiegand_format_list == null||device.wiegand_format_list.size() < 1 )) {
+                        if (!(device.isSupportWiegand() || device.isSupportCSNWiegand())) {
                             response.records.remove(i);
                             mRemovedCount++;
                             continue;
@@ -116,12 +125,17 @@ public abstract class BaseDeviceAdapter extends BaseListAdapter<ListDevice> {
             if (mTotal < 0) {
                 mTotal = 0;
             }
-
+            if (mTotal < mItems.size()) {
+                mTotal = mItems.size();
+            }
             if (mAddedCount < mLimit) {
-                mPopup.showWait(mCancelExitListener);
+                if (mPopup != null) {
+                    mPopup.showWait(mCancelExitListener);
+                }
                 mHandler.removeCallbacks(mRunGetItems);
                 mHandler.postDelayed(mRunGetItems, 100);
             }
+
             if (mOnItemsListener != null) {
                 mOnItemsListener.onTotalReceive(mTotal);
             }
@@ -130,29 +144,38 @@ public abstract class BaseDeviceAdapter extends BaseListAdapter<ListDevice> {
     Response.ErrorListener mItemErrorListener = new Response.ErrorListener() {
         @Override
         public void onErrorResponse(VolleyError error, Object deliverParam) {
+            if (mPopup != null) {
+                mPopup.dismiss();
+            }
             if (isDestroy(error)) {
                 return;
             }
-            mPopup.dismiss();
-            mPopup.show(PopupType.ALERT, mActivity.getString(R.string.fail_retry), Setting.getErrorMessage(error, mActivity), new OnPopupClickListener() {
-                @Override
-                public void OnNegative() {
-                    mCancelExitListener.onCancel(null);
-                }
+            if (mPopup != null) {
+                mPopup.show(PopupType.ALERT, mActivity.getString(R.string.fail_retry), Setting.getErrorMessage(error, mActivity), new OnPopupClickListener() {
+                    @Override
+                    public void OnNegative() {
+                        mCancelExitListener.onCancel(null);
+                    }
 
-                @Override
-                public void OnPositive() {
-                    mHandler.removeCallbacks(mRunGetItems);
-                    mHandler.post(mRunGetItems);
-                }
-            }, mActivity.getString(R.string.ok), mActivity.getString(R.string.cancel), false);
+                    @Override
+                    public void OnPositive() {
+                        mHandler.removeCallbacks(mRunGetItems);
+                        mHandler.post(mRunGetItems);
+                    }
+                }, mActivity.getString(R.string.ok), mActivity.getString(R.string.cancel), false);
+            }
         }
     };
     Runnable mRunGetItems = new Runnable() {
         @Override
         public void run() {
+            if (isDestroy()) {
+                return;
+            }
             if (isMemoryPoor()) {
-                mPopup.dismiss();
+                if (mPopup != null) {
+                    mPopup.dismiss();
+                }
                 if (mSwipyRefreshLayout != null) {
                     mSwipyRefreshLayout.setRefreshing(false);
                 }
@@ -170,11 +193,15 @@ public abstract class BaseDeviceAdapter extends BaseListAdapter<ListDevice> {
             @Override
             public void onScrollStateChanged(AbsListView view, int scrollState) {
                 if (scrollState == AbsListView.OnScrollListener.SCROLL_STATE_IDLE && mIsLastItemVisible && mTotal - 1 > mOffset) {
-                    mPopup.showWait(mCancelExitListener);
+                    if (mPopup != null) {
+                        mPopup.showWait(mCancelExitListener);
+                    }
                     mHandler.removeCallbacks(mRunGetItems);
                     mHandler.postDelayed(mRunGetItems, 100);
                 } else {
-                    mPopup.dismissWiat();
+                    if (mPopup != null) {
+                        mPopup.dismissWiat();
+                    }
                 }
             }
 
@@ -195,7 +222,9 @@ public abstract class BaseDeviceAdapter extends BaseListAdapter<ListDevice> {
         mLimit = FIRST_LIMIT;
         mHandler.removeCallbacks(mRunGetItems);
         mDeviceDataProvider.cancelAll(TAG);
-        mPopup.showWait(mCancelExitListener);
+        if (mPopup != null) {
+            mPopup.showWait(mCancelExitListener);
+        }
         if (mItems != null) {
             mItems.clear();
             notifyDataSetChanged();

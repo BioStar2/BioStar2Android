@@ -28,10 +28,12 @@ import com.supremainc.biostar2.BuildConfig;
 import com.supremainc.biostar2.R;
 import com.supremainc.biostar2.adapter.base.BaseListAdapter;
 import com.supremainc.biostar2.adapter.base.BaseMonitorAdapter;
+import com.supremainc.biostar2.sdk.datatype.v2.Common.VersionData;
 import com.supremainc.biostar2.sdk.datatype.v2.Door.BaseDoor;
 import com.supremainc.biostar2.sdk.datatype.v2.EventLog.ListEventLog;
 import com.supremainc.biostar2.sdk.datatype.v2.EventLog.LogLevel;
 import com.supremainc.biostar2.sdk.datatype.v2.EventLog.LogType;
+import com.supremainc.biostar2.sdk.datatype.v2.Permission.PermissionModule;
 import com.supremainc.biostar2.sdk.provider.TimeConvertProvider;
 import com.supremainc.biostar2.view.StyledTextView;
 import com.supremainc.biostar2.widget.popup.Popup;
@@ -51,8 +53,16 @@ public class MonitorAdapter extends BaseMonitorAdapter {
         if (!mIsClickEnable) {
             return;
         }
+        if (VersionData.getCloudVersion(mActivity) > 1) {
+            if (!mPermissionDataProvider.getPermission(PermissionModule.USER, false)) {
+                return;
+            }
+        }
         ItemViewHolder viewHolder = (ItemViewHolder) view.getTag();
         ListEventLog item = mItems.get(position);
+        if (item.user == null || item.user.name == null || item.user.name.isEmpty() || item.user.user_id == null || item.user.user_id.isEmpty()) {
+            return;
+        }
         setSelector(view, viewHolder.mLink, position);
 
         super.onItemClick(parent, view, position, id);
@@ -74,6 +84,7 @@ public class MonitorAdapter extends BaseMonitorAdapter {
                 vh.mDevice.setText(item.device.id + " / " + item.device.name);
             }
             vh.mDevice.setVisibility(View.VISIBLE);
+            return;
         }
         vh.mDevice.setVisibility(View.GONE);
     }
@@ -84,6 +95,11 @@ public class MonitorAdapter extends BaseMonitorAdapter {
             vh.mUser.setVisibility(View.VISIBLE);
             if (item.user.name == null || item.user.name.isEmpty() || item.user.user_id == null || item.user.user_id.isEmpty()) {
                 return false;
+            }
+            if (VersionData.getCloudVersion(mActivity) > 1) {
+                if (!mPermissionDataProvider.getPermission(PermissionModule.USER, false)) {
+                    return false;
+                }
             }
             return true;
         }

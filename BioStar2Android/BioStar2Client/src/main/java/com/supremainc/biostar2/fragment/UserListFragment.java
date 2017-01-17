@@ -39,7 +39,9 @@ import com.supremainc.biostar2.meta.Setting;
 import com.supremainc.biostar2.adapter.PhotoUserAdapter;
 import com.supremainc.biostar2.adapter.base.BaseListAdapter.OnItemsListener;
 import com.supremainc.biostar2.sdk.datatype.v2.Card.ListCard;
+import com.supremainc.biostar2.sdk.datatype.v2.Common.BioStarSetting;
 import com.supremainc.biostar2.sdk.datatype.v2.Common.ResponseStatus;
+import com.supremainc.biostar2.sdk.datatype.v2.Common.VersionData;
 import com.supremainc.biostar2.sdk.datatype.v2.Permission.PermissionModule;
 import com.supremainc.biostar2.sdk.datatype.v2.User.ListUser;
 import com.supremainc.biostar2.sdk.datatype.v2.User.User;
@@ -117,25 +119,74 @@ public class UserListFragment extends BaseFragment {
             }, mContext.getString(R.string.ok), mContext.getString(R.string.cancel));
         }
     };
-    private OnItemsListener mOnUsersListener = new OnItemsListener() {
-        @Override
-        public void onSuccessNull() {
-            mIsDataReceived = true;
-            if (mTotal == 0 ) {
-                mToastPopup.show(getString(R.string.none_data), null);
+
+    private void addUser() {
+        if (mUserGroup == null) {
+            mScreenControl.addScreen(ScreenType.USER_MODIFY, null);
+        } else {
+            UserGroup userGroup = null;
+            try {
+                userGroup = mUserGroup.clone();
+            } catch (CloneNotSupportedException e) {
+                Log.e(TAG, "selected user clone fail");
+                e.printStackTrace();
             }
+            Bundle bundle = new Bundle();
+            bundle.putSerializable(UserGroup.TAG, userGroup);
+            mScreenControl.addScreen(ScreenType.USER_MODIFY, bundle);
+        }
+    }
+
+    private Response.Listener<BioStarSetting> mSettingListener = new Response.Listener<BioStarSetting>() {
+        @Override
+        public void onResponse(BioStarSetting response, Object deliverParam) {
+            if (isInValidCheck(null)) {
+                return;
+            }
+            mPopup.dismissWiat();
+            addUser();
+        }
+    };
+
+    private Response.ErrorListener mSettingErrorListener = new Response.ErrorListener() {
+        @Override
+        public void onErrorResponse(VolleyError volleyError, Object deliverParam) {
+            if (isInValidCheck(null)) {
+                return;
+            }
+            mPopup.dismissWiat();
+            addUser();
+        }
+    };
+
+    private void setTotal(int total) {
+        if (mTotal != total) {
+            mSubToolbar.setTotal(total);
+            mTotal = total;
+            if (mSearchText == null && mUserAdapter != null && mUserAdapter.getuserGroupId().equals("1")) {
+                sendLocalBroadcast(Setting.BROADCAST_USER_COUNT, total);
+            }
+        }
+    }
+
+    private OnItemsListener mOnUsersListener = new OnItemsListener()
+    {
+        @Override
+        public void onSuccessNull(int total) {
+            mIsDataReceived = true;
+            setTotal(total);
+        }
+
+        @Override
+        public void onNoMoreData() {
+            mToastPopup.show(getString(R.string.none_data), null);
+            setTotal(0);
         }
 
         @Override
         public void onTotalReceive(int total) {
             mIsDataReceived = true;
-            if (mTotal != total) {
-                mSubToolbar.setTotal(total);
-                mTotal = total;
-                if (mSearchText == null && mUserAdapter != null && mUserAdapter.getuserGroupId().equals("1")) {
-                    sendLocalBroadcast(Setting.BROADCAST_USER_COUNT, total);
-                }
-            }
+            setTotal(total);
         }
     };
     private Listener<ResponseStatus> mDeleteListener = new Response.Listener<ResponseStatus>() {
@@ -335,19 +386,20 @@ public class UserListFragment extends BaseFragment {
                 setSubMode(MODE_DELETE);
                 break;
             case R.id.action_add:
-                if (mUserGroup == null) {
-                    mScreenControl.addScreen(ScreenType.USER_MODIFY, null);
+                if (VersionData.getCloudVersion(mContext) > 1) {
+//                    String message = "";
+//                    if (!mPermissionDataProvider.getPermission(PermissionModule.ACCESS_GROUP, false)) {
+//                        message = getString(R.string.guide_feature_permission)+"\n"+PermissionModule.ACCESS_GROUP.mName;
+//                    }
+//
+//                    if (!message.isEmpty()) {
+//                        mPopup.show(PopupType.ALERT, message, null, null, null);
+//                        return true;
+//                    }
+                    mPopup.showWait(mCancelExitListener);
+                    mCommonDataProvider.getBioStarSetting(mSettingListener, mSettingErrorListener, null);
                 } else {
-                    UserGroup userGroup = null;
-                    try {
-                        userGroup = mUserGroup.clone();
-                    } catch (CloneNotSupportedException e) {
-                        Log.e(TAG, "selected user clone fail");
-                        e.printStackTrace();
-                    }
-                    Bundle bundle = new Bundle();
-                    bundle.putSerializable(UserGroup.TAG, userGroup);
-                    mScreenControl.addScreen(ScreenType.USER_MODIFY, bundle);
+                    addUser();
                 }
                 return true;
             case R.id.action_usergroups:
@@ -425,7 +477,16 @@ public class UserListFragment extends BaseFragment {
                         if (user == null) {
                             return;
                         }
-                        mUserAdapter.modifyFingerPrintItem(user.user_id,user.fingerprint_count);
+
+                        Log.e(TAG,"user.user_id"+user.user_id);
+                        Log.e(TAG,"user.fingerprint_count"+user.fingerprint_count);
+                        Log.e(TAG,"user.fingerprint_template_count"+user.fingerprint_template_count);
+                        if (VersionData.getCloudVersion(mContext) < 2) {
+                            mUserAdapter.modifyFingerPrintItem(user.user_id,user.fingerprint_count);
+                        } else {
+                            mUserAdapter.modifyFingerPrintItem(user.user_id,user.fingerprint_template_count);
+                        }
+
                         return;
                     }
 
@@ -434,8 +495,12 @@ public class UserListFragment extends BaseFragment {
             IntentFilter intentFilter = new IntentFilter();
             intentFilter.addAction(Setting.BROADCAST_USER);
             intentFilter.addAction(Setting.BROADCAST_REROGIN);
-            intentFilter.addAction(Setting.BROADCAST_UPDATE_CARD);
-            intentFilter.addAction(Setting.BROADCAST_UPDATE_FINGER);
+            if (VersionData.getCloudVersion(mContext) > 1) {
+                intentFilter.addAction(Setting.BROADCAST_UPDATE_CARD);
+            }
+            if (VersionData.getCloudVersion(mContext) > 1) {
+                intentFilter.addAction(Setting.BROADCAST_UPDATE_FINGER);
+            }
 
             LocalBroadcastManager.getInstance(getActivity()).registerReceiver(mReceiver, intentFilter);
         }
@@ -474,7 +539,7 @@ public class UserListFragment extends BaseFragment {
     public void onPrepareOptionsMenu(Menu menu) {
         menu.clear();
         MenuInflater inflater = mContext.getMenuInflater();
-        if (mPermissionDataProvider.getPermission(PermissionModule.USER, true) || mPermissionDataProvider.getPermission(PermissionModule.USER_GROUP, true)) {
+        if (mPermissionDataProvider.getPermission(PermissionModule.USER, true)) {
             switch (mSubMode) {
                 default:
                 case MODE_NORMAL:

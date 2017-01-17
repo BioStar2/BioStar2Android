@@ -98,6 +98,12 @@ public class LoginActivity extends Activity {
                     if (isFinishing()) {
                         return;
                     }
+//                    //TODO 삭제
+//                    VersionData response = new VersionData();
+//                    response.cloud_version = 1;
+//                    response.biostar_ac_version = "2.3.0";
+//                    response.init(mContext);
+//                    mUserDataProvider.login(mSubDomain,  mID, mPw, mGooglePush.getRegistrationId(), mLoginListener, mLoginErrorListener, null);
                 }
 
                 @Override
@@ -165,6 +171,8 @@ public class LoginActivity extends Activity {
             mPw = pw;
             mSubDomain = subDomain;
             mPopup.showWait(false);
+            ConfigDataProvider.setLatestDomain(mContext,mSubDomain);
+            ConfigDataProvider.setLatestURL(mContext,mURL);
             mUserDataProvider.getServerVersion(mSubDomain,mURL,mVersionListener,mVersionErrorListener,null);
         }
     };
@@ -183,7 +191,7 @@ public class LoginActivity extends Activity {
     }
 
     private void initCrashReport() {
-        if (!BuildConfig.DEBUG && Setting.IS_CRASH_REPORT) {
+        if (!BuildConfig.DEBUG && Setting.IS_CRASH_REPORT && !Setting.CRITTERISM.isEmpty()) {
             CrittercismConfig config = new CrittercismConfig();
             config.setCustomVersionName(getString(R.string.app_version));
             config.setVersionCodeToBeIncludedInVersionString(true);

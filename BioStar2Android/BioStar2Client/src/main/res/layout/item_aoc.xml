@@ -230,9 +230,8 @@
                     android:layout_gravity="bottom|left"
                     android:gravity="bottom|left"
                     android:maxLines="1"
-                    android:text="0"
                     android:textColor="@color/drawer_top"
-                    android:textSize="10dp"
+                    android:textSize="9dp"
                     androidfont:typeface="roboto_medium.ttf" />
             </LinearLayout>
         </LinearLayout>

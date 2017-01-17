@@ -175,8 +175,11 @@ public class DoorFragment extends BaseFragment {
             if (isInValidCheck(error)) {
                 return;
             }
+            mPopup.dismissWiat();
             String errorDetail = error.getMessage();
-            Log.e(TAG, "get mDoor:" + errorDetail);
+            if (BuildConfig.DEBUG) {
+                Log.e(TAG, "get mDoor:" + errorDetail);
+            }
             int id = (Integer) deliverParam;
             String message = "";
             switch (id) {
@@ -205,11 +208,11 @@ public class DoorFragment extends BaseFragment {
             } else {
                 mToastPopup.show(ToastPopup.TYPE_DOOR, message, date + " / " + mDoor.name);
             }
-            if (mDoor == null) {
-                mPopup.dismissWiat();
-            } else {
-                mDoorDataProvider.getDoor(TAG, mDoor.id, mDoorListener, mDoorErrorListener, null);
-            }
+//            if (mDoor == null) {
+//                mPopup.dismissWiat();
+//            } else {
+//                mDoorDataProvider.getDoor(TAG, mDoor.id, mDoorListener, mDoorErrorListener, null);
+//            }
         }
     };
     private Listener<ResponseStatus> mRequestDoorListener = new Response.Listener<ResponseStatus>() {
@@ -225,7 +228,7 @@ public class DoorFragment extends BaseFragment {
     private SummaryDoorView.SummaryDoorViewListener mSummaryDoorViewListener = new SummaryDoorView.SummaryDoorViewListener() {
         @Override
         public void onDoorAction() {
-            if (mPermissionDataProvider.getPermission(PermissionModule.DOOR, true) || mPermissionDataProvider.getPermission(PermissionModule.DOOR_GROUP, true)) {
+            if (mPermissionDataProvider.getPermission(PermissionModule.DOOR, true) || mPermissionDataProvider.getPermission(PermissionModule.MONITORING, true)) {
                 openMenu();
             } else {
                 sendOpenRequest();
@@ -316,11 +319,14 @@ public class DoorFragment extends BaseFragment {
 
     private void applyPermission() {
         if (mSummaryDoorView != null) {
-            if (mPermissionDataProvider.getPermission(PermissionModule.DOOR, true) || mPermissionDataProvider.getPermission(PermissionModule.DOOR_GROUP, true)) {
+            if (mPermissionDataProvider.getPermission(PermissionModule.DOOR, true)) {
+                mSummaryDoorView.setActionButtonName(getString(R.string.door_control));
+            } else if (mPermissionDataProvider.getPermission(PermissionModule.DOOR, false) && mPermissionDataProvider.getPermission(PermissionModule.MONITORING, true)) {
                 mSummaryDoorView.setActionButtonName(getString(R.string.door_control));
             } else {
                 mSummaryDoorView.setActionButtonName(getString(R.string.request_open));
             }
+
             if (mPermissionDataProvider.getPermission(PermissionModule.MONITORING, false)) {
                 mSummaryDoorView.showGoLogBtn(true);
             } else {

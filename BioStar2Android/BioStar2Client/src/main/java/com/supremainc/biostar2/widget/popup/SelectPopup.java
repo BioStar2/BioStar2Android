@@ -19,6 +19,8 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnDismissListener;
+import android.os.Handler;
+import android.os.Looper;
 import android.support.v7.widget.SearchView;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -100,13 +102,27 @@ public class SelectPopup<T> {
     private boolean misInfoVisible;
     OnItemsListener mOnItemsListener = new OnItemsListener() {
         @Override
-        public void onSuccessNull() {
-            if (mTotal == 0) {
-                mToastPopup.show(mActivity.getString(R.string.none_data), null);
-            }
+        public void onSuccessNull(int total) {
+            setSize(total);
+            mSubToolbar.setTotal(total);
             if (mMainView.getVisibility() != View.VISIBLE) {
                 mMainView.setVisibility(View.VISIBLE);
-                mDialog.show();
+                if (!mDialog.isShowing()) {
+                    mDialog.show();
+                }
+            }
+        }
+
+        @Override
+        public void onNoMoreData() {
+            mSubToolbar.setTotal(0);
+            setSize(0);
+            mToastPopup.show(mActivity.getString(R.string.none_data), null);
+            if (mMainView.getVisibility() != View.VISIBLE) {
+                mMainView.setVisibility(View.VISIBLE);
+                if (!mDialog.isShowing()) {
+                    mDialog.show();
+                }
             }
         }
 
@@ -115,7 +131,9 @@ public class SelectPopup<T> {
             setSize(total);
             mSubToolbar.setTotal(total);
             mMainView.setVisibility(View.VISIBLE);
-            mDialog.show();
+            if (!mDialog.isShowing()) {
+                mDialog.show();
+            }
         }
     };
 
@@ -327,19 +345,17 @@ public class SelectPopup<T> {
 
     private void setSize(int count) {
         mTotal = count;
-        if (count > 4 && misInfoVisible) {
-            mSubToolbar.setVisible(true);
-        } else {
-            mSubToolbar.setVisible(false);
-        }
+        mSubToolbar.setVisible(misInfoVisible);
 
         if (count > 4 || count < 0) {
             count = 4;
         }
         ViewGroup.LayoutParams params = mListView.getLayoutParams();
-        params.height = dpToPx(count * 55.2); // TODO change
-        // adapter.getListItemHeight();
-        mListView.setLayoutParams(params);
+        if (params.height != dpToPx(count * 55.2)) {
+            params.height = dpToPx(count * 55.2); // TODO change
+            // adapter.getListItemHeight();
+            mListView.setLayoutParams(params);
+        }
 
     }
 

@@ -191,21 +191,22 @@ public class RegisterCardView extends BaseView {
 //        mCardIDCode.content.addTextChangedListener(mCardIDCodeWatcher);
 //        mCardIDCode.setOnClickListener(mClickListener);
 //        mCardIDCode.content.setImeOptions(EditorInfo.IME_ACTION_NEXT);
-        mWiegandCardID1Watcher = new TextWatcherFilter(mCardID.content, TextWatcherFilter.EDIT_TYPE.NUMBER, mContext, 3);
-        mWiegandCardID1Watcher.setCheckZero(true);
-        mWiegandCardID2Watcher = new TextWatcherFilter(mCardID.content, TextWatcherFilter.EDIT_TYPE.NUMBER, mContext, 3);
-        mWiegandCardID2Watcher.setCheckZero(true);
-        mWiegandCardID3Watcher = new TextWatcherFilter(mCardID.content, TextWatcherFilter.EDIT_TYPE.NUMBER, mContext, 3);
-        mWiegandCardID3Watcher.setCheckZero(true);
-        mWiegandCardID4Watcher = new TextWatcherFilter(mCardID.content, TextWatcherFilter.EDIT_TYPE.NUMBER, mContext, 3);
-        mWiegandCardID4Watcher.setCheckZero(true);
+
         mWiegandCardID1 = (DetailEditItemView) findViewById(R.id.wigand_card_id1);
+        mWiegandCardID1Watcher = new TextWatcherFilter(mWiegandCardID1.content, TextWatcherFilter.EDIT_TYPE.NUMBER, mContext, 512);
+        mWiegandCardID1Watcher.setCheckZero(true);
         mWiegandCardID1.content.addTextChangedListener(mWiegandCardID1Watcher);
         mWiegandCardID2 = (DetailEditItemView) findViewById(R.id.wigand_card_id2);
+        mWiegandCardID2Watcher = new TextWatcherFilter(mWiegandCardID2.content, TextWatcherFilter.EDIT_TYPE.NUMBER, mContext, 512);
+        mWiegandCardID2Watcher.setCheckZero(true);
         mWiegandCardID2.content.addTextChangedListener(mWiegandCardID2Watcher);
         mWiegandCardID3 = (DetailEditItemView) findViewById(R.id.wigand_card_id3);
+        mWiegandCardID3Watcher = new TextWatcherFilter(mWiegandCardID3.content, TextWatcherFilter.EDIT_TYPE.NUMBER, mContext, 512);
+        mWiegandCardID3Watcher.setCheckZero(true);
         mWiegandCardID3.content.addTextChangedListener(mWiegandCardID3Watcher);
         mWiegandCardID4 = (DetailEditItemView) findViewById(R.id.wigand_card_id4);
+        mWiegandCardID4Watcher = new TextWatcherFilter(mWiegandCardID4.content, TextWatcherFilter.EDIT_TYPE.NUMBER, mContext, 512);
+        mWiegandCardID4Watcher.setCheckZero(true);
         mWiegandCardID4.content.addTextChangedListener(mWiegandCardID4Watcher);
 
         mPIN = (DetailTextItemView) findViewById(R.id.pin);
@@ -277,13 +278,20 @@ public class RegisterCardView extends BaseView {
         } else {
             view.enableEdit(false);
         }
-        filter.setMaxlength(cardID.getLength());
+//        filter.setMaxlength(cardID.getLength());
         filter.setMaxSize(cardID.max,true);
 //        view.content.setHint("1"+" - "+cardID.max);
 //        view.content.setHintTextColor(mContext.getResources().getColor(R.color.gray_1));
         if (displayCardID != null) {
             view.content.setText(displayCardID);
         }
+    }
+
+    public void clearWiegandFormat() {
+        mWiegandCardID1.content.setText("");
+        mWiegandCardID2.content.setText("");
+        mWiegandCardID3.content.setText("");
+        mWiegandCardID4.content.setText("");
     }
 
     public void setWiegandFormat(WiegandFormat selectedWiegandFormat,Card card,REGISTER_METHOD method) {
@@ -308,6 +316,7 @@ public class RegisterCardView extends BaseView {
         if (card != null && card.card_id != null) {
             cardIds = card.card_id.split("-");
         }
+
         if (selectedWiegandFormat.use_facility_code) {
             mWiegandCardID1.title.setText(mContext.getString(R.string.id_code));
         } else {
@@ -318,6 +327,7 @@ public class RegisterCardView extends BaseView {
             if (card.card_id != null && !card.card_id.isEmpty()) {
                 int exist = card.card_id.indexOf("-");
                 if (exist == -1) {
+                    mWiegandCardID1Watcher.setMaxSize(1028,false);
                     mWiegandCardID1.setVisibility(View.VISIBLE);
                     mWiegandCardID1.title.setText(mContext.getString(R.string.card_id));
                     mWiegandCardID1.content.setText(card.card_id);
@@ -327,21 +337,25 @@ public class RegisterCardView extends BaseView {
                     for (int i=0; i < cardIds.length; i++) {
                         switch (i) {
                             case 0:
+                                mWiegandCardID1Watcher.setMaxSize(1028,false);
                                 mWiegandCardID1.setVisibility(View.VISIBLE);
                                 mWiegandCardID1.content.setText(cardIds[i]);
                                 mWiegandCardID1.enableEdit(false);
                                 break;
                             case 1:
+                                mWiegandCardID2Watcher.setMaxSize(1028,false);
                                 mWiegandCardID2.setVisibility(View.VISIBLE);
                                 mWiegandCardID2.content.setText(cardIds[i]);
                                 mWiegandCardID2.enableEdit(false);
                                 break;
                             case 2:
+                                mWiegandCardID3Watcher.setMaxSize(1028,false);
                                 mWiegandCardID3.setVisibility(View.VISIBLE);
                                 mWiegandCardID3.content.setText(cardIds[i]);
                                 mWiegandCardID3.enableEdit(false);
                                 break;
                             case 3:
+                                mWiegandCardID4Watcher.setMaxSize(1028,false);
                                 mWiegandCardID4.setVisibility(View.VISIBLE);
                                 mWiegandCardID4.content.setText(cardIds[i]);
                                 mWiegandCardID4.enableEdit(false);
@@ -376,7 +390,6 @@ public class RegisterCardView extends BaseView {
                 }
             }
         }
-
     }
 
     public void setReadCard() {
@@ -390,7 +403,9 @@ public class RegisterCardView extends BaseView {
     }
 
     public void setSmartCardlayout(SmartCardLayout layout) {
-        mSmartCardLayout.content.setText(layout.name);
+        if (layout != null) {
+            mSmartCardLayout.content.setText(layout.name);
+        }
     }
 
     public void setCardSmartCard(Card card) {
@@ -460,8 +475,9 @@ public class RegisterCardView extends BaseView {
                 break;
             case READ_CARD:
                 mRegisterMethod.setVisibility(View.GONE);
-                mSmartCardType.setEnabled(false);
+                mCardID.setVisibility(View.VISIBLE);
                 if (Card.WIEGAND.equals(card.type) || Card.CSN_WIEGAND.equals(card.type)) {
+                    mCardID.setVisibility(View.GONE);
                     setWiegandFormat(card.wiegand_format,card,method);
                     if (card.wiegand_format != null) {
                         mWiegandFormat.setVisibility(View.VISIBLE);
@@ -471,12 +487,12 @@ public class RegisterCardView extends BaseView {
                 } else if (Card.ACCESS_ON.equals(card.type) || Card.SECURE_CREDENTIAL.equals(card.type)) {
                     if (device != null && device.smart_card_layout != null) {
                         mSmartCardLayout.setVisibility(View.VISIBLE);
+                        mSmartCardLayout.enableLink(false);
                         mSmartCardLayout.content.setText(device.smart_card_layout.name);
                     }
                     setCardSmartCard(card);
                 }
                 mCardID.content.setText(card.card_id);
-                mCardID.setVisibility(View.VISIBLE);
                 mCardID.enableEdit(false);
                 mAction.setVisibility(View.VISIBLE);
                 mDevice.setVisibility(View.VISIBLE);
@@ -501,29 +517,60 @@ public class RegisterCardView extends BaseView {
     }
 
     private boolean generatorWiegandCardID(DetailEditItemView view,ToastPopup toast,WiegandCardID differ,ArrayList<WiegandCardID> result) {
-        Log.e(TAG,"mWiegandCardID:"+view.content.toString2());
         if (view.content.toString2().isEmpty()) {
             toast.show(mContext.getString(R.string.none_select_card), null);
             return false;
         }
-        int cardID = Integer.valueOf(mWiegandCardID2.content.toString2());
+        int cardID = Integer.valueOf(view.content.toString2());
         if (cardID > differ.max) {
-            toast.show(mContext.getString(R.string.over_value), null);
+            toast.show(mContext.getString(R.string.over_value),  cardID+" / "+differ.max);
             return false;
         }
         result.add(new WiegandCardID(cardID));
         return true;
     }
 
-    public WiegandFormat getWigandID(WiegandFormat wiegandFormat ,ToastPopup toast) {
+    public WiegandFormat getWigandID(WiegandFormat wiegandFormat ,ToastPopup toast,REGISTER_METHOD method) {
         ArrayList<WiegandCardID> result = new ArrayList<WiegandCardID>();
+        WiegandFormat resultWiegandFormat = new WiegandFormat(result);
+        resultWiegandFormat.id = wiegandFormat.id;
+        resultWiegandFormat.wiegand_format_id = wiegandFormat.id;
+        if (method == REGISTER_METHOD.ASSIGN_CARD) {
+            if (mWiegandCardID1.content.toString2().isEmpty()) {
+                if (wiegandFormat.use_facility_code) {
+                    toast.show(mContext.getString(R.string.discern_empty), null);
+                } else {
+                    toast.show(mContext.getString(R.string.none_select_card), null);
+                }
+                return null;
+            }
+            int cardID = Integer.valueOf(mWiegandCardID1.content.toString2());
+            result.add(new WiegandCardID(cardID));
+            if (mWiegandCardID2.content.toString2().isEmpty()) {
+                return resultWiegandFormat;
+            }
+            cardID = Integer.valueOf(mWiegandCardID2.content.toString2());
+            result.add(new WiegandCardID(cardID));
+            if (mWiegandCardID3.content.toString2().isEmpty()) {
+                return resultWiegandFormat;
+            }
+            cardID = Integer.valueOf(mWiegandCardID3.content.toString2());
+            result.add(new WiegandCardID(cardID));
+            if (mWiegandCardID4.content.toString2().isEmpty()) {
+                return resultWiegandFormat;
+            }
+            cardID = Integer.valueOf(mWiegandCardID4.content.toString2());
+            result.add(new WiegandCardID(cardID));
+            return resultWiegandFormat;
+        }
+
+        WiegandCardID wiegandCardID = null;
         for (int i = 0; i < wiegandFormat.wiegand_card_ids.size(); i++) {
-            WiegandCardID wiegandCardID = wiegandFormat.wiegand_card_ids.get(i);
+             wiegandCardID = wiegandFormat.wiegand_card_ids.get(i);
             switch (i) {
                 case 0: {
                     if (mWiegandCardID1.content.toString2().isEmpty()) {
-                        Log.e(TAG,"mWiegandCardID1:"+mWiegandCardID1.content.toString2());
-                        if (wiegandFormat.use_facility_code) {
+                         if (wiegandFormat.use_facility_code) {
                             toast.show(mContext.getString(R.string.discern_empty), null);
                         } else {
                             toast.show(mContext.getString(R.string.none_select_card), null);
@@ -532,7 +579,7 @@ public class RegisterCardView extends BaseView {
                     }
                     int cardID = Integer.valueOf(mWiegandCardID1.content.toString2());
                     if (cardID > wiegandCardID.max) {
-                        toast.show(mContext.getString(R.string.over_value), null);
+                        toast.show(mContext.getString(R.string.over_value), cardID+" / "+wiegandCardID.max);
                         return null;
                     }
                     result.add(new WiegandCardID(cardID));
@@ -558,7 +605,7 @@ public class RegisterCardView extends BaseView {
                 }
             }
         }
-        return new WiegandFormat(result);
+        return resultWiegandFormat;
     }
 
     private void removeTextChangedListener() {
@@ -731,6 +778,7 @@ public class RegisterCardView extends BaseView {
                 mCardID.enableEdit(true);
                 break;
             case ACCESS_ON:
+                removeTextChangedListener();
                 mSmartCardType.content.setText(mContext.getString(R.string.access_on_card));
                 mCardID.enableEdit(false);
                 if (user.user_id.length() > 32) {
@@ -738,8 +786,6 @@ public class RegisterCardView extends BaseView {
                 } else {
                     mCardID.content.setText(user.user_id);
                 }
-                removeTextChangedListener();
-//                mCardID.content.addTextChangedListener(mAocWatcher);
                 mAccessGroup.setVisibility(View.VISIBLE);
                 mPeriod.setVisibility(View.VISIBLE);
                 mAccessGroup.content.setText("");

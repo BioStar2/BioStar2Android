@@ -277,7 +277,7 @@ public class CardFragment extends BaseFragment {
 
         if (VersionData.getCloudVersion(mContext) > 1) {
             if (mItemAdapter == null) {
-                mItemAdapter = new NewCardAdapter(mContext, mUserInfo.cards, getListView(), new OnItemClickListener() {
+                mItemAdapter = new NewCardAdapter(mContext, mUserInfo.user_id,mUserInfo.cards, getListView(), new OnItemClickListener() {
                     @Override
                     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                         if (mSubToolbar == null) {
@@ -321,6 +321,9 @@ public class CardFragment extends BaseFragment {
     public void onDestroy() {
         unRegisterBroadcast();
         if (mUserInfo != null && mUserInfo.cards != null) {
+            if (mUserInfo.card_count != mUserInfo.cards.size()) {
+                mUserInfo.card_count =  mUserInfo.cards.size();
+            }
             try {
                 sendLocalBroadcast(Setting.BROADCAST_UPDATE_CARD, (Serializable) mUserInfo.clone());
             } catch (Exception e) {
@@ -447,13 +450,15 @@ public class CardFragment extends BaseFragment {
             return null;
         }
         if (VersionData.getCloudVersion(mContext) > 1) {
-            mPopup.showWait(new DialogInterface.OnCancelListener() {
-                @Override
-                public void onCancel(DialogInterface dialog) {
-                    mScreenControl.backScreen();
-                }
-            });
-            mUserDataProvider.getCards(TAG, mUserInfo.user_id, mCardsListener, mErrorBackListener, null);
+            if (!mIsDisableModify) {
+                mPopup.showWait(new DialogInterface.OnCancelListener() {
+                    @Override
+                    public void onCancel(DialogInterface dialog) {
+                        mScreenControl.backScreen();
+                    }
+                });
+                mUserDataProvider.getCards(TAG, mUserInfo.user_id, mCardsListener, mErrorBackListener, null);
+            }
         }
         return mRootView;
     }
@@ -542,13 +547,15 @@ public class CardFragment extends BaseFragment {
                          User user = getExtraData(Setting.BROADCAST_UPDATE_CARD, intent);
                         if (user == null || user.cards == null) {
                             if (VersionData.getCloudVersion(mContext) > 1) {
-                                mPopup.showWait(new DialogInterface.OnCancelListener() {
-                                    @Override
-                                    public void onCancel(DialogInterface dialog) {
-                                        mScreenControl.backScreen();
-                                    }
-                                });
-                                mUserDataProvider.getCards(TAG, mUserInfo.user_id,mCardsListener,mErrorBackListener,null);
+                                if (!mIsDisableModify) {
+                                    mPopup.showWait(new DialogInterface.OnCancelListener() {
+                                        @Override
+                                        public void onCancel(DialogInterface dialog) {
+                                            mScreenControl.backScreen();
+                                        }
+                                    });
+                                    mUserDataProvider.getCards(TAG, mUserInfo.user_id, mCardsListener, mErrorBackListener, null);
+                                }
                             }
                             return;
                         }

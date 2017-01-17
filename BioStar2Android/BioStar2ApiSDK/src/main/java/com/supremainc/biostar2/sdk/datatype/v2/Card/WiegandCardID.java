@@ -25,7 +25,7 @@ public class WiegandCardID implements Cloneable, Serializable {
     private static final long serialVersionUID = -4952287661504771970L;
 
     @SerializedName("card_id_max_num") // use only get
-    public int max;
+    public long max;
     @SerializedName("card_id") // use only post
     public String card_id;
 

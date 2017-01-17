@@ -86,6 +86,7 @@ public class StyledEditTextView extends EditText {
             f.set(this, R.drawable.shape_cursor_black);
         } catch (Exception ignored) {
         }
+        arr.recycle();
     }
 
     private void loadFont(Context context) {

@@ -210,18 +210,10 @@ public class PreferenceFragment extends BaseFragment {
     }
 
     private void applyPermission() {
-        if (VersionData.getCloudVersion(mContext) > 1) {
-            if (mPermissionDataProvider.getPermission(PermissionModule.SETTING_NOTIFICATION, true)) {
-                showNotification(true);
-            } else {
-                showNotification(false);
-            }
+        if (mPermissionDataProvider.getPermission(PermissionModule.MONITORING, false)) {
+            showNotification(true);
         } else {
-            if (mPermissionDataProvider.getPermission(PermissionModule.DOOR, true) || mPermissionDataProvider.getPermission(PermissionModule.DOOR_GROUP, true)) {
-                showNotification(true);
-            } else {
-                showNotification(false);
-            }
+            showNotification(false);
         }
     }
 

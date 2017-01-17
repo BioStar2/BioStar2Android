@@ -432,6 +432,8 @@ public class FingerprintFragment extends BaseFragment {
     public void onDestroy() {
         if (mUserInfo.fingerprint_templates != null) {
             try {
+                mUserInfo.fingerprint_count = mUserInfo.fingerprint_templates.size();
+                mUserInfo.fingerprint_template_count = mUserInfo.fingerprint_templates.size();
                 sendLocalBroadcast(Setting.BROADCAST_UPDATE_FINGER, (Serializable) mUserInfo.clone());
             } catch (Exception e) {
 
@@ -537,13 +539,15 @@ public class FingerprintFragment extends BaseFragment {
             return null;
         }
         if (VersionData.getCloudVersion(mContext) > 1) {
-            mPopup.showWait(new DialogInterface.OnCancelListener() {
-                @Override
-                public void onCancel(DialogInterface dialog) {
-                    mScreenControl.backScreen();
-                }
-            });
-            mUserDataProvider.getFingerPrints(TAG, mUserInfo.user_id, mFingerPrintListener, mErrorBackListener, null);
+            if (!mIsDisableModify) {
+                mPopup.showWait(new DialogInterface.OnCancelListener() {
+                    @Override
+                    public void onCancel(DialogInterface dialog) {
+                        mScreenControl.backScreen();
+                    }
+                });
+                mUserDataProvider.getFingerPrints(TAG, mUserInfo.user_id, mFingerPrintListener, mErrorBackListener, null);
+            }
         }
         return mRootView;
     }
@@ -671,13 +675,16 @@ public class FingerprintFragment extends BaseFragment {
     }
 
     private void showSelectDevice() {
-        int result = mBioMiniDataProvider.findDevice();
-        if (result == BioMiniDataProvider.UFA_OK) {
-            mIsBioMiniRescan = true;
-            scanBioMini();
+//        int result = mBioMiniDataProvider.findDevice();
+//        if (result == BioMiniDataProvider.UFA_OK) {
+//            mIsBioMiniRescan = true;
+//            scanBioMini();
+//            return;
+//        }
+//        Toast.makeText(mContext,"err:"+BioMiniDataProvider.getMessage(result)+" code:"+result,Toast.LENGTH_LONG).show();
+        if (mIsDisableModify) {
             return;
         }
-        Toast.makeText(mContext,"err:"+BioMiniDataProvider.getMessage(result)+" code:"+result,Toast.LENGTH_LONG).show();
         mIsBioMiniRescan = false;
         mSelectDevicePopup.show(SelectType.DEVICE_FINGERPRINT, new OnSelectResultListener<ListDevice>() {
             @Override

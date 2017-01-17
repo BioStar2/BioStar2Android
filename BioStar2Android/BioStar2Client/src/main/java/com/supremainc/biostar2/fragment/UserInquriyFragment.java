@@ -39,14 +39,18 @@ import com.supremainc.biostar2.meta.Setting;
 import com.supremainc.biostar2.impl.OnSingleClickListener;
 
 import com.supremainc.biostar2.sdk.datatype.v2.Card.ListCard;
+import com.supremainc.biostar2.sdk.datatype.v2.Common.BioStarSetting;
 import com.supremainc.biostar2.sdk.datatype.v2.Common.VersionData;
 import com.supremainc.biostar2.sdk.datatype.v2.Permission.PermissionModule;
 import com.supremainc.biostar2.sdk.datatype.v2.User.User;
 import com.supremainc.biostar2.sdk.provider.TimeConvertProvider;
 import com.supremainc.biostar2.sdk.utils.ImageUtil;
+import com.supremainc.biostar2.sdk.volley.Response;
+import com.supremainc.biostar2.sdk.volley.VolleyError;
 import com.supremainc.biostar2.view.DetailTextItemView;
 import com.supremainc.biostar2.view.SummaryUserView;
 import com.supremainc.biostar2.widget.ScreenControl.ScreenType;
+import com.supremainc.biostar2.widget.popup.Popup;
 
 import java.util.ArrayList;
 
@@ -107,6 +111,45 @@ public class UserInquriyFragment extends BaseFragment {
         }
     };
 
+    private Response.Listener<BioStarSetting> mSettingListener = new Response.Listener<BioStarSetting>() {
+        @Override
+        public void onResponse(BioStarSetting response, Object deliverParam) {
+            if (isInValidCheck(null)) {
+                return;
+            }
+            mPopup.dismissWiat();
+            User arg = null;
+            try {
+                arg = mUserInfo.clone();
+            } catch (CloneNotSupportedException e) {
+                Log.e(TAG, "selected user clone fail");
+                e.printStackTrace();
+            }
+            Bundle bundle = new Bundle();
+            bundle.putSerializable(User.TAG, arg);
+            mScreenControl.addScreen(ScreenType.USER_MODIFY, bundle);
+        }
+    };
+    private Response.ErrorListener mSettingErrorListener = new Response.ErrorListener() {
+        @Override
+        public void onErrorResponse(VolleyError volleyError, Object deliverParam) {
+            if (isInValidCheck(null)) {
+                return;
+            }
+            mPopup.dismissWiat();
+            User arg = null;
+            try {
+                arg = mUserInfo.clone();
+            } catch (CloneNotSupportedException e) {
+                Log.e(TAG, "selected user clone fail");
+                e.printStackTrace();
+            }
+            Bundle bundle = new Bundle();
+            bundle.putSerializable(User.TAG, arg);
+            mScreenControl.addScreen(ScreenType.USER_MODIFY, bundle);
+        }
+    };
+
     public UserInquriyFragment() {
         super();
         setType(ScreenType.USER_INQURIY);
@@ -164,16 +207,20 @@ public class UserInquriyFragment extends BaseFragment {
         }
         switch (item.getItemId()) {
             case R.id.action_edit:
-                User arg = null;
-                try {
-                    arg = mUserInfo.clone();
-                } catch (CloneNotSupportedException e) {
-                    Log.e(TAG, "selected user clone fail");
-                    e.printStackTrace();
+                if (VersionData.getCloudVersion(mContext) > 1) {
+//                    String message = "";
+//                    if (!mPermissionDataProvider.getPermission(PermissionModule.ACCESS_GROUP, false)) {
+//                        message = getString(R.string.guide_feature_permission)+"\n"+PermissionModule.ACCESS_GROUP.mName;
+//                    }
+//                    if (!message.isEmpty()) {
+//                        mPopup.show(Popup.PopupType.ALERT, message, null, null, null);
+//                        return true;
+//                    }
+                    mPopup.showWait(mCancelExitListener);
+                    mCommonDataProvider.getBioStarSetting(mSettingListener, mSettingErrorListener, null);
+                } else {
+                    mSettingListener.onResponse(null,null);
                 }
-                Bundle bundle = new Bundle();
-                bundle.putSerializable(User.TAG, arg);
-                mScreenControl.addScreen(ScreenType.USER_MODIFY, bundle);
                 return true;
             default:
                 break;
@@ -228,6 +275,7 @@ public class UserInquriyFragment extends BaseFragment {
                         }
                         if (mUserInfo != null) {
                             mUserInfo.fingerprint_templates = user.fingerprint_templates;
+                            mUserInfo.fingerprint_template_count = user.fingerprint_templates.size();
                             mUserInfo.fingerprint_count = user.fingerprint_templates.size();
                         }
                         setView();
@@ -239,8 +287,12 @@ public class UserInquriyFragment extends BaseFragment {
             intentFilter.addAction(Setting.BROADCAST_USER);
             intentFilter.addAction(Setting.BROADCAST_PREFRENCE_REFRESH);
             intentFilter.addAction(Setting.BROADCAST_REROGIN);
-            intentFilter.addAction(Setting.BROADCAST_UPDATE_CARD);
-            intentFilter.addAction(Setting.BROADCAST_UPDATE_FINGER);
+            if (VersionData.getCloudVersion(mContext) > 1) {
+                intentFilter.addAction(Setting.BROADCAST_UPDATE_CARD);
+            }
+            if (VersionData.getCloudVersion(mContext) > 1) {
+                intentFilter.addAction(Setting.BROADCAST_UPDATE_FINGER);
+            }
             LocalBroadcastManager.getInstance(getActivity()).registerReceiver(mReceiver, intentFilter);
         }
     }
@@ -284,10 +336,10 @@ public class UserInquriyFragment extends BaseFragment {
     public void onPrepareOptionsMenu(Menu menu) {
         menu.clear();
         MenuInflater inflater = mContext.getMenuInflater();
-        if (!mUserInfo.user_id.equals("1") && (mPermissionDataProvider.getPermission(PermissionModule.USER, true) || mPermissionDataProvider.getPermission(PermissionModule.USER_GROUP, true))) {
+        if (!mUserInfo.user_id.equals("1") && (mPermissionDataProvider.getPermission(PermissionModule.USER, true))) {
             inflater.inflate(R.menu.edit, menu);
         } else {
-            inflater.inflate(R.menu.menu, menu);
+            inflater.inflate(R.menu.empty, menu);
         }
         super.onPrepareOptionsMenu(menu);
     }
@@ -386,21 +438,23 @@ public class UserInquriyFragment extends BaseFragment {
         if (VersionData.getCloudVersion(mContext) < 2) {
             if (mUserInfo.fingerprint_templates != null) {
                 count = mUserInfo.fingerprint_templates.size();
+                mUserInfo.fingerprint_template_count = count;
             }
         } else {
             count = mUserInfo.fingerprint_template_count;
         }
         mFingerPrintView.content.setText(String.valueOf(count));
-
+        mSummaryUserView.setFingerCount(String.valueOf(count));
         count = 0;
         if (VersionData.getCloudVersion(mContext) > 1) {
             count = mUserInfo.card_count;
         } else {
             if (mUserInfo.cards != null) {
                 count = mUserInfo.cards.size();
+                mUserInfo.card_count = count;
             }
         }
-
+        mSummaryUserView.setCardCount(String.valueOf(count));
         mCardView.content.setText(String.valueOf(count));
 
         if (mUserInfo.pin_exist) {

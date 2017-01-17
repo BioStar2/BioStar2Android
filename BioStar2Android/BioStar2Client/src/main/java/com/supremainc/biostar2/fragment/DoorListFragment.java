@@ -109,25 +109,35 @@ public class DoorListFragment extends BaseFragment {
         }
     };
 
-    private OnItemsListener mOnItemsListener = new OnItemsListener() {
-        @Override
-        public void onSuccessNull() {
-            mIsDataReceived = true;
-            if (mTotal == 0 ) {
-                mToastPopup.show(getString(R.string.none_data), null);
+    private void setTotal(int total) {
+        if (mTotal != total) {
+            mSubToolbar.setTotal(total);
+            mTotal = total;
+            if (mSearchText == null) {
+                sendLocalBroadcast(Setting.BROADCAST_DOOR_COUNT, total);
             }
+        }
+    }
+
+    private OnItemsListener mOnItemsListener = new OnItemsListener()
+    {
+        @Override
+        public void onSuccessNull(int total) {
+            mIsDataReceived = true;
+            setTotal(total);
+        }
+
+        @Override
+        public void onNoMoreData() {
+            mIsDataReceived = true;
+            mToastPopup.show(getString(R.string.none_data), null);
+            setTotal(0);
         }
 
         @Override
         public void onTotalReceive(int total) {
-            if (mTotal != total) {
-                mSubToolbar.setTotal(total);
-                mIsDataReceived = true;
-                mTotal = total;
-                if (mSearchText == null) {
-                    sendLocalBroadcast(Setting.BROADCAST_DOOR_COUNT, total);
-                }
-            }
+            mIsDataReceived = true;
+            setTotal(total);
         }
     };
 

@@ -159,8 +159,12 @@ public class SubToolbar extends BaseView {
     public void showTotal(boolean isShow) {
         if (isShow) {
             mTotalView.setVisibility(View.VISIBLE);
+            findViewById(R.id.selected).setVisibility(View.VISIBLE);
+            findViewById(R.id.total_index).setVisibility(View.VISIBLE);
         } else {
             mTotalView.setVisibility(View.GONE);
+            findViewById(R.id.selected).setVisibility(View.GONE);
+            findViewById(R.id.total_index).setVisibility(View.GONE);
         }
     }
 

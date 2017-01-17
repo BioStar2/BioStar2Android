@@ -13,17 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package com.supremainc.biostar2.sdk.datatype.v2.Permission;
+package com.supremainc.biostar2.sdk.datatype.v2.Common;
 
-public enum PermissionModule {
-    USER("USER"), USER_GROUP("USER_GROUP"), DEVICE("DEVICE"), DEVICE_GROUP("DEVICE_GROUP"), DOOR("DOOR"), DOOR_GROUP("DOOR_GROUP"), ELEVATOR("ELEVATOR"), ZONE("ZONE"), ACCESS_GROUP(
-            "ACCESS_GROUP"), ACCESS_LEVEL("ACCESS_LEVEL"), MONITORING("MONITORING"), TA("TA"), ADMIN("ADMIN"), ACCOUNT("ACCOUNT"),CARD("CARD"), HOLIDAY("HOLIDAY"), SETTING(
-            "SETTING"), SCHEDULE("SCHEDULE"), PERMISSION("PERMISSION");
+import com.google.gson.annotations.SerializedName;
 
+public class BioStarSetting {
+    public static final String TAG = BioStarSetting.class.getSimpleName();
 
-    public final String mName;
+    @SerializedName("status_code")
+    public String statusCode;
+    @SerializedName("message")
+    public String message;
 
-    private PermissionModule(String name) {
-        this.mName = name;
+    @SerializedName("use_alphanumeric_user_id")
+    public boolean use_alphanumeric_user_id ;
+    @SerializedName("password_strength_level")
+    public String password_strength_level;
+
+    public BioStarSetting() {
+
     }
 }

@@ -46,6 +46,10 @@ public class LoginView extends BaseView {
     private String mAddressFullText;
     private InputMethodManager mImm;
     private LoginViewListener mLoginViewListener;
+    private TextWatcherFilter mIDTextWatcherFilter;
+    private TextWatcherFilter mPasswordTextWatcherFilter;
+
+
     private OnSingleClickListener mClickListener = new OnSingleClickListener() {
         @Override
         public void onSingleClick(View v) {
@@ -142,9 +146,17 @@ public class LoginView extends BaseView {
         mLogin = (StyledTextView) findViewById(R.id.login);
         mLogin.setOnClickListener(mClickListener);
         mID = (StyledEditTextView) findViewById(R.id.login_id);
-        mID.addTextChangedListener(new TextWatcherFilter(mID, TextWatcherFilter.EDIT_TYPE.LOGIN_ID, mContext, 32));
+        if (mIDTextWatcherFilter == null) {
+            mIDTextWatcherFilter = new TextWatcherFilter(mID, TextWatcherFilter.EDIT_TYPE.LOGIN_ID, mContext, 32);
+        }
+        mID.removeTextChangedListener(mIDTextWatcherFilter);
+        mID.addTextChangedListener(mIDTextWatcherFilter);
         mPassword = (StyledEditTextView) findViewById(R.id.password);
-        mPassword.addTextChangedListener(new TextWatcherFilter(mPassword, TextWatcherFilter.EDIT_TYPE.PASSWORD, mContext, 32));
+//        if (mPasswordTextWatcherFilter == null) {
+//            mPasswordTextWatcherFilter = new TextWatcherFilter(mPassword, TextWatcherFilter.EDIT_TYPE.PASSWORD, mContext, 32);
+//        }
+//        mPassword.removeTextChangedListener(mPasswordTextWatcherFilter);
+//        mPassword.addTextChangedListener(mPasswordTextWatcherFilter);
         mPassword.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {

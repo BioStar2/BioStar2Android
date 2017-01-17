@@ -29,6 +29,7 @@ import com.supremainc.biostar2.sdk.datatype.v2.EventLog.EventLogs;
 import com.supremainc.biostar2.sdk.datatype.v2.EventLog.ListEventLog;
 import com.supremainc.biostar2.sdk.datatype.v2.EventLog.Query;
 import com.supremainc.biostar2.sdk.provider.EventDataProvider;
+import com.supremainc.biostar2.sdk.provider.PermissionDataProvider;
 import com.supremainc.biostar2.sdk.provider.TimeConvertProvider;
 import com.supremainc.biostar2.sdk.volley.Response;
 import com.supremainc.biostar2.sdk.volley.Response.Listener;
@@ -51,20 +52,26 @@ public abstract class BaseMonitorAdapter extends BaseListAdapter<ListEventLog> {
     protected BaseListViewScroll mOnScroll;
     protected Query mQueryObject;
     protected TimeConvertProvider mTimeConvertProvider;
-
+    protected PermissionDataProvider mPermissionDataProvider;
     Listener<EventLogs> mEventsListener = new Listener<EventLogs>() {
         @Override
         public void onResponse(EventLogs response, Object deliverParam) {
+            if (mPopup != null) {
+                mPopup.dismiss();
+            }
             if (isDestroy()) {
                 return;
             }
-            mPopup.dismissWiat();
             if (mSwipyRefreshLayout != null) {
                 mSwipyRefreshLayout.setRefreshing(false);
             }
             if (response == null || response.records == null || response.records.size() < 1) {
-                if (mOnItemsListener != null) {
-                    mOnItemsListener.onSuccessNull();
+                if (mItems == null || mItems.size() < 1) {
+                    mTotal =0;
+                    mOnItemsListener.onNoMoreData();
+                } else {
+                    mTotal = mItems.size();
+                    mOnItemsListener.onSuccessNull(mItems.size());
                 }
                 mSwipyRefreshLayout.setEnableBottom(false);
                 mTotal = getCount();
@@ -100,36 +107,43 @@ public abstract class BaseMonitorAdapter extends BaseListAdapter<ListEventLog> {
     Response.ErrorListener mEventsErrorListener = new Response.ErrorListener() {
         @Override
         public void onErrorResponse(VolleyError error, Object deliverParam) {
+            if (mPopup != null) {
+                mPopup.dismiss();
+            }
             if (isDestroy(error)) {
                 return;
             }
-            mPopup.dismissWiat();
             if (mSwipyRefreshLayout != null) {
                 mSwipyRefreshLayout.setRefreshing(false);
             }
-            mPopup.show(PopupType.ALERT, mActivity.getString(R.string.fail_retry), Setting.getErrorMessage(error, mActivity), new OnPopupClickListener() {
-                @Override
-                public void OnNegative() {
-                    // mCancelExitListener.onCancel(null);
-                }
-
-                @Override
-                public void OnPositive() {
-                    if (mSwipyRefreshLayout != null) {
-                        mSwipyRefreshLayout.setRefreshing(true);
-                    } else {
-                        mPopup.showWait(mCancelExitListener);
+            if (mPopup != null) {
+                mPopup.show(PopupType.ALERT, mActivity.getString(R.string.fail_retry), Setting.getErrorMessage(error, mActivity), new OnPopupClickListener() {
+                    @Override
+                    public void OnNegative() {
+                        // mCancelExitListener.onCancel(null);
                     }
-                    mHandler.removeCallbacks(mRunGetItems);
-                    mHandler.post(mRunGetItems);
-                }
-            }, mActivity.getString(R.string.ok), mActivity.getString(R.string.cancel), false);
+
+                    @Override
+                    public void OnPositive() {
+                        if (mSwipyRefreshLayout != null) {
+                            mSwipyRefreshLayout.setRefreshing(true);
+                        } else {
+                            mPopup.showWait(mCancelExitListener);
+                        }
+                        mHandler.removeCallbacks(mRunGetItems);
+                        mHandler.post(mRunGetItems);
+                    }
+                }, mActivity.getString(R.string.ok), mActivity.getString(R.string.cancel), false);
+            }
 
         }
     };
     Runnable mRunGetItems = new Runnable() {
         @Override
         public void run() {
+            if (isDestroy()) {
+                return;
+            }
             if (isMemoryPoor()) {
                 mPopup.dismiss();
                 if (mSwipyRefreshLayout != null) {
@@ -152,7 +166,8 @@ public abstract class BaseMonitorAdapter extends BaseListAdapter<ListEventLog> {
                               OnItemsListener onItemsListener) {
         super(context, items, listView, itemClickListener, popup, onItemsListener);
         mTimeConvertProvider = TimeConvertProvider.getInstance(context);
-        mEventDataProvider = EventDataProvider.getInstance();
+        mEventDataProvider = EventDataProvider.getInstance(context);
+        mPermissionDataProvider = PermissionDataProvider.getInstance(context);
     }
 
     public void setClickEnable(boolean clickEnable) {

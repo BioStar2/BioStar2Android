@@ -19,9 +19,12 @@ import android.content.Context;
 import com.supremainc.biostar2.sdk.datatype.v2.Common.ResponseStatus;
 import com.supremainc.biostar2.sdk.datatype.v2.Door.Door;
 import com.supremainc.biostar2.sdk.datatype.v2.Door.Doors;
+import com.supremainc.biostar2.sdk.datatype.v2.Door.ListDoor;
 import com.supremainc.biostar2.sdk.volley.Request.Method;
 import com.supremainc.biostar2.sdk.volley.Response.ErrorListener;
 import com.supremainc.biostar2.sdk.volley.Response.Listener;
+
+import java.util.ArrayList;
 
 public class DoorDataProvider extends BaseDataProvider {
     private static DoorDataProvider mSelf = null;
@@ -49,9 +52,23 @@ public class DoorDataProvider extends BaseDataProvider {
         }
         return null;
     }
-
-    public void getDoors(String tag, Listener<Doors> listener, ErrorListener errorListener, int offset, int limit, String groupId, String query, Object deliverParam) {
-        sendRequest(tag, Doors.class, Method.GET, NetWork.PARAM_DOORS, null, createParams(offset, limit, groupId, query), null, listener, errorListener, deliverParam);
+//    private static int test_count=0;
+    public void getDoors(String tag, Listener<Doors> listener, ErrorListener errorListener, int offset, int limit, String query, Object deliverParam) {
+        sendRequest(tag, Doors.class, Method.GET, NetWork.PARAM_DOORS, null, createParams(offset, limit,null, query), null, listener, errorListener, deliverParam);
+//        Doors doors = new Doors();
+//        ArrayList<ListDoor> list = new ArrayList<ListDoor>();
+//        int count = test_count +limit;
+//        for (int i=test_count; i < count ; i++) {
+//            ListDoor item = new ListDoor();
+//            item.id = String.valueOf(test_count);
+//            item.name = String.valueOf(test_count)+"door";
+//            item.description = String.valueOf(test_count)+"description";
+//            list.add(item);
+//            test_count++;
+//        }
+//        doors.total = 1000;
+//        doors.records = list;
+//        listener.onResponse(doors,deliverParam);
     }
 
     public void getDoor(String tag, String id, Listener<Door> listener, ErrorListener errorListener, Object deliverParam) {

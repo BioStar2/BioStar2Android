@@ -226,6 +226,9 @@ public class FileUtil {
         FileInputStream fileInputStream = null;
         byte buffer[];
         File file = new File(path);
+        if (!file.exists()) {
+            return null;
+        }
         try {
             fileInputStream = new FileInputStream(file);
             buffer = new byte[(int) file.length()];

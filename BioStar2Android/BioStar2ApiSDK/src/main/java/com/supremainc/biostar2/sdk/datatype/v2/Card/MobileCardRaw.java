@@ -34,7 +34,8 @@ public class MobileCardRaw implements Cloneable, Serializable {
     public String status_code;
     @SerializedName("raw")
     public String raw;
-
+    @SerializedName("smart_card_layout_key")
+    public String smart_card_layout_key;
     public MobileCardRaw() {
 
     }

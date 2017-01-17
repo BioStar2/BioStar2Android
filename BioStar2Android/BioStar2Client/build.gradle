@@ -31,7 +31,7 @@ android {
 
 dependencies {
     compile project(':BioStar2ApiSDK')
-    //compile 'com.supremainc.biostar2:biostar2sdk:1.1.0'
+    //compile 'com.supremainc.biostar2:biostar2sdk:2.4.0'
     //compile 'com.github.bumptech.glide:volley-integration:1.3.1@aar'
     compile fileTree(include: ['*.jar'], dir: 'libs')
     // App's dependencies, including test

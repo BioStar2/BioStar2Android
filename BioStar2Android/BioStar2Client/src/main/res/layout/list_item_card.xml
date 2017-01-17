@@ -44,8 +44,10 @@
 
         <com.supremainc.biostar2.view.StyledTextView
             android:id="@+id/info_block"
-            android:layout_width="47dp"
+            android:layout_width="wrap_content"
             android:layout_height="35dp"
+            android:paddingLeft="3dp"
+            android:paddingRight="3dp"
             android:gravity="center"
             android:textColor="@color/white"
             android:textSize="18dp"
@@ -56,8 +58,10 @@
 
         <com.supremainc.biostar2.view.StyledTextView
             android:id="@+id/info_unblock"
-            android:layout_width="74dp"
+            android:layout_width="wrap_content"
             android:layout_height="35dp"
+            android:paddingLeft="3dp"
+            android:paddingRight="3dp"
             android:gravity="center"
             android:textColor="@color/white"
             android:textSize="18dp"

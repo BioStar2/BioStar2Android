@@ -15,6 +15,7 @@
  */
 package com.supremainc.biostar2.activity;
 
+import android.Manifest;
 import android.app.Activity;
 import android.app.SearchManager;
 import android.content.BroadcastReceiver;
@@ -26,11 +27,14 @@ import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
 import android.content.pm.PackageManager.NameNotFoundException;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.provider.SearchRecentSuggestions;
+import android.provider.Settings;
 import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.LocalBroadcastManager;
@@ -53,6 +57,8 @@ import com.supremainc.biostar2.fragment.DoorFragment;
 import com.supremainc.biostar2.fragment.DoorListFragment;
 import com.supremainc.biostar2.fragment.FingerprintFragment;
 import com.supremainc.biostar2.fragment.MainFragment;
+import com.supremainc.biostar2.fragment.MobileCardFragment;
+import com.supremainc.biostar2.fragment.MobileCardGuideFragment;
 import com.supremainc.biostar2.fragment.MonitorFragment;
 import com.supremainc.biostar2.fragment.MyProfileFragment;
 import com.supremainc.biostar2.fragment.PermisionFragment;
@@ -93,6 +99,7 @@ public class HomeActivity extends BaseActivity {
     private HomeActivity mActivity;
     private Handler mHandler = new Handler();
     private DrawLayerMenuView mDrawLayerMenuView;
+    private long mTick=0;
     Response.Listener<Users> mUserCountListener = new Response.Listener<Users>() {
         @Override
         public void onResponse(Users response, Object deliverParam) {
@@ -298,7 +305,7 @@ public class HomeActivity extends BaseActivity {
             LocalBroadcastManager.getInstance(mContext).sendBroadcast(new Intent(Setting.BROADCAST_REROGIN));
             setUser(mUserDataProvider.getLoginUserInfo());
             getEventMessage();
-            if (mIsGoAlarmList && (mPermissionDataProvider.getPermission(PermissionModule.DOOR, true) || mPermissionDataProvider.getPermission(PermissionModule.DOOR_GROUP, true))) {
+            if (mIsGoAlarmList && (mPermissionDataProvider.getPermission(PermissionModule.DOOR, true))) {
                 mIsGoAlarmList = false;
                 gotoScreen(ScreenType.ALARM_LIST, null, true);
             } else {
@@ -418,19 +425,18 @@ public class HomeActivity extends BaseActivity {
     }
 
     private void applyPermission() {
-        if (mPermissionDataProvider.getPermission(PermissionModule.USER, false) || mPermissionDataProvider.getPermission(PermissionModule.USER_GROUP, false)) {
+        if (mPermissionDataProvider.getPermission(PermissionModule.USER, false)) {
             showUserMenu(true);
         } else {
             showUserMenu(false);
         }
 
-        if (mPermissionDataProvider.getPermission(PermissionModule.DOOR, false) || mPermissionDataProvider.getPermission(PermissionModule.DOOR_GROUP, false)) {
+        if (mPermissionDataProvider.getPermission(PermissionModule.DOOR, false) ) {
             showDoorMenu(true);
         } else {
             showDoorMenu(false);
         }
-
-        if (mPermissionDataProvider.getPermission(PermissionModule.DOOR, true) || mPermissionDataProvider.getPermission(PermissionModule.DOOR_GROUP, true)) {
+        if ( mPermissionDataProvider.getPermission(PermissionModule.MONITORING, false)) {
             showAlarmMenu(true);
         } else {
             showAlarmMenu(false);
@@ -440,6 +446,7 @@ public class HomeActivity extends BaseActivity {
         } else {
             showMonitorMenu(false);
         }
+        showMobileCard(false);
 //        if (VersionData.getCloudVersion(mContext) >= 2) {
 //            showMobileCard(false);
 //        }
@@ -520,10 +527,10 @@ public class HomeActivity extends BaseActivity {
                 fragemnt = new PermisionFragment();
                 break;
             case MOBILE_CARD_LIST:
-//                fragemnt = new MobileCardFragment();
+                fragemnt = new MobileCardFragment();
                 break;
             case MOBILE_CARD_GUIDE:
-//                fragemnt = new MobileCardGuideFragment();
+                fragemnt = new MobileCardGuideFragment();
                 break;
             // case DOOR_ALARM:
             // fragemnt = new DoorAlarmFragment();
@@ -802,7 +809,7 @@ public class HomeActivity extends BaseActivity {
         if (mCommonDataProvider.isValidLogin()) {
             applyPermission();
             getEventMessage();
-            if (mIsGoAlarmList &&(mPermissionDataProvider.getPermission(PermissionModule.DOOR, true) || mPermissionDataProvider.getPermission(PermissionModule.DOOR_GROUP, true))) {
+            if (mIsGoAlarmList &&(mPermissionDataProvider.getPermission(PermissionModule.MONITORING, false) )) {
                 mIsGoAlarmList = false;
                 gotoScreen(ScreenType.ALARM_LIST, null, true);
             } else {
@@ -812,14 +819,24 @@ public class HomeActivity extends BaseActivity {
         } else {
             mUserDataProvider.simpleLogin(mLoginListener, mSimpleLoginErrorListener, null);
         }
-        if (mPermissionDataProvider.getPermission(PermissionModule.USER, false) || mPermissionDataProvider.getPermission(PermissionModule.USER_GROUP, false)) {
+        if (mPermissionDataProvider.getPermission(PermissionModule.USER, false)) {
             mUserDataProvider.getUsers(TAG, mUserCountListener, null, 0, 1, "1", null, null);
         }
 
-        if (mPermissionDataProvider.getPermission(PermissionModule.DOOR, false) || mPermissionDataProvider.getPermission(PermissionModule.DOOR_GROUP, false)) {
-            mDoorDataProvider.getDoors(TAG, mDoorCountListener, null, 0, 1, "1", null, null);
+        if (mPermissionDataProvider.getPermission(PermissionModule.DOOR, false)) {
+            mDoorDataProvider.getDoors(TAG, mDoorCountListener, null, 0, 1, null, null);
         }
         isUpdate();
+        //TODO 나중에 삭제.
+//        if (Build.VERSION.SDK_INT >= 23) {
+//            if ((ActivityCompat.checkSelfPermission(mContext, Manifest.permission.READ_EXTERNAL_STORAGE)
+//                    != PackageManager.PERMISSION_GRANTED) || (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+//                    != PackageManager.PERMISSION_GRANTED)) {
+//                ActivityCompat.requestPermissions(mContext, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE},
+//                        Setting.REQUEST_EXTERNAL_STORAGE);
+//                return;
+//            }
+//        }
     }
 
     @Override
@@ -858,7 +875,7 @@ public class HomeActivity extends BaseActivity {
 
         if (intent != null) {
             String action = intent.getAction();
-            if (action != null && action.startsWith(Setting.ACTION_NOTIFICATION_START) && mPermissionDataProvider != null && (mPermissionDataProvider.getPermission(PermissionModule.DOOR, true) || mPermissionDataProvider.getPermission(PermissionModule.DOOR_GROUP, true))) {
+            if (action != null && action.startsWith(Setting.ACTION_NOTIFICATION_START) && mPermissionDataProvider != null && (mPermissionDataProvider.getPermission(PermissionModule.MONITORING, false))) {
                 gotoScreen(ScreenType.ALARM_LIST, null, true);
             }
         }
@@ -882,6 +899,7 @@ public class HomeActivity extends BaseActivity {
         if (ConfigDataProvider.getFullURL(mContext) == null) {
             finish();
         }
+        mUserDataProvider.simpleLoginCheck();
     }
 
 
@@ -1016,7 +1034,7 @@ public class HomeActivity extends BaseActivity {
                             mAppDataProvider.setDoorCount(total);
                             setDoorCount(total);
                         } else if (total == -1) {
-                            mDoorDataProvider.getDoors(TAG, mDoorCountListener, null, 0, 1, "1", null, null);
+                            mDoorDataProvider.getDoors(TAG, mDoorCountListener, null, 0, 1,  null, null);
                         }
                     } else if (action.equals(Setting.BROADCAST_REROGIN)) {
                         setUser(mUserDataProvider.getLoginUserInfo());
@@ -1029,7 +1047,7 @@ public class HomeActivity extends BaseActivity {
                         if (mContext == null) {
                             return;
                         }
-                        if (mPermissionDataProvider.getPermission(PermissionModule.DOOR, true) || mPermissionDataProvider.getPermission(PermissionModule.DOOR_GROUP, true)) {
+                        if (mPermissionDataProvider.getPermission(PermissionModule.MONITORING, false) ) {
                             mIsGoAlarmList = true;
                         }
                     }

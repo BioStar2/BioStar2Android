@@ -16,6 +16,7 @@
 package com.supremainc.biostar2.adapter;
 
 import android.app.Activity;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -45,6 +46,7 @@ public class SimpleDeviceAdapter extends BaseDeviceAdapter {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
+
         if (mItems == null || mItems.size() < 1) {
             return null;
         }

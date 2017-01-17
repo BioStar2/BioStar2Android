@@ -28,7 +28,7 @@ public class MobileCards implements Cloneable, Serializable {
     public String statusCode;
     @SerializedName("message")
     public String message;
-    @SerializedName("records")
+    @SerializedName("mobile_credential_list")
     public ArrayList<MobileCard> records;
     @SerializedName("total")
     public int total;

@@ -63,6 +63,7 @@ public class DetailTextItemView extends BaseView {
                 title.setText(index);
             }
             enableLink(arr.getBoolean(R.styleable.DetailtemView_link, false));
+            arr.recycle();
         } else {
             enableLink(false);
         }

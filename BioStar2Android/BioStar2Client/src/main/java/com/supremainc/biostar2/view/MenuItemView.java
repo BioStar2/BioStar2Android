@@ -17,6 +17,7 @@ package com.supremainc.biostar2.view;
 
 import android.content.Context;
 import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -124,6 +125,7 @@ public class MenuItemView extends BaseView {
         }
         mBadge.setText(content);
         mBadge.setVisibility(View.VISIBLE);
+        mBadge.invalidate();
     }
 
     public enum MenuItemType {

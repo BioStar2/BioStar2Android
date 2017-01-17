@@ -52,7 +52,7 @@ public class MobileCard implements Cloneable, Serializable {
     @SerializedName("fingerprint_index_list")
     public ArrayList<Integer> fingerprint_index_list;
     @SerializedName("is_registered")
-    private boolean is_registered ;
+    public boolean is_registered ;
 
     public static final String SECURE_CREDENTIAL = "SECURE_CREDENTIAL";
     public static final String ACCESS_ON = "ACCESS_ON";

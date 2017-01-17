@@ -47,57 +47,95 @@ public abstract class BaseWiegandFormatAdapter extends BaseListAdapter<WiegandFo
     Listener<WiegandFormats> mItemListener = new Listener<WiegandFormats>() {
         @Override
         public void onResponse(WiegandFormats response, Object deliverParam) {
+            if (mPopup != null) {
+                mPopup.dismiss();
+            }
             if (isDestroy()) {
                 return;
             }
-            mPopup.dismiss();
             if (response == null || response.records == null || response.records.size() < 1) {
                 if (mOnItemsListener != null) {
-                    mOnItemsListener.onSuccessNull();
+                    if (mItems == null || mItems.size() < 1) {
+                        mTotal =0;
+                        mOnItemsListener.onNoMoreData();
+                    } else {
+                        mTotal = mItems.size();
+                        mOnItemsListener.onSuccessNull(mItems.size());
+                    }
                 }
                 return;
             }
+
             if (mItems == null) {
                 mItems = new ArrayList<WiegandFormat>();
             }
-            if (mOnItemsListener != null) {
-                mOnItemsListener.onTotalReceive(response.total);
+            if (mQuery != null && !mQuery.isEmpty()) {
+                mQuery = mQuery.toLowerCase();
             }
             for (WiegandFormat data : response.records) {
+                if (mQuery != null && !mQuery.isEmpty()) {
+                    if (data.name == null) {
+                        continue;
+                    }
+                    String target = data.name.toLowerCase();
+                    if (!target.contains(mQuery)) {
+                        continue;
+                    }
+                }
                 mItems.add(data);
             }
             setData(mItems);
-            mOffset = mItems.size() - 1;
             mTotal = response.total;
+            if (mTotal < mItems.size()) {
+                mTotal = mItems.size();
+            }
+            if (mOnItemsListener != null) {
+                if (mItems == null || mItems.size() < 1) {
+                    mOnItemsListener.onNoMoreData();
+                } else {
+                    mOnItemsListener.onTotalReceive(mTotal);
+                }
+            }
+            mOffset = mItems.size();
+
         }
     };
     Response.ErrorListener mItemErrorListener = new Response.ErrorListener() {
         @Override
         public void onErrorResponse(VolleyError error, Object deliverParam) {
+            if (mPopup != null) {
+                mPopup.dismiss();
+            }
             if (isDestroy(error)) {
                 return;
             }
-            mPopup.dismiss();
-            mPopup.show(PopupType.ALERT, mActivity.getString(R.string.fail_retry), Setting.getErrorMessage(error, mActivity), new OnPopupClickListener() {
-                @Override
-                public void OnNegative() {
-                    mCancelExitListener.onCancel(null);
-                }
+            if (mPopup != null) {
+                mPopup.show(PopupType.ALERT, mActivity.getString(R.string.fail_retry), Setting.getErrorMessage(error, mActivity), new OnPopupClickListener() {
+                    @Override
+                    public void OnNegative() {
+                        mCancelExitListener.onCancel(null);
+                    }
 
-                @Override
-                public void OnPositive() {
-                    mHandler.removeCallbacks(mRunGetItems);
-                    mHandler.post(mRunGetItems);
-                }
-            }, mActivity.getString(R.string.ok), mActivity.getString(R.string.cancel), false);
+                    @Override
+                    public void OnPositive() {
+                        mHandler.removeCallbacks(mRunGetItems);
+                        mHandler.post(mRunGetItems);
+                    }
+                }, mActivity.getString(R.string.ok), mActivity.getString(R.string.cancel), false);
+            }
         }
     };
 
     Runnable mRunGetItems = new Runnable() {
         @Override
         public void run() {
+            if (isDestroy()) {
+                return;
+            }
             if (isMemoryPoor()) {
-                mPopup.dismiss();
+                if (mPopup != null) {
+                    mPopup.dismiss();
+                }
                 if (mSwipyRefreshLayout != null) {
                     mSwipyRefreshLayout.setRefreshing(false);
                 }
@@ -139,7 +177,9 @@ public abstract class BaseWiegandFormatAdapter extends BaseListAdapter<WiegandFo
         mLimit = FIRST_LIMIT;
         mHandler.removeCallbacks(mRunGetItems);
         mCardDataProvider.cancelAll(TAG);
-        mPopup.showWait(mCancelExitListener);
+        if (mPopup != null) {
+            mPopup.showWait(mCancelExitListener);
+        }
         if (mItems != null) {
             mItems.clear();
             notifyDataSetChanged();

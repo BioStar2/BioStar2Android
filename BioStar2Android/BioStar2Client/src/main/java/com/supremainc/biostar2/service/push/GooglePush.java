@@ -43,6 +43,7 @@ public class GooglePush {
     private Random mRandom;
     private GoogleCloudMessaging mGcm;
     private String mRegID;
+    private static final String mPushID = "set your push id";
 
     public GooglePush(Activity activity) {
         mActivity = activity;
@@ -129,12 +130,16 @@ public class GooglePush {
         new AsyncTask<Void, Void, Void>() {
             @Override
             protected Void doInBackground(Void... params) {
+                if (mPushID.equals("set your push id")) {
+                    Log.e(TAG,"mPushID set your push id");
+                    return null;
+                }
                 if (Setting.IS_GOOGPLAY_SERVICE) {
                     try {
                         if (mGcm == null) {
                             mGcm = GoogleCloudMessaging.getInstance(mActivity.getApplicationContext());
                         }
-                        mRegID = mGcm.register("884059532537");
+                        mRegID = mGcm.register(mPushID);
                         if (mRegID != null && !mRegID.isEmpty()) {
                             PreferenceUtil.putSharedPreference(mActivity, "registrationId", mRegID);
                             PreferenceUtil.putSharedPreference(mActivity, "version", getAppVersion());
@@ -149,7 +154,7 @@ public class GooglePush {
                 } else {
                     Intent intent = new Intent("com.google.android.c2dm.intent.REGISTER");
                     intent.setPackage("com.google.android.gsf");
-                    intent.putExtra("sender", "884059532537");
+                    intent.putExtra("sender",mPushID);
                     if (mRandom == null) {
                         mRandom = new Random();
                     }

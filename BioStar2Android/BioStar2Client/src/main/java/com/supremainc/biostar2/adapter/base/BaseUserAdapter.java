@@ -51,10 +51,12 @@ public abstract class BaseUserAdapter extends BaseListAdapter<ListUser> {
     Listener<Users> mUsersListener = new Listener<Users>() {
         @Override
         public void onResponse(Users response, Object deliverParam) {
+            if (mPopup != null) {
+                mPopup.dismiss();
+            }
             if (isDestroy()) {
                 return;
             }
-            mPopup.dismiss();
             if (mSwipyRefreshLayout != null) {
                 mSwipyRefreshLayout.setRefreshing(false);
             }
@@ -65,8 +67,13 @@ public abstract class BaseUserAdapter extends BaseListAdapter<ListUser> {
     Runnable mRunGetItems = new Runnable() {
         @Override
         public void run() {
+            if (isDestroy()) {
+                return;
+            }
             if (isMemoryPoor()) {
-                mPopup.dismiss();
+                if (mPopup != null) {
+                    mPopup.dismiss();
+                }
                 if (mSwipyRefreshLayout != null) {
                     mSwipyRefreshLayout.setRefreshing(false);
                 }
@@ -79,29 +86,33 @@ public abstract class BaseUserAdapter extends BaseListAdapter<ListUser> {
     Response.ErrorListener mUsersErrorListener = new Response.ErrorListener() {
         @Override
         public void onErrorResponse(VolleyError error, Object deliverParam) {
+            if (mPopup != null) {
+                mPopup.dismiss();
+            }
             if (isDestroy(error)) {
                 return;
             }
-            mPopup.dismiss();
             if (mSwipyRefreshLayout != null) {
                 mSwipyRefreshLayout.setRefreshing(false);
             }
-            mPopup.show(PopupType.ALERT, mActivity.getString(R.string.fail_retry), Setting.getErrorMessage(error, mActivity), new OnPopupClickListener() {
-                @Override
-                public void OnNegative() {
-                }
-
-                @Override
-                public void OnPositive() {
-                    if (mSwipyRefreshLayout != null) {
-                        mSwipyRefreshLayout.setRefreshing(true);
-                    } else {
-                        mPopup.showWait(mCancelExitListener);
+            if (mPopup != null) {
+                mPopup.show(PopupType.ALERT, mActivity.getString(R.string.fail_retry), Setting.getErrorMessage(error, mActivity), new OnPopupClickListener() {
+                    @Override
+                    public void OnNegative() {
                     }
-                    mHandler.removeCallbacks(mRunGetItems);
-                    mHandler.post(mRunGetItems);
-                }
-            }, mActivity.getString(R.string.ok), mActivity.getString(R.string.cancel), false);
+
+                    @Override
+                    public void OnPositive() {
+                        if (mSwipyRefreshLayout != null) {
+                            mSwipyRefreshLayout.setRefreshing(true);
+                        } else {
+                            mPopup.showWait(mCancelExitListener);
+                        }
+                        mHandler.removeCallbacks(mRunGetItems);
+                        mHandler.post(mRunGetItems);
+                    }
+                }, mActivity.getString(R.string.ok), mActivity.getString(R.string.cancel), false);
+            }
         }
     };
     private BaseListViewScroll mOnScroll;
@@ -113,11 +124,15 @@ public abstract class BaseUserAdapter extends BaseListAdapter<ListUser> {
             @Override
             public void onScrollStateChanged(AbsListView view, int scrollState) {
                 if (scrollState == OnScrollListener.SCROLL_STATE_IDLE && mIsLastItemVisible && mTotal - 1 > mOffset) {
-                    mPopup.showWait(true);
+                    if (mPopup != null) {
+                        mPopup.showWait(true);
+                    }
                     mHandler.removeCallbacks(mRunGetItems);
                     mHandler.postDelayed(mRunGetItems, 100);
                 } else {
-                    mPopup.dismissWiat();
+                    if (mPopup != null) {
+                        mPopup.dismissWiat();
+                    }
                 }
             }
 
@@ -129,7 +144,7 @@ public abstract class BaseUserAdapter extends BaseListAdapter<ListUser> {
     }
 
     public boolean modifyItem(ListUser user) {
-        if (user == null || user.user_id == null) {
+        if (user == null || user.user_id == null || mItems == null) {
             return false;
         }
         for (int i = 0; i < mItems.size(); i++) {
@@ -149,7 +164,7 @@ public abstract class BaseUserAdapter extends BaseListAdapter<ListUser> {
     }
 
     public boolean modifyCardItem(String userID,int cardCount) {
-        if (userID == null) {
+        if (userID == null || mItems == null) {
             return false;
         }
         for (int i = 0; i < mItems.size(); i++) {
@@ -164,13 +179,14 @@ public abstract class BaseUserAdapter extends BaseListAdapter<ListUser> {
     }
 
     public boolean modifyFingerPrintItem(String userID,int fingerCount) {
-        if (userID == null) {
+        if (userID == null || mItems == null) {
             return false;
         }
         for (int i = 0; i < mItems.size(); i++) {
             ListUser itemUser = mItems.get(i);
             if (itemUser.user_id.equals(userID)) {
                 itemUser.fingerprint_count = fingerCount;
+                itemUser.fingerprint_template_count = fingerCount;
                 notifyDataSetChanged();
                 return true;
             }
@@ -203,7 +219,9 @@ public abstract class BaseUserAdapter extends BaseListAdapter<ListUser> {
             mSwipyRefreshLayout.setEnableBottom(true);
             mSwipyRefreshLayout.onRefresh(SwipyRefreshLayoutDirection.TOP, false);
         } else {
-            mPopup.showWait(mCancelExitListener);
+            if (mPopup != null) {
+                mPopup.showWait(mCancelExitListener);
+            }
         }
         mHandler.removeCallbacks(mRunGetItems);
         mHandler.postDelayed(mRunGetItems, 500);
@@ -217,7 +235,13 @@ public abstract class BaseUserAdapter extends BaseListAdapter<ListUser> {
     private void onUserListener(Users response, Object deliverParam) {
         if (response == null || response.records == null || response.records.size() < 1) {
             if (mOnItemsListener != null) {
-                mOnItemsListener.onSuccessNull();
+                if (mItems == null || mItems.size() < 1) {
+                    mTotal =0;
+                    mOnItemsListener.onNoMoreData();
+                } else {
+                    mTotal = mItems.size();
+                    mOnItemsListener.onSuccessNull(mItems.size());
+                }
             }
             if (mTotal <= getCount() && mSwipyRefreshLayout != null) {
                 mSwipyRefreshLayout.setEnableBottom(false);
@@ -228,24 +252,21 @@ public abstract class BaseUserAdapter extends BaseListAdapter<ListUser> {
         if (mItems == null) {
             mItems = new ArrayList<ListUser>();
         }
-        if (mOnItemsListener != null) {
-            mOnItemsListener.onTotalReceive(response.total);
-        }
-
-        if (response.records.size() < 1) {
-            if (mTotal <= getCount() && mSwipyRefreshLayout != null) {
-                mSwipyRefreshLayout.setEnableBottom(false);
-            }
-            return;
-        }
 
         for (ListUser user : response.records) {
             mItems.add(user);
         }
         setData(mItems);
-        mOffset = mItems.size() - 1;
-        mTotal = response.total;
+        mOffset = mItems.size();
+
         mLimit = SECOND_LIMIT;
+        mTotal = response.total;
+        if (mTotal < mItems.size()) {
+            mTotal = mItems.size();
+        }
+        if (mOnItemsListener != null) {
+            mOnItemsListener.onTotalReceive(mTotal);
+        }
         if (BuildConfig.DEBUG) {
             Log.e(TAG, "mTotal:" + mTotal + " mOffset:" + mOffset + " getCount():" + getCount());
         }

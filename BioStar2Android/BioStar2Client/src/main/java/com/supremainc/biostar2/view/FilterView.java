@@ -27,6 +27,7 @@ import android.widget.TimePicker;
 
 import com.supremainc.biostar2.R;
 import com.supremainc.biostar2.impl.OnSingleClickListener;
+import com.supremainc.biostar2.sdk.datatype.v2.Common.VersionData;
 import com.supremainc.biostar2.sdk.datatype.v2.Device.BaseDevice;
 import com.supremainc.biostar2.sdk.datatype.v2.Device.ListDevice;
 import com.supremainc.biostar2.sdk.datatype.v2.EventLog.EventType;
@@ -88,6 +89,10 @@ public class FilterView extends BaseView {
                 mPopup.show(PopupType.ALERT, mContext.getString(R.string.info), mActivity.getString(R.string.error_set_date), null, null, null);
                 return;
             }
+            if (mDateTimePicker.isErrorSetDate(mStartHour, mStartMinute, 0, mEndHour, mEndMinute, 0) && year == mEndYear && monthOfYear == mEndMonth && dayOfMonth == mEndDay) {
+                mPopup.show(PopupType.ALERT, mContext.getString(R.string.info), mActivity.getString(R.string.error_set_date), null, null, null);
+                return;
+            }
             mStartYear = year;
             mStartMonth = monthOfYear;
             mStartDay = dayOfMonth;
@@ -98,6 +103,10 @@ public class FilterView extends BaseView {
         @Override
         public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
             if (mDateTimePicker.isErrorSetDate(mStartYear, mStartMonth, mStartDay, year, monthOfYear, dayOfMonth)) {
+                mPopup.show(PopupType.ALERT, mContext.getString(R.string.info), mActivity.getString(R.string.error_set_date), null, null, null);
+                return;
+            }
+            if (mDateTimePicker.isErrorSetDate(mStartHour, mStartMinute, 0, mEndHour, mEndMinute, 0) && mStartYear == year && mStartMonth == monthOfYear && mStartDay == dayOfMonth) {
                 mPopup.show(PopupType.ALERT, mContext.getString(R.string.info), mActivity.getString(R.string.error_set_date), null, null, null);
                 return;
             }
@@ -487,7 +496,11 @@ public class FilterView extends BaseView {
             return;
         }
         int size = mEventTypes.size();
-        mEventView.setText(mEventTypes.get(0).name);
+        if (VersionData.getCloudVersion(mContext) > 1) {
+            mEventView.setText(mEventTypes.get(0).description);
+        } else {
+            mEventView.setText(mEventTypes.get(0).name);
+        }
         if (size > 1) {
             mEventMoreView.setText(String.valueOf((size - 1)));
             mEventMoreView.setVisibility(View.VISIBLE);

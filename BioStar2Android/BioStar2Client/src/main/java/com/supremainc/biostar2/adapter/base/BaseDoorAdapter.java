@@ -16,13 +16,16 @@
 package com.supremainc.biostar2.adapter.base;
 
 import android.app.Activity;
+import android.util.Log;
 import android.view.View;
+import android.widget.AbsListView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ImageView;
 import android.widget.ListView;
 
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout;
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutDirection;
+import com.supremainc.biostar2.BuildConfig;
 import com.supremainc.biostar2.R;
 import com.supremainc.biostar2.meta.Setting;
 import com.supremainc.biostar2.sdk.datatype.v2.Door.Doors;
@@ -40,16 +43,21 @@ import com.tekinarslan.material.sample.FloatingActionButton;
 import java.util.ArrayList;
 
 public abstract class BaseDoorAdapter extends BaseListAdapter<ListDoor> {
+    protected static final int FIRST_LIMIT = 50;
     protected DoorDataProvider mDoorDataProvider;
+    protected boolean mIsLastItemVisible = false;
+    protected int mLimit = FIRST_LIMIT;
+    protected int mOffset = 0;
     Response.ErrorListener mItemErrorListener = new Response.ErrorListener() {
         @Override
         public void onErrorResponse(VolleyError error, Object deliverParam) {
-            if (isDestroy(error)) {
-                return;
-            }
             if (mPopup != null) {
                 mPopup.dismiss();
             }
+            if (isDestroy(error)) {
+                return;
+            }
+
             if (mSwipyRefreshLayout != null) {
                 mSwipyRefreshLayout.setRefreshing(false);
             }
@@ -71,35 +79,63 @@ public abstract class BaseDoorAdapter extends BaseListAdapter<ListDoor> {
     Runnable mRunGetItems = new Runnable() {
         @Override
         public void run() {
-            mDoorDataProvider.getDoors(TAG, mItemListener, mItemErrorListener, 0, -1, "1", mQuery, null);
+            if (isDestroy()) {
+                return;
+            }
+            mDoorDataProvider.getDoors(TAG, mItemListener, mItemErrorListener, mOffset, mLimit, mQuery, null);
         }
     };
     private int mSetFirstVisible = 0;
     Listener<Doors> mItemListener = new Listener<Doors>() {
         @Override
         public void onResponse(Doors response, Object deliverParam) {
+            if (mPopup != null) {
+                mPopup.dismiss();
+            }
             if (isDestroy()) {
                 return;
             }
             if (mSwipyRefreshLayout != null) {
                 mSwipyRefreshLayout.setRefreshing(false);
             }
-            if (mPopup != null) {
-                mPopup.dismiss();
-            }
             if (response == null || response.records == null || response.records.size() < 1) {
-                if (mOnItemsListener != null) {
-                    mOnItemsListener.onSuccessNull();
+                if (mItems == null || mItems.size() < 1) {
+                    mTotal =0;
+                    mOnItemsListener.onNoMoreData();
+                } else {
+                    mTotal = mItems.size();
+                    mOnItemsListener.onSuccessNull(mItems.size());
+                }
+                if (mTotal <= getCount() && mSwipyRefreshLayout != null) {
+                    mSwipyRefreshLayout.setEnableBottom(false);
                 }
                 return;
             }
             if (mOnItemsListener != null) {
                 mOnItemsListener.onTotalReceive(response.total);
             }
-            setData(response.records);
+
+            if (mItems == null) {
+                mItems = new ArrayList<ListDoor>();
+            }
+            for (ListDoor door : response.records) {
+                mItems.add(door);
+            }
+            setData(mItems);
             if (mSetFirstVisible != 0) {
                 mListView.setSelection(mSetFirstVisible);
                 mSetFirstVisible = 0;
+            }
+            mOffset = mItems.size();
+            mTotal = response.total;
+            if (mTotal < mItems.size()) {
+                mTotal = mItems.size();
+            }
+            if (BuildConfig.DEBUG) {
+                Log.e(TAG, "mTotal:" + mTotal + " mOffset:" + mOffset + " getCount():" + getCount());
+            }
+            if (mTotal <= getCount() && mSwipyRefreshLayout != null) {
+                mSwipyRefreshLayout.setEnableBottom(false);
             }
         }
     };
@@ -109,6 +145,27 @@ public abstract class BaseDoorAdapter extends BaseListAdapter<ListDoor> {
     public BaseDoorAdapter(Activity context, ArrayList<ListDoor> items, ListView listView, OnItemClickListener itemClickListener, Popup popup, OnItemsListener onItemsListener) {
         super(context, items, listView, itemClickListener, popup, onItemsListener);
         mDoorDataProvider = DoorDataProvider.getInstance(context);
+        setOnScrollListener(new AbsListView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(AbsListView view, int scrollState) {
+                if (scrollState == AbsListView.OnScrollListener.SCROLL_STATE_IDLE && mIsLastItemVisible && mTotal - 1 > mOffset) {
+                    if (mPopup != null) {
+                        mPopup.showWait(true);
+                    }
+                    mHandler.removeCallbacks(mRunGetItems);
+                    mHandler.postDelayed(mRunGetItems, 100);
+                } else {
+                    if (mPopup != null) {
+                        mPopup.dismissWiat();
+                    }
+                }
+            }
+
+            @Override
+            public void onScroll(AbsListView view, int firstVisibleItem, int visibleItemCount, int totalItemCount) {
+                mIsLastItemVisible = (totalItemCount > 0) && (firstVisibleItem + visibleItemCount >= totalItemCount);
+            }
+        });
     }
 
     @Override
@@ -116,11 +173,18 @@ public abstract class BaseDoorAdapter extends BaseListAdapter<ListDoor> {
         mQuery = query;
         mHandler.removeCallbacks(mRunGetItems);
         mDoorDataProvider.cancelAll(TAG);
+        mOffset = 0;
+        mTotal = 0;
         if (mSwipyRefreshLayout != null) {
+            mSwipyRefreshLayout.setRefreshing(false);
+            mSwipyRefreshLayout.setEnableBottom(true);
             mSwipyRefreshLayout.onRefresh(SwipyRefreshLayoutDirection.TOP, false);
         } else {
-            mPopup.showWait(mCancelExitListener);
+            if (mPopup != null) {
+                mPopup.showWait(mCancelExitListener);
+            }
         }
+
         if (mItems != null) {
             mItems.clear();
             notifyDataSetChanged();
@@ -150,8 +214,13 @@ public abstract class BaseDoorAdapter extends BaseListAdapter<ListDoor> {
                         getItems(mQuery);
                         break;
                     case BOTTOM:
-                        mSwipyRefreshLayout.setRefreshing(false);
-                        mToastPopup.show(mActivity.getString(R.string.no_more_data), null);
+                        if (mTotal - 1 > mOffset) {
+                            mHandler.removeCallbacks(mRunGetItems);
+                            mHandler.postDelayed(mRunGetItems, 100);
+                        } else {
+                            mSwipyRefreshLayout.setRefreshing(false);
+                            mToastPopup.show(mActivity.getString(R.string.no_more_data), null);
+                        }
                         break;
                     default:
                         break;

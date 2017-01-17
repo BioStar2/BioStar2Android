@@ -16,6 +16,7 @@
 package com.supremainc.biostar2.adapter;
 
 import android.app.Activity;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -58,6 +59,13 @@ public class PhotoUserAdapter extends BaseUserAdapter {
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        ListUser user=null;
+        if (mItems != null) {
+            user =  mItems.get(position);
+        }
+        if (user != null && user.user_id.equals("1")) {
+            mListView.setItemChecked(position,false);
+        }
         ItemViewHolder viewHolder = (ItemViewHolder) view.getTag();
         setSelector(view, viewHolder.mLink, position);
         super.onItemClick(parent, view, position, id);

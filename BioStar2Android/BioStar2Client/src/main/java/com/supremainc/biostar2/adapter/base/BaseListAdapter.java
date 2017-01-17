@@ -437,8 +437,8 @@ public abstract class BaseListAdapter<T> extends BaseAdapter implements OnItemCl
     }
 
     public interface OnItemsListener {
-        public void onSuccessNull();
-
+        public void onSuccessNull(int total);
+        public void onNoMoreData();
         public void onTotalReceive(int total);
     }
 

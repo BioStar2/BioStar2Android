@@ -20,15 +20,19 @@ import android.content.Context;
 import com.google.gson.JsonObject;
 import com.supremainc.biostar2.sdk.datatype.v2.Card.Card;
 import com.supremainc.biostar2.sdk.datatype.v2.Device.Device;
+import com.supremainc.biostar2.sdk.datatype.v2.Device.DeviceType;
 import com.supremainc.biostar2.sdk.datatype.v2.Device.DeviceTypes;
 import com.supremainc.biostar2.sdk.datatype.v2.Device.Devices;
 import com.supremainc.biostar2.sdk.datatype.v2.Device.FingerprintVerify;
+import com.supremainc.biostar2.sdk.datatype.v2.Device.ListDevice;
 import com.supremainc.biostar2.sdk.datatype.v2.FingerPrint.ListFingerprintTemplate;
 import com.supremainc.biostar2.sdk.datatype.v2.FingerPrint.ScanFingerprintTemplate;
 import com.supremainc.biostar2.sdk.datatype.v2.FingerPrint.VerifyFingerprintOption;
 import com.supremainc.biostar2.sdk.volley.Request.Method;
 import com.supremainc.biostar2.sdk.volley.Response.ErrorListener;
 import com.supremainc.biostar2.sdk.volley.Response.Listener;
+
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -58,7 +62,7 @@ public class DeviceDataProvider extends BaseDataProvider {
         }
         return null;
     }
-
+//    private static int test_count=0;
     public void getDevices(String tag, Listener<Devices> listener, ErrorListener errorListener, int offset,int limit,String query, Object deliverParam) {
         Map<String, String> params =new HashMap<String, String>();
         if (query != null) {
@@ -67,6 +71,29 @@ public class DeviceDataProvider extends BaseDataProvider {
         params.put("limit", String.valueOf(limit));
         params.put("offset", String.valueOf(offset));
         sendRequest(tag, Devices.class, Method.GET, NetWork.PARAM_DEVICES, null, params, null, listener, errorListener, deliverParam);
+
+//        Devices items = new Devices();
+//        ArrayList<ListDevice> list = new ArrayList<ListDevice>();
+//        if (test_count > 500) {
+//            listener.onResponse(null,deliverParam);
+//            return;
+//        }
+//        int count = test_count +limit;
+//        for (int i=test_count; i < count ; i++) {
+//            ListDevice item = new ListDevice();
+//            item.id = String.valueOf(test_count);
+//            DeviceType type = new DeviceType();
+//            type.id = "10";
+//            item.device_type = type;
+//            item.mode = "master";
+//            item.name = String.valueOf(test_count);
+//            item.device_type.scan_card = true;
+//            list.add(item);
+//            test_count++;
+//        }
+//        items.total = 500;
+//        items.records = list;
+//        listener.onResponse(items,deliverParam);
     }
 
 

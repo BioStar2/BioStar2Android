@@ -37,6 +37,9 @@ public class User extends ListUser implements Cloneable, Serializable {
     @SerializedName("permissions") // 2.3.0
     public ArrayList<CloudPermission> permissions;
 
+    @SerializedName("password_strength_level") // 2.3.0
+    public String password_strength_level;
+
     @SerializedName("password")
     public String password;
     @SerializedName("security_level")
@@ -67,12 +70,13 @@ public class User extends ListUser implements Cloneable, Serializable {
 
     @SerializedName("permission") // 2.4.0
     public UserPermission permission;
-    @SerializedName("password_strength_level")
-    public String password_strength_level;
+
     @SerializedName("start_datetime")
     private String start_datetime;
     @SerializedName("expiry_datetime")
     private String expiry_datetime;
+
+
 
     public static final String USER_STATUS_ACTIVE = "AC";
     public static final String USER_STATUS_INACTIVE = "IN";

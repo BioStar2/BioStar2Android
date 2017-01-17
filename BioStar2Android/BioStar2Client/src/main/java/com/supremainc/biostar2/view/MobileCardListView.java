@@ -16,7 +16,9 @@
 package com.supremainc.biostar2.view;
 
 import android.content.Context;
+import android.graphics.Bitmap;
 import android.util.AttributeSet;
+import android.util.Base64;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
@@ -25,7 +27,11 @@ import android.widget.LinearLayout;
 import com.supremainc.biostar2.BuildConfig;
 import com.supremainc.biostar2.R;
 import com.supremainc.biostar2.datatype.MobileCardData;
+import com.supremainc.biostar2.impl.OnSingleClickListener;
+import com.supremainc.biostar2.sdk.datatype.v2.Card.MobileCard;
 import com.supremainc.biostar2.sdk.datatype.v2.User.User;
+import com.supremainc.biostar2.sdk.provider.TimeConvertProvider;
+import com.supremainc.biostar2.sdk.utils.ImageUtil;
 
 public class MobileCardListView extends BaseView {
     public final String TAG = getClass().getSimpleName() + String.valueOf(System.currentTimeMillis());
@@ -58,16 +64,18 @@ public class MobileCardListView extends BaseView {
     }
 
 
-    public boolean addCard(MobileCardData.MobileCard card, User user) {
+    public boolean addCard(MobileCard card, User user, OnSingleClickListener listener) {
         int resID = R.layout.item_aoc;
 
-        if (card.cardType == 2) {
+        if (MobileCard.SECURE_CREDENTIAL.equals(card.type)) {
             resID = R.layout.item_secure_card;
         }
         if (mCardListView == null) {
             return false;
         }
         View item = mInflater.inflate(resID, mCardListView, false);
+        item.setTag(card);
+        item.setOnClickListener(listener);
         SwitchView switchView = (SwitchView) item.findViewById(R.id.card_switch);
         switchView.init(mContext, new SwitchView.OnChangeListener() {
             @Override
@@ -79,8 +87,8 @@ public class MobileCardListView extends BaseView {
                 } else {
                 }
             }
-        }, true, SwitchView.SwitchType.RED);
-        if (card.cardType == 2) {
+        }, card.is_registered, SwitchView.SwitchType.RED);
+        if (MobileCard.SECURE_CREDENTIAL.equals(card.type)) {
             setSecureCardData(item, user, card);
         } else {
             setAccessOnCardData(item, user, card);
@@ -89,37 +97,57 @@ public class MobileCardListView extends BaseView {
         return true;
     }
 
-
-    private void setAccessOnCardData(View v, User user, MobileCardData.MobileCard card) {
+    private void setPhoto(ImageView view,String photo) {
+        if(photo!=null&&!photo.isEmpty())   {
+            byte[] photoByte = Base64.decode(photo, 0);
+            Bitmap bmp = ImageUtil.byteArrayToBitmap(photoByte);
+            if (bmp != null) {
+                view.setImageBitmap(bmp);
+            }
+        }
+    }
+    private void setAccessOnCardData(View v, User user, MobileCard card) {
         StyledTextView cardType = (StyledTextView) v.findViewById(R.id.card_type);
         cardType.setText(mContext.getString(R.string.access_on_card));
         ImageView photo = (ImageView) v.findViewById(R.id.user_photo);
+        setPhoto(photo,user.photo);
         StyledTextView cardID = (StyledTextView) v.findViewById(R.id.card_id);
-        cardID.setText(card.cardID);
+        cardID.setText(card.card_id);
         StyledTextView fingerCount = (StyledTextView) v.findViewById(R.id.fingerprint_count);
-        fingerCount.setText(String.valueOf(card.templateCount));
+        if (card.fingerprint_index_list != null) {
+            fingerCount.setText(String.valueOf(card.fingerprint_index_list.size()));
+        } else {
+            fingerCount.setText("");
+        }
         StyledTextView period = (StyledTextView) v.findViewById(R.id.period);
-        period.setText(card.startDateTime + "- " + card.endDateTime);
+        String startDateTime = card.getTimeFormmat(TimeConvertProvider.getInstance(), MobileCard.TimeType.start_datetime, TimeConvertProvider.DATE_TYPE.FORMAT_DATE_HOUR_MIN);
+        String endDateTime = card.getTimeFormmat(TimeConvertProvider.getInstance(), MobileCard.TimeType.expiry_datetime, TimeConvertProvider.DATE_TYPE.FORMAT_DATE_HOUR_MIN);
+        period.setText(startDateTime + " - " + endDateTime);
         StyledTextView name = (StyledTextView) v.findViewById(R.id.user_name);
         name.setText(user.getName());
         StyledTextView accessGroup = (StyledTextView) v.findViewById(R.id.access_group);
-        if (card.accessGroups != null && card.accessGroups.size() > 0) {
-            if (card.accessGroups.size() > 1) {
-                accessGroup.setText(card.accessGroups.get(0) + " + " + (card.accessGroups.size() - 1));
+        if (card.access_groups != null && card.access_groups.size() > 0) {
+            if (card.access_groups.size() > 1) {
+                accessGroup.setText(card.access_groups.get(0).name + " + " + (card.access_groups.size() - 1));
             } else {
-                accessGroup.setText(card.accessGroups.get(0));
+                accessGroup.setText(card.access_groups.get(0).name);
             }
         }
     }
 
-    private void setSecureCardData(View v, User user, MobileCardData.MobileCard card) {
+    private void setSecureCardData(View v, User user, MobileCard card) {
         StyledTextView cardType = (StyledTextView) v.findViewById(R.id.card_type);
         cardType.setText(mContext.getString(R.string.secure_card));
         ImageView photo = (ImageView) v.findViewById(R.id.user_photo);
+        setPhoto(photo,user.photo);
         StyledTextView cardID = (StyledTextView) v.findViewById(R.id.card_id);
-        cardID.setText(card.cardID);
+        cardID.setText(card.card_id);
         StyledTextView fingerCount = (StyledTextView) v.findViewById(R.id.fingerprint_count);
-        fingerCount.setText(String.valueOf(card.templateCount));
+        if (card.fingerprint_index_list != null) {
+            fingerCount.setText(String.valueOf(card.fingerprint_index_list.size()));
+        } else {
+            fingerCount.setText("");
+        }
         StyledTextView name = (StyledTextView) v.findViewById(R.id.user_name);
         name.setText(user.getName());
     }

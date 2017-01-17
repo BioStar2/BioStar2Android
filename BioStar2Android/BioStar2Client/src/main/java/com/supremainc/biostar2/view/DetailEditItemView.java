@@ -88,6 +88,7 @@ public class DetailEditItemView extends BaseView {
                 this.title.setText(index);
             }
             enableEdit(arr.getBoolean(R.styleable.DetailtemView_edit, false));
+            arr.recycle();
         }
     }
 

@@ -36,18 +36,16 @@ public class FingerPrintAdapter extends BaseListAdapter<ListFingerprintTemplate>
     public FingerPrintAdapter(Activity activity, ArrayList<ListFingerprintTemplate> items, ListView listView, OnItemClickListener itemClickListener, Popup popup, OnItemsListener onItemsListener, boolean editEnable) {
         super(activity, items, listView, itemClickListener, popup, onItemsListener);
         mIsEditEnable = editEnable;
-        if (mIsEditEnable) {
-            mDefaultSelectColor = mActivity.getResources().getColor(R.color.gray_10);
-        }
+//        mDefaultSelectColor = mActivity.getResources().getColor(R.color.gray_10);
     }
 
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         if (mIsEditEnable) {
-            if (mToastPopup != null) {
-                mToastPopup.show(-1, R.string.inherited_not_change);
-            }
+//            if (mToastPopup != null) {
+//                mToastPopup.show(-1, R.string.inherited_not_change);
+//            }
             return;
         }
         SimpleItemViewHolder viewHolder = (SimpleItemViewHolder) view.getTag();

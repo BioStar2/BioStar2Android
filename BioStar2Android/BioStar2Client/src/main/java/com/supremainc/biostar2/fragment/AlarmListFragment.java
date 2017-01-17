@@ -393,25 +393,23 @@ public class AlarmListFragment extends BaseFragment {
     public void onPrepareOptionsMenu(Menu menu) {
         menu.clear();
         MenuInflater inflater = mContext.getMenuInflater();
-        if (mPermissionDataProvider.getPermission(PermissionModule.DOOR, true) || mPermissionDataProvider.getPermission(PermissionModule.DOOR_GROUP, true)) {
-            switch (mSubMode) {
-                default:
-                case MODE_NORMAL:
-                    initActionbar(getString(R.string.alarm));
-                    if (Setting.IS_FAKE_PUSH_DATA) {
-                        inflater.inflate(R.menu.add_delete, menu);
-                        return;
-                    }
-                    inflater.inflate(R.menu.delete, menu);
-                    break;
-                case MODE_DELETE:
-                    initActionbar(getString(R.string.delete) + " " + getString(R.string.alarm));
-                    inflater.inflate(R.menu.delete_confirm, menu);
-                    break;
-            }
-        } else {
-            inflater.inflate(R.menu.menu, menu);
+
+        switch (mSubMode) {
+            default:
+            case MODE_NORMAL:
+                initActionbar(getString(R.string.alarm));
+                if (Setting.IS_FAKE_PUSH_DATA) {
+                    inflater.inflate(R.menu.add_delete, menu);
+                    return;
+                }
+                inflater.inflate(R.menu.delete, menu);
+                break;
+            case MODE_DELETE:
+                initActionbar(getString(R.string.delete) + " " + getString(R.string.alarm));
+                inflater.inflate(R.menu.delete_confirm, menu);
+                break;
         }
+
         super.onPrepareOptionsMenu(menu);
     }
 

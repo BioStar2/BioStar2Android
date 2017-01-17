@@ -115,21 +115,23 @@ public class MainFragment extends BaseFragment {
         }
         mMainMenuView.removeAllMenuItem();
         mMainMenuView.addMenu(MenuItemView.MenuItemType.MY_PROFILE);
-        if (mPermissionDataProvider.getPermission(PermissionModule.USER, false) || mPermissionDataProvider.getPermission(PermissionModule.USER_GROUP, false)) {
+        if (mPermissionDataProvider.getPermission(PermissionModule.USER, false)) {
             mMainMenuView.addMenu(MenuItemView.MenuItemType.USER);
         }
 
-        if (mPermissionDataProvider.getPermission(PermissionModule.DOOR, false) || mPermissionDataProvider.getPermission(PermissionModule.DOOR_GROUP, false)) {
+        if (mPermissionDataProvider.getPermission(PermissionModule.DOOR, false)) {
             mMainMenuView.addMenu(MenuItemView.MenuItemType.DOOR);
           }
-
-        if (mPermissionDataProvider.getPermission(PermissionModule.DOOR, true) || mPermissionDataProvider.getPermission(PermissionModule.DOOR_GROUP, true)) {
-            mMainMenuView.addMenu(MenuItemView.MenuItemType.ALARM);
-        }
 
         if (mPermissionDataProvider.getPermission(PermissionModule.MONITORING, false)) {
             mMainMenuView.addMenu(MenuItemView.MenuItemType.MONITORING);
         }
+
+        if (mPermissionDataProvider.getPermission(PermissionModule.MONITORING, false)) {
+            mMainMenuView.addMenu(MenuItemView.MenuItemType.ALARM);
+        }
+
+
 
         //mMainMenuView.addMenu(MenuItemView.MenuItemType.MOBILE_CARD_ALERT);
 //        if (VersionData.getCloudVersion(mContext) > 1) {
@@ -261,6 +263,7 @@ public class MainFragment extends BaseFragment {
             };
             IntentFilter intentFilter = new IntentFilter();
             intentFilter.addAction(Setting.BROADCAST_REROGIN);
+            intentFilter.addAction(Setting.BROADCAST_ALARM_UPDATE);
             LocalBroadcastManager.getInstance(getActivity()).registerReceiver(mReceiver, intentFilter);
         }
     }
@@ -347,12 +350,12 @@ public class MainFragment extends BaseFragment {
                     mScreenControl.addScreen(ScreenType.PREFERENCE, null);
                 }
             });
-            mRootView.findViewById(R.id.main_menu).setOnClickListener(new OnSingleClickListener() {
-                @Override
-                public void onSingleClick(View v) {
-                    mScreenControl.gotoScreen(ScreenType.OPEN_MENU, null);
-                }
-            });
+//            mRootView.findViewById(R.id.main_menu).setOnClickListener(new OnSingleClickListener() {
+//                @Override
+//                public void onSingleClick(View v) {
+//                    mScreenControl.gotoScreen(ScreenType.OPEN_MENU, null);
+//                }
+//            });
             applyPermission();
             mHandler.removeCallbacks(mRunnableGuide);
             mHandler.postDelayed(mRunnableGuide,1000);

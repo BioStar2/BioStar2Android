@@ -53,7 +53,13 @@ public abstract class BaseSimpleDataAdapter extends BaseListAdapter<SimpleData> 
             mPopup.dismiss();
             if (response == null || response.records == null || response.records.size() < 1) {
                 if (mOnItemsListener != null) {
-                    mOnItemsListener.onSuccessNull();
+                    if (mItems == null || mItems.size() < 1) {
+                        mTotal =0;
+                        mOnItemsListener.onNoMoreData();
+                    } else {
+                        mTotal = mItems.size();
+                        mOnItemsListener.onSuccessNull(mItems.size());
+                    }
                 }
                 return;
             }
@@ -67,8 +73,11 @@ public abstract class BaseSimpleDataAdapter extends BaseListAdapter<SimpleData> 
                 mItems.add(data);
             }
             setData(mItems);
-            mOffset = mItems.size() - 1;
+            mOffset = mItems.size() ;
             mTotal = response.total;
+            if (mTotal < mItems.size()) {
+                mTotal = mItems.size();
+            }
         }
     };
     Response.ErrorListener mItemErrorListener = new Response.ErrorListener() {
@@ -96,6 +105,9 @@ public abstract class BaseSimpleDataAdapter extends BaseListAdapter<SimpleData> 
     Runnable mRunGetItems = new Runnable() {
         @Override
         public void run() {
+            if (isDestroy()) {
+                return;
+            }
             if (isMemoryPoor()) {
                 mPopup.dismiss();
                 if (mSwipyRefreshLayout != null) {

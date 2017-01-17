@@ -123,40 +123,47 @@ public class GcmBroadcastReceiver extends WakefulBroadcastReceiver {
         if (message.equals("notificationType.message.deviceReboot")) {
             base = context.getString(R.string.message_deviceReboot);
         }
-        if (message.equals("notificationType.title.deviceRs485Disconnect")) {
-            return context.getString(R.string.title_deviceRs485Disconnect);
+        if (message.equals("notificationType.message.deviceRs485Disconnect")) {
+            base =  context.getString(R.string.message_deviceRs485Disconnect);
         }
-        if (message.equals("notificationType.title.deviceTampering")) {
-            return context.getString(R.string.title_deviceTampering);
+        if (message.equals("notificationType.message.deviceTampering")) {
+            base =  context.getString(R.string.message_deviceTampering);
         }
-        if (message.equals("notificationType.title.doorApb")) {
-            return context.getString(R.string.title_doorApb);
+        if (message.equals("notificationType.message.doorApb")) {
+            base =  context.getString(R.string.message_doorApb);
         }
-        if (message.equals("notificationType.title.doorForcedOpen")) {
-            return context.getString(R.string.title_doorForcedOpen);
+        if (message.equals("notificationType.message.doorForcedOpen")) {
+            base =  context.getString(R.string.message_doorForcedOpen);
         }
-        if (message.equals("notificationType.title.doorHeldOpen")) {
-            return context.getString(R.string.title_doorHeldOpen);
+        if (message.equals("notificationType.message.doorHeldOpen")) {
+            base =  context.getString(R.string.message_doorHeldOpen);
         }
-        if (message.equals("notificationType.title.doorOpenRequest")) {
-            return context.getString(R.string.title_doorOpenRequest);
+        if (message.equals("notificationType.message.doorOpenRequest")) {
+            base =  context.getString(R.string.message_doorOpenRequest);
         }
-        if (message.equals("notificationType.title.zoneApb")) {
-            return context.getString(R.string.title_zoneApb);
+        if (message.equals("notificationType.message.zoneApb")) {
+            base =  context.getString(R.string.message_zoneApb);
         }
-        if (message.equals("notificationType.title.zoneFire")) {
-            return context.getString(R.string.title_zoneFire);
+        if (message.equals("notificationType.message.zoneFire")) {
+            base =  context.getString(R.string.message_zoneFire);
         }
-        if (arg == null) {
+        if (arg == null || base == null) {
             return base;
         }
-        if (arg.size() == 1) {
-            return String.format(base, arg.get(0));
-        } else if (arg.size() == 2) {
-            return String.format(base, arg.get(0), arg.get(1));
-        } else if (arg.size() == 3) {
-            return String.format(base, arg.get(0), arg.get(1), arg.get(2));
-        } else {
+        try {
+            if (arg.size() == 1) {
+                return String.format(base, arg.get(0));
+            } else if (arg.size() == 2) {
+                return String.format(base, arg.get(0), arg.get(1));
+            } else if (arg.size() == 3) {
+                return String.format(base, arg.get(0), arg.get(1), arg.get(2));
+            } else {
+                return base;
+            }
+        } catch (Exception e) {
+            if (com.supremainc.biostar2.BuildConfig.DEBUG) {
+                Log.e(TAG, "getMessage e:" + e.getMessage());
+            }
             return base;
         }
     }
@@ -267,9 +274,11 @@ public class GcmBroadcastReceiver extends WakefulBroadcastReceiver {
         for (String key : bundle.keySet()) {
             String value;
             try {
-                value = (String) bundle.get(key);
+                value = String.valueOf(bundle.get(key));
             } catch (Exception e) {
-                Log.e(TAG, " " + e.getMessage());
+                if (BuildConfig.DEBUG) {
+                    Log.e(TAG, " value:" +bundle.get(key)+" message:"+ e.getMessage());
+                }
                 continue;
             }
             if (value == null) {

@@ -77,10 +77,10 @@ public class VersionData {
         if (cloudVersion == -1) {
             return false;
         }
+        cloud_version = cloudVersion;
         if (!setCloudVersion(context,cloud_version)) {
             Log.e(TAG,"Version invalid"+cloud_version);
-            cloud_version = MAX_VERSION;
-            setCloudVersion(context,cloud_version);
+            return false;
         }
         setLocalVersion(context,biostar_ac_version);
         return true;

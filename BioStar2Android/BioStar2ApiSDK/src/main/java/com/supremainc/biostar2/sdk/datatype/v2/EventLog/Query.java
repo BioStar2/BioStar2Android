@@ -105,7 +105,6 @@ public class Query implements Cloneable, Serializable {
                     datetime.add(src);
                 } else if (datetime.size() < 2) {
                     datetime.add(src);
-                    ;
                 } else {
                     datetime.set(1, src);
                 }
@@ -123,8 +122,8 @@ public class Query implements Cloneable, Serializable {
     public boolean setTimeCalendar(TimeConvertProvider convert, QueryTimeType timeType, Calendar cal) {
         switch (timeType) {
             case end_datetime:
-                cal.set(Calendar.HOUR_OF_DAY, 23);
-                cal.set(Calendar.MINUTE, 59);
+//                cal.set(Calendar.HOUR_OF_DAY, 23);
+//                cal.set(Calendar.MINUTE, 59);
                 break;
             default:
                 break;

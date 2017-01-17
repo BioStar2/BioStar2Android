@@ -113,8 +113,10 @@ public class SummaryDoorView extends BaseView {
         }
 
         if (isEnable) {
+            mActionButton.setOnClickListener(mClickListener);
             mActionButton.setBackgroundResource(R.drawable.selector_btn_round_ok);
         } else {
+            mActionButton.setOnClickListener(null);
             mActionButton.setBackgroundResource(R.drawable.selector_list_gray);
         }
     }

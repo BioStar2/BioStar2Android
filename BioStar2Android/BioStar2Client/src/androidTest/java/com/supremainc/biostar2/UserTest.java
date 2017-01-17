@@ -62,13 +62,13 @@ public class UserTest {
         ExtTest.waitSwipyRefresh();
         UserTestUtil.checkUserList(R.id.listview);
         Log.e(TAG, "result: 1) All Users List로 이동한다.");
-        UserTestUtil.deleteUserID();
+//        UserTestUtil.deleteUserID();
 
 //        inputTelephone();
 //        inputEmail();
 //        inputUserID();
 //        inputUserName();
-        inputOperator();
+//        inputOperator();
 
 
 //        Log.e(TAG, "result: User 추가 화면으로 이동한다.");

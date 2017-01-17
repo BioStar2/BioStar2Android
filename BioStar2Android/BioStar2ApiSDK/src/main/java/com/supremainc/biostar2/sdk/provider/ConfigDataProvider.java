@@ -24,8 +24,8 @@ import com.supremainc.biostar2.sdk.utils.PreferenceUtil;
 public class ConfigDataProvider  {
     private final String TAG = getClass().getSimpleName();
     public static final boolean TEST_RELEASE_DELETE = true;
-    public static final boolean TEST_DELETE = true;
-    public static final boolean DEBUG = true;
+    public static final boolean TEST_DELETE = false;
+    public static final boolean DEBUG = false;
     public static final boolean DEBUG_SDCARD = false;
     public static final boolean SSL_ALL_PASS = false;
     public static final NetworkType mNetworkType = NetworkType.OK_HTTP;

@@ -79,10 +79,15 @@ public class ListDevice extends BaseDevice implements Cloneable, Serializable {
         return device_type.isSupport(deviceSupport);
     }
 
-    public boolean isSupportWiegand() {
+    public boolean isSupportCSNWiegand() {
         if (wiegand_format != null) {
             return true;
+        } else {
+            return false;
         }
+    }
+
+    public boolean isSupportWiegand() {
         if (wiegand_format_list != null && wiegand_format_list.size() > 0) {
             return true;
         }

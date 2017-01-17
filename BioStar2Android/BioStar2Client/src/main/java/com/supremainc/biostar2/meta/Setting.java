@@ -61,7 +61,7 @@ public class Setting {
     public static final int USER_PROFILE_IMAGE_SIZE = 400;
     public static final int USER_PROFILE_IMAGE_SIZE_BYTE = 16000;
     public static final int LIMIT_USER_ACCESS_GROUP_SIZE = 16;
-    public static final String CRITTERISM = "555e7af0b60a7d3e63908d21";
+    public static final String CRITTERISM = "";
 
     // IOS (R.string.no_permission)
     public static String getDebugFlag() {

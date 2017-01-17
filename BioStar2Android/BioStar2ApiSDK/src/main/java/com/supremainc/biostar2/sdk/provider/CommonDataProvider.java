@@ -17,6 +17,7 @@ package com.supremainc.biostar2.sdk.provider;
 
 import android.content.Context;
 
+import com.supremainc.biostar2.sdk.datatype.v2.Common.BioStarSetting;
 import com.supremainc.biostar2.sdk.datatype.v2.Common.ResponseStatus;
 import com.supremainc.biostar2.sdk.datatype.v2.Common.UpdateData;
 import com.supremainc.biostar2.sdk.datatype.v2.Preferrence.Preference;
@@ -106,6 +107,7 @@ public class CommonDataProvider extends BaseDataProvider {
         ArrayList<String> list = new ArrayList<String>();
         list.add("yyyy/MM/dd");
         list.add("MM/dd/yyyy");
+        list.add("dd/MM/yyyy");
         return list;
     }
 
@@ -183,6 +185,28 @@ public class CommonDataProvider extends BaseDataProvider {
         String url = NetWork.PARAM_SETTING;
         mNetwork.sendRequest(null, Preference.class, Method.GET, url, null, null, null, inListener, errorListener, deliverParam);
     }
+
+    public void getBioStarSetting(final Listener<BioStarSetting> listener, final ErrorListener errorListener, Object deliverParam) {
+        Listener<BioStarSetting> inListener = new Listener<BioStarSetting>() {
+            @Override
+            public void onResponse(BioStarSetting response, Object param) {
+                if (response == null) {
+                    if (errorListener != null) {
+                        errorListener.onErrorResponse(new VolleyError(""), param);
+                    }
+                    return;
+                }
+                mPasswordLevel = response.password_strength_level;
+                mAlphaNumericUserID = response.use_alphanumeric_user_id;
+                if (listener != null) {
+                    listener.onResponse(response, param);
+                }
+            }
+        };
+
+        mNetwork.sendRequest(null, BioStarSetting.class, Method.GET, createUrl( NetWork.PARAM_SETTING, NetWork.PARAM_BIOSTAR_AC), null, null, null, inListener, errorListener, deliverParam);
+    }
+
 
     public boolean getSavedPrefrence() {
         Preference content = new Preference();

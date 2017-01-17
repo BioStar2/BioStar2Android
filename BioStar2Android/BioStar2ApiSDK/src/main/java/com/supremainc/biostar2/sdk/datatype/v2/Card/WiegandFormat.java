@@ -28,7 +28,8 @@ public class WiegandFormat implements Cloneable, Serializable {
     public String id;
     @SerializedName("name") // use only get
     public String name;
-
+    @SerializedName("wiegand_format_id") // use only post
+    public String wiegand_format_id;
     @SerializedName("use_facility_code")  // use only get
     public boolean use_facility_code;
     @SerializedName("wiegand_card_id_list")

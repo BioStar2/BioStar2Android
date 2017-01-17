@@ -110,6 +110,7 @@ public abstract class Button extends RelativeLayout {
     @Override
     protected void onFocusChanged(boolean gainFocus, int direction,
                                   Rect previouslyFocusedRect) {
+        super.onFocusChanged(gainFocus,direction,previouslyFocusedRect);
         if (!gainFocus) {
             x = -1;
             y = -1;

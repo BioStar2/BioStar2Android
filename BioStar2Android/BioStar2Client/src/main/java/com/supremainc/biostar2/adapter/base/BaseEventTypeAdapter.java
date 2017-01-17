@@ -86,9 +86,9 @@ public abstract class BaseEventTypeAdapter extends BaseListAdapter<EventType> {
                 if (checkInclude(item.name, query, item, resultItems)) {
                     continue;
                 }
-//                if (checkInclude(item.description, query, item, resultItems)) {
-//                    continue;
-//                }
+                if (checkInclude(item.description, query, item, resultItems)) {
+                    continue;
+                }
 //                if (checkInclude(item.alert_message, query, item, resultItems)) {
 //                    continue;
 //                }

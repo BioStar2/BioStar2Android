@@ -50,15 +50,19 @@ import com.supremainc.biostar2.impl.OnSingleClickListener;
 import com.supremainc.biostar2.sdk.datatype.v1.Permission.CloudRole;
 import com.supremainc.biostar2.sdk.datatype.v2.AccessControl.ListAccessGroup;
 import com.supremainc.biostar2.sdk.datatype.v2.Card.ListCard;
+import com.supremainc.biostar2.sdk.datatype.v2.Common.BioStarSetting;
 import com.supremainc.biostar2.sdk.datatype.v2.Common.ResponseStatus;
+import com.supremainc.biostar2.sdk.datatype.v2.Common.VersionData;
 import com.supremainc.biostar2.sdk.datatype.v2.FingerPrint.ListFingerprintTemplate;
 import com.supremainc.biostar2.sdk.datatype.v2.Permission.PermissionModule;
 import com.supremainc.biostar2.sdk.datatype.v2.User.User;
+import com.supremainc.biostar2.sdk.provider.CommonDataProvider;
 import com.supremainc.biostar2.sdk.provider.TimeConvertProvider;
 import com.supremainc.biostar2.sdk.utils.ImageUtil;
 import com.supremainc.biostar2.sdk.volley.Response;
 import com.supremainc.biostar2.sdk.volley.VolleyError;
 import com.supremainc.biostar2.util.InvalidChecker;
+import com.supremainc.biostar2.util.TextInputFilter;
 import com.supremainc.biostar2.util.TextWatcherFilter;
 import com.supremainc.biostar2.view.DetailEditItemView;
 import com.supremainc.biostar2.view.DetailSwitchItemView;
@@ -111,6 +115,12 @@ public class MyProfileFragment extends BaseFragment {
     private DetailTextItemView mFingerPrintView;
     private DetailTextItemView mCardView;
     private DetailSwitchItemView mPinView;
+    private TextWatcherFilter mUserNameViewTextWatcherFilter;
+    private TextWatcherFilter mEmailViewTextWatcherFilter;
+    private TextWatcherFilter mTelephoneViewTextWatcherFilter;
+    private TextWatcherFilter mLoginIDViewTextWatcherFilter;
+    private TextInputFilter mTextInputFilter;
+
     private SummaryUserView.SummaryUserViewListener mSummaryUserViewListener = new SummaryUserView.SummaryUserViewListener() {
         @Override
         public void goLog() {
@@ -122,6 +132,7 @@ public class MyProfileFragment extends BaseFragment {
             editUserImage();
         }
     };
+
     private DialogInterface.OnCancelListener cancelListener = new DialogInterface.OnCancelListener() {
         @Override
         public void onCancel(DialogInterface dialog) {
@@ -145,6 +156,7 @@ public class MyProfileFragment extends BaseFragment {
                 e.printStackTrace();
                 return;
             }
+            LocalBroadcastManager.getInstance(mContext).sendBroadcast(new Intent(Setting.BROADCAST_REROGIN));
             mScreenControl.backScreen();
         }
 
@@ -169,7 +181,6 @@ public class MyProfileFragment extends BaseFragment {
                 Log.e(TAG, " " + e.getMessage());
             }
             mUserDataProvider.simpleLogin(null, null, null);
-            LocalBroadcastManager.getInstance(mContext).sendBroadcast(new Intent(Setting.BROADCAST_REROGIN));
             mPopup.dismissWiat();
             mPopup.show(Popup.PopupType.CONFIRM, getString(R.string.info), getString(R.string.user_modify_success), mPopupSucess, null, null);
         }
@@ -209,12 +220,42 @@ public class MyProfileFragment extends BaseFragment {
             if (isInValidCheck(null)) {
                 return;
             }
+            mUserInfo = mUserDataProvider.getLoginUserInfo();
+            setView();
             LocalBroadcastManager.getInstance(mContext).sendBroadcast(new Intent(Setting.BROADCAST_REROGIN));
+            mPopup.dismissWiat();
+        }
+    };
+    private Response.ErrorListener mSimpleLoginErrorListener = new Response.ErrorListener() {
+        @Override
+        public void onErrorResponse(VolleyError volleyError, Object deliverParam) {
+            if (isInValidCheck(null)) {
+                return;
+            }
+            mPopup.dismissWiat();
+        }
+    };
+    private Response.Listener<BioStarSetting> mSettingListener = new Response.Listener<BioStarSetting>() {
+        @Override
+        public void onResponse(BioStarSetting response, Object deliverParam) {
+            if (isInValidCheck(null)) {
+                return;
+            }
             mPopup.dismissWiat();
             showPasswodPopup();
         }
     };
-    private Response.ErrorListener mSimpleLoginErrorListener = new Response.ErrorListener() {
+    private Response.Listener<User> mSettingListener2 = new Response.Listener<User>() {
+        @Override
+        public void onResponse(User response, Object deliverParam) {
+            if (isInValidCheck(null)) {
+                return;
+            }
+            mPopup.dismissWiat();
+            showPasswodPopup();
+        }
+    };
+    private Response.ErrorListener mSettingErrorListener = new Response.ErrorListener() {
         @Override
         public void onErrorResponse(VolleyError volleyError, Object deliverParam) {
             if (isInValidCheck(null)) {
@@ -253,7 +294,11 @@ public class MyProfileFragment extends BaseFragment {
                 }
                 case R.id.login_password: {
                     mPopup.showWait(mCancelLoginListener);
-                    mUserDataProvider.simpleLogin(mLoginListener, mSimpleLoginErrorListener, null);
+                    if (VersionData.getCloudVersion(mContext) > 1) {
+                        mCommonDataProvider.getBioStarSetting(mSettingListener, mSettingErrorListener, null);
+                    } else {
+                        mCommonDataProvider.simpleLogin(mSettingListener2, mSettingErrorListener, null);
+                    };
                     break;
                 }
                 case R.id.access_group: {
@@ -325,16 +370,30 @@ public class MyProfileFragment extends BaseFragment {
     }
 
     private void UpdateClone() {
-        if (mUserInfo.roles != null && mUserInfo.roles.size() > 0) {
-            mUserInfo.password = mPasswordData;
-            if (mLoginIDView.content.toString2().equals("")) {
-                mUserInfo.login_id = null;
+        if (VersionData.getCloudVersion(mContext) > 1) {
+            if (mUserInfo.permission != null) {
+                mUserInfo.password = mPasswordData;
+                if (mLoginIDView.content.toString2().equals("")) {
+                    mUserInfo.login_id = null;
+                } else {
+                    mUserInfo.login_id = mLoginIDView.content.toString2();
+                }
             } else {
-                mUserInfo.login_id = mLoginIDView.content.toString2();
+                mUserInfo.login_id = null;
+                mUserInfo.password = null;
             }
         } else {
-            mUserInfo.login_id = null;
-            mUserInfo.password = null;
+            if (mUserInfo.roles != null && mUserInfo.roles.size() > 0) {
+                mUserInfo.password = mPasswordData;
+                if (mLoginIDView.content.toString2().equals("")) {
+                    mUserInfo.login_id = null;
+                } else {
+                    mUserInfo.login_id = mLoginIDView.content.toString2();
+                }
+            } else {
+                mUserInfo.login_id = null;
+                mUserInfo.password = null;
+            }
         }
 
         mUserInfo.name = mUserNameView.content.toString2();
@@ -410,7 +469,7 @@ public class MyProfileFragment extends BaseFragment {
             e.printStackTrace();
             return;
         }
-        mScreenControl.addScreen(ScreenControl.ScreenType.CARD_RIGISTER, bundle);
+        mScreenControl.addScreen(ScreenControl.ScreenType.CARD, bundle);
     }
 
     private void editFingerPrint() {
@@ -533,6 +592,9 @@ public class MyProfileFragment extends BaseFragment {
         if (mUserInfo == null) {
             mUserInfo = mUserDataProvider.getLoginUserInfo();
         }
+        if (mTextInputFilter == null) {
+            mTextInputFilter = new TextInputFilter(mToastPopup);
+        }
         if (savedInstanceState != null) {
             int photoMode = savedInstanceState.getInt("photoStatus");
             mPhotoStatus = PhotoStatus.values()[photoMode];
@@ -554,7 +616,9 @@ public class MyProfileFragment extends BaseFragment {
         mUserIDView = (DetailTextItemView) mRootView.findViewById(R.id.user_id);
         mUserIDView.content.setTextColor(mContext.getResources().getColor(R.color.subtext));
         mUserNameView = (DetailEditItemView) mRootView.findViewById(R.id.user_name);
+        mTextInputFilter.setFilter( mUserNameView.content, TextInputFilter.EDIT_TYPE.USER_NAME);
         mEmailView = (DetailEditItemView) mRootView.findViewById(R.id.email);
+        mTextInputFilter.setFilter( mEmailView.content, TextInputFilter.EDIT_TYPE.EMAIL);
         mTelephoneView = (DetailEditItemView) mRootView.findViewById(R.id.telephone);
         mOperatorView = (DetailTextItemView) mRootView.findViewById(R.id.operator);
         mOperatorView.content.setTextColor(mContext.getResources().getColor(R.color.subtext));
@@ -621,6 +685,8 @@ public class MyProfileFragment extends BaseFragment {
         }
     }
 
+
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         setResID(R.layout.fragment_myprofile);
@@ -639,6 +705,7 @@ public class MyProfileFragment extends BaseFragment {
             initActionbar(getString(R.string.myprofile), R.drawable.action_bar_bg);
             mRootView.invalidate();
         }
+
         return mRootView;
     }
 
@@ -665,6 +732,14 @@ public class MyProfileFragment extends BaseFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        if (mPopup == null) {
+            mPopup = new Popup(getActivity());
+        }
+        if (mCommonDataProvider == null) {
+            mCommonDataProvider = CommonDataProvider.getInstance(getActivity());
+        }
+        mPopup.showWait(mCancelExitListener);
+        mCommonDataProvider.simpleLogin(mLoginListener, mSimpleLoginErrorListener, null);
     }
 
     @Override
@@ -791,19 +866,29 @@ public class MyProfileFragment extends BaseFragment {
     }
 
     private void setCardCount() {
-        if (mUserInfo.cards != null) {
-            mCardView.content.setText(String.valueOf(mUserInfo.cards.size()));
+        int count = 0;
+        if (VersionData.getCloudVersion(mContext) > 1) {
+            count = mUserInfo.card_count;
         } else {
-            mCardView.content.setText("0");
+            if (mUserInfo.cards != null) {
+                count = mUserInfo.cards.size();
+            }
         }
+        mCardView.content.setText(String.valueOf(count));
+        mSummaryUserView.setCardCount(String.valueOf(count));
     }
 
     private void setFingerCount() {
-        if (mUserInfo.fingerprint_templates != null) {
-            mFingerPrintView.content.setText(String.valueOf(mUserInfo.fingerprint_templates.size()));
+        int count = 0;
+        if (VersionData.getCloudVersion(mContext) < 2) {
+            if (mUserInfo.fingerprint_templates != null) {
+                count = mUserInfo.fingerprint_templates.size();
+            }
         } else {
-            mFingerPrintView.content.setText("0");
+            count = mUserInfo.fingerprint_template_count;
         }
+        mFingerPrintView.content.setText(String.valueOf(count));
+        mSummaryUserView.setFingerCount(String.valueOf(count));
     }
 
 
@@ -841,28 +926,52 @@ public class MyProfileFragment extends BaseFragment {
     }
 
     private void setPermission() {
-        if (mUserInfo.roles == null || mUserInfo.roles.size() < 1) {
-            mOperatorView.content.setText(getString(R.string.none));
-            mUserInfo.password_exist = false;
-            mLoginPasswordView.content.setText("");
-            mLoginIDView.setVisibility(View.GONE);
-            mLoginPasswordView.setVisibility(View.GONE);
-        } else {
-            mLoginIDView.setVisibility(View.VISIBLE);
-            mLoginPasswordView.setVisibility(View.VISIBLE);
-            int size = mUserInfo.roles.size();
-            if (size == 1) {
-                mOperatorView.content.setText(mUserInfo.roles.get(0).description);
-            } else if (size > 1) {
-                mOperatorView.content.setText(mUserInfo.roles.get(size).description + " + " + mUserInfo.roles.size());
-            }
-            if (mUserInfo.password_exist || (mPasswordData != null && !mPasswordData.isEmpty())) {
-                mLoginPasswordView.content.setText(getString(R.string.password_display));
+        if (VersionData.getCloudVersion(mContext) > 1) {
+            if (mUserInfo.permission != null) {
+                mLoginIDView.setVisibility(View.VISIBLE);
+                mLoginPasswordView.setVisibility(View.VISIBLE);
+
+                mOperatorView.content.setText(mUserInfo.permission.name);
+                if (mUserInfo.password_exist || (mPasswordData != null && !mPasswordData.isEmpty())) {
+                    mLoginPasswordView.content.setText(getString(R.string.password_display));
+                } else {
+                    mLoginPasswordView.content.setText("");
+                }
             } else {
+                mOperatorView.content.setText(getString(R.string.none));
+                mUserInfo.password_exist = false;
                 mLoginPasswordView.content.setText("");
+                mLoginIDView.setVisibility(View.GONE);
+                mLoginPasswordView.setVisibility(View.GONE);
+            }
+        } else {
+            if (mUserInfo.roles == null || mUserInfo.roles.size() < 1) {
+                mOperatorView.content.setText(getString(R.string.none));
+                mUserInfo.password_exist = false;
+                mLoginPasswordView.content.setText("");
+                mLoginIDView.setVisibility(View.GONE);
+                mLoginPasswordView.setVisibility(View.GONE);
+            } else {
+                mLoginIDView.setVisibility(View.VISIBLE);
+                mLoginPasswordView.setVisibility(View.VISIBLE);
+
+                int size = mUserInfo.roles.size();
+                if (size == 1) {
+                    mOperatorView.content.setText(mUserInfo.roles.get(0).description);
+                } else if (size > 1) {
+                    mOperatorView.content.setText(mUserInfo.roles.get(size).description + " + " + mUserInfo.roles.size());
+                }
+                if (mUserInfo.password_exist || (mPasswordData != null && !mPasswordData.isEmpty())) {
+                    mLoginPasswordView.content.setText(getString(R.string.password_display));
+                } else {
+                    mLoginPasswordView.content.setText("");
+                }
             }
         }
     }
+
+
+
 
     private void showUserViewLog() {
         User bundleItem = null;
@@ -892,23 +1001,38 @@ public class MyProfileFragment extends BaseFragment {
         } else {
             mSummaryUserView.showUserViewLog(false);
         }
-
-        mUserNameView.content.addTextChangedListener(new TextWatcherFilter(mUserNameView.content, TextWatcherFilter.EDIT_TYPE.USER_NAME, getActivity(), 48));
+        if (mUserNameViewTextWatcherFilter == null) {
+            mUserNameViewTextWatcherFilter  = new TextWatcherFilter(mUserNameView.content, TextWatcherFilter.EDIT_TYPE.USER_NAME, getActivity(), 48);
+        }
+        mUserNameView.content.removeTextChangedListener(mUserNameViewTextWatcherFilter);
+        mUserNameView.content.addTextChangedListener(mUserNameViewTextWatcherFilter);
         mUserNameView.setOnClickListener(mClickListener);
         if (mUserInfo.getName() != null) {
             mUserNameView.content.setText(mUserInfo.getName());
         }
         mEmailView.content.setText(mUserInfo.email);
-        mEmailView.content.addTextChangedListener(new TextWatcherFilter(mEmailView.content, TextWatcherFilter.EDIT_TYPE.EMAIL, getActivity(), 128));
+//        if (mEmailViewTextWatcherFilter == null) {
+//            mEmailViewTextWatcherFilter = new TextWatcherFilter(mEmailView.content, TextWatcherFilter.EDIT_TYPE.EMAIL, getActivity(), 320);
+//        }
+//        mEmailView.content.removeTextChangedListener(mEmailViewTextWatcherFilter);
+//        mEmailView.content.addTextChangedListener(mEmailViewTextWatcherFilter);
         mEmailView.setOnClickListener(mClickListener);
         mTelephoneView.content.setText(mUserInfo.phone_number);
-        mTelephoneView.content.addTextChangedListener(new TextWatcherFilter(mTelephoneView.content, TextWatcherFilter.EDIT_TYPE.TELEPHONE, getActivity(), 128));
+        if (mTelephoneViewTextWatcherFilter == null) {
+            mTelephoneViewTextWatcherFilter = new TextWatcherFilter(mTelephoneView.content, TextWatcherFilter.EDIT_TYPE.TELEPHONE, getActivity(), 32);
+        }
+        mTelephoneView.content.removeTextChangedListener(mTelephoneViewTextWatcherFilter );
+        mTelephoneView.content.addTextChangedListener(mTelephoneViewTextWatcherFilter  );
         mTelephoneView.setOnClickListener(mClickListener);
 
         setPermission();
         mOperatorView.content.setTextColor(mContext.getResources().getColor(R.color.content_text));
         mLoginIDView.content.setText(mUserInfo.login_id);
-        mLoginIDView.content.addTextChangedListener(new TextWatcherFilter(mLoginIDView.content, TextWatcherFilter.EDIT_TYPE.LOGIN_ID, getActivity(), 32));
+        if (mLoginIDViewTextWatcherFilter == null) {
+            mLoginIDViewTextWatcherFilter = new TextWatcherFilter(mLoginIDView.content, TextWatcherFilter.EDIT_TYPE.LOGIN_ID, getActivity(), 32);
+        }
+        mLoginIDView.content.removeTextChangedListener(mLoginIDViewTextWatcherFilter);
+        mLoginIDView.content.addTextChangedListener(mLoginIDViewTextWatcherFilter);
         mLoginIDView.setOnClickListener(mClickListener);
         mLoginPasswordView.enableLink(true, mClickListener);
 

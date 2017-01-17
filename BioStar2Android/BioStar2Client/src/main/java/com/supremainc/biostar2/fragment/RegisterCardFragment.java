@@ -59,6 +59,7 @@ public class RegisterCardFragment extends BaseFragment {
     private SelectPopup<ListCard> mSelectCardPopup;
     private SelectPopup<ListDevice> mSelectDevicePopup;
     private SelectPopup<SmartCardLayout> mSelectSmartCardLayoutPopup;
+    private SelectPopup<WiegandFormat> mSelectWiegandFormatPopup;
     private SelectPopup<SimpleData> mSelectSimpleDataPopup;
 
     private ListDevice mSelectedDevice;
@@ -222,13 +223,13 @@ public class RegisterCardFragment extends BaseFragment {
                 }
                 switch (mType) {
                     case CSN:
-                        if (device.isSupportWiegand()) {
+                        if (device.isSupportCSNWiegand()) {
                             mToastPopup.show(null,getString(R.string.csn_format_wigand_scan));
                             return;
                         }
                         break;
                     case WIEGAND:
-                        if (!device.isSupportWiegand()) {
+                        if (!(device.isSupportWiegand() || device.isSupportCSNWiegand())) {
                             mToastPopup.show(null,getString(R.string.none_wigand));
                             return;
                         }
@@ -249,14 +250,14 @@ public class RegisterCardFragment extends BaseFragment {
            mSelectedDevice = device;
            mRegisterCardView.setDevice(mSelectedDevice,mType);
            }
-        }, null, getString(R.string.select_device_orginal), false, false);
+        }, null, getString(R.string.select_device_orginal), false, true);
     }
 
     private void selectWiegandFormat() {
         switch (mMethod) {
             case DIRECT_INPUT: {
-                SelectPopup<WiegandFormat> selectPopup = new SelectPopup<WiegandFormat>(mContext, mPopup);
-                selectPopup.show(SelectPopup.SelectType.WIEGAND_FORMAT, new SelectPopup.OnSelectResultListener<WiegandFormat>() {
+
+                mSelectWiegandFormatPopup.show(SelectPopup.SelectType.WIEGAND_FORMAT, new SelectPopup.OnSelectResultListener<WiegandFormat>() {
                     @Override
                     public void OnResult(ArrayList<WiegandFormat> selectedItem, boolean isPositive) {
                         if (isInValidCheck(null)) {
@@ -266,6 +267,7 @@ public class RegisterCardFragment extends BaseFragment {
                             return;
                         }
                         mSelectedWiegandFormat = selectedItem.get(0);
+                        mRegisterCardView.clearWiegandFormat();
                         mRegisterCardView.setWiegandFormat(mSelectedWiegandFormat,mSelectedCard,mMethod);
                     }
                 }, null, getString(R.string.wiegand), false,true);
@@ -431,7 +433,7 @@ public class RegisterCardFragment extends BaseFragment {
         }
         switch (mType) {
             case CSN:
-                if (mSelectedDevice.isSupportWiegand()) {
+                if (mSelectedDevice.wiegand_format != null) {
                     mToastPopup.show(getString(R.string.csn_format_wigand_scan), null);
                     return;
                 }
@@ -443,7 +445,7 @@ public class RegisterCardFragment extends BaseFragment {
                 }
                 break;
             case WIEGAND:
-                if (!mSelectedDevice.isSupportWiegand()) {
+                if (!(mSelectedDevice.isSupportCSNWiegand() || mSelectedDevice.isSupportWiegand())) {
                     mToastPopup.show(getString(R.string.none_wigand), null);
                     return;
                 }
@@ -488,9 +490,14 @@ public class RegisterCardFragment extends BaseFragment {
                     e.printStackTrace();
                     return;
                 }
+                switch (mType) {
+                    case WIEGAND:
+                        mSelectedWiegandFormat = mSelectedCard.wiegand_format;
+                        break;
+                }
                 mRegisterCardView.setCard(mSelectedCard,mSelectedDevice,mType,mMethod);
             }
-        }, null, getString(R.string.registeration_option_assign_card), false, false);
+        }, null, getString(R.string.registeration_option_assign_card), false, true);
     }
 
     private void selectFingerPrint() {
@@ -574,6 +581,9 @@ public class RegisterCardFragment extends BaseFragment {
         if (mSelectDevicePopup == null) {
             mSelectDevicePopup = new SelectPopup<ListDevice>(mContext, mPopup);
         }
+        if (mSelectWiegandFormatPopup == null) {
+            mSelectWiegandFormatPopup = new SelectPopup<WiegandFormat>(mContext, mPopup);
+        }
         if (mSelectSimpleDataPopup == null) {
             mSelectSimpleDataPopup = new SelectPopup<SimpleData>(mContext, mPopup);
         }
@@ -598,7 +608,11 @@ public class RegisterCardFragment extends BaseFragment {
                   mErrorStayListener.onErrorResponse(new VolleyError(null,"Server response is null"),null);
                   return;
             }
-            mSaveEndListener.onResponse(null,null);
+            Card card = new Card();
+            card.id = response.id;
+            card.card_id = (String)param;
+            mSelectedCard = card;
+            saveEnd();
         }
     };
 
@@ -627,8 +641,9 @@ public class RegisterCardFragment extends BaseFragment {
                         card.type = Card.ACCESS_ON;
                     }
                     mSelectedCard = card;
-                    mSaveEndListener.onResponse(null,null);
-                    return;
+//                    mSaveEndListener.onResponse(null,null);
+//                    return;
+                    break;
                 case WIEGAND:
                     break;
                 case MOBILE_CARD:
@@ -665,18 +680,35 @@ public class RegisterCardFragment extends BaseFragment {
         if (!isFind) {
             cards.add(mSelectedCard);
         }
+        mPopup.showWait(mCancelExitListener);
         mUserDataProvider.modifyCards(TAG,mUserInfo.user_id, cards ,mSaveEndListener,mErrorStayListener,null);
     }
+    private Popup.OnPopupClickListener mPopupSucess = new Popup.OnPopupClickListener() {
+        @Override
+        public void OnNegative() {
+            mScreenControl.backScreen();
+        }
 
+        @Override
+        public void OnPositive() {
+            mScreenControl.backScreen();
+        }
+    };
     private Response.Listener<ResponseStatus> mSaveEndListener = new Response.Listener<ResponseStatus>() {
         @Override
         public void onResponse(ResponseStatus response, Object param) {
             if (isInValidCheck(null)) {
                 return;
             }
-            sendLocalBroadcast(Setting.BROADCAST_UPDATE_CARD, null);
             mPopup.dismiss();
-            mScreenControl.backScreen();
+            sendLocalBroadcast(Setting.BROADCAST_UPDATE_CARD, null);
+            mHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    mPopup.dismiss();
+                    mPopup.show(Popup.PopupType.CONFIRM, getString(R.string.info), getString(R.string.success), mPopupSucess, null, null);
+                }
+            });
         }
     };
 
@@ -710,14 +742,24 @@ public class RegisterCardFragment extends BaseFragment {
                 }
                 switch (mType) {
                     case WIEGAND:
-                        if (mSelectedWiegandFormat == null) {
+                        if (mMethod == REGISTER_METHOD.ASSIGN_CARD) {
+                            if (mSelectedCard == null) {
+                                mToastPopup.show(getString(R.string.none_select_card), null);
+                                return true;
+                            }
+                            saveEnd();
+                            return true;
+                        }
+                        if (mSelectedWiegandFormat == null || (mSelectedWiegandFormat.wiegand_card_ids == null)) {
                             mToastPopup.show(getString(R.string.wiegand_format_empty), null);
                             return true;
                         }
-                        WiegandFormat wiegandFormat =mRegisterCardView.getWigandID(mSelectedWiegandFormat,mToastPopup);
+
+                        WiegandFormat wiegandFormat =mRegisterCardView.getWigandID(mSelectedWiegandFormat,mToastPopup,mMethod);
                         if (wiegandFormat == null) {
                             return true;
                         }
+                        mPopup.showWait(mCancelExitListener);
                         mCardDataProvider.registerWiegand(TAG,mRegisterCardListener ,mErrorStayListener,wiegandFormat,null);
                         return true;
                     case CSN:
@@ -874,6 +916,16 @@ public class RegisterCardFragment extends BaseFragment {
             mSelectDevicePopup.onSearch(query);
             return true;
         }
+        if (mSelectWiegandFormatPopup != null && mSelectWiegandFormatPopup.isExpand()) {
+            mSelectWiegandFormatPopup.onSearch(query);
+            return true;
+        }
+
+//        if (mSelectSmartCardLayoutPopup != null && mSelectSmartCardLayoutPopup.isExpand()) {
+//            mSelectSmartCardLayoutPopup.onSearch(query);
+//            return true;
+//        }
+
         return true;
     }
 

@@ -38,46 +38,66 @@ public abstract class BaseUserGroupAdapter extends BaseListAdapter<UserGroup> {
     Listener<UserGroups> mItemListener = new Listener<UserGroups>() {
         @Override
         public void onResponse(UserGroups response, Object deliverParam) {
+            if (mPopup != null) {
+                mPopup.dismiss();
+            }
             if (isDestroy()) {
                 return;
             }
-            mPopup.dismiss();
             if (response == null || response.records == null || response.records.size() < 1) {
                 if (mOnItemsListener != null) {
-                    mOnItemsListener.onSuccessNull();
+                    if (mItems == null || mItems.size() < 1) {
+                        mTotal =0;
+                        mOnItemsListener.onNoMoreData();
+                    } else {
+                        mTotal = mItems.size();
+                        mOnItemsListener.onSuccessNull(mItems.size());
+                    }
                 }
                 return;
             }
-            if (mOnItemsListener != null) {
-                mOnItemsListener.onTotalReceive(response.total);
-            }
             setData(response.records);
+            mTotal = response.total;
+            if (mTotal < mItems.size()) {
+                mTotal = mItems.size();
+            }
+            if (mOnItemsListener != null) {
+                mOnItemsListener.onTotalReceive(mTotal);
+            }
+
         }
     };
     Response.ErrorListener mItemErrorListener = new Response.ErrorListener() {
         @Override
         public void onErrorResponse(VolleyError error, Object deliverParam) {
+            if (mPopup != null) {
+                mPopup.dismiss();
+            }
             if (isDestroy(error)) {
                 return;
             }
-            mPopup.dismiss();
-            mPopup.show(PopupType.ALERT, mActivity.getString(R.string.fail_retry), Setting.getErrorMessage(error, mActivity), new OnPopupClickListener() {
-                @Override
-                public void OnNegative() {
-                    mCancelExitListener.onCancel(null);
-                }
+            if (mPopup != null) {
+                mPopup.show(PopupType.ALERT, mActivity.getString(R.string.fail_retry), Setting.getErrorMessage(error, mActivity), new OnPopupClickListener() {
+                    @Override
+                    public void OnNegative() {
+                        mCancelExitListener.onCancel(null);
+                    }
 
-                @Override
-                public void OnPositive() {
-                    getItems(mQuery);
-                }
-            }, mActivity.getString(R.string.ok), mActivity.getString(R.string.cancel), false);
+                    @Override
+                    public void OnPositive() {
+                        getItems(mQuery);
+                    }
+                }, mActivity.getString(R.string.ok), mActivity.getString(R.string.cancel), false);
+            }
         }
     };
     Runnable mRunGetItems = new Runnable() {
         @Override
         public void run() {
-            mUserDataProvider.getUserGroups(TAG, mItemListener, mItemErrorListener, 0, -1, null, null);
+            if (isDestroy()) {
+                return;
+            }
+            mUserDataProvider.getUserGroups(TAG, mItemListener, mItemErrorListener, 0, 5000, null, null);
         }
     };
 
@@ -91,7 +111,9 @@ public abstract class BaseUserGroupAdapter extends BaseListAdapter<UserGroup> {
         mQuery = query;
         mListView.removeCallbacks(mRunGetItems);
         mUserDataProvider.cancelAll(TAG);
-        mPopup.showWait(mCancelExitListener);
+        if (mPopup != null) {
+            mPopup.showWait(mCancelExitListener);
+        }
         if (mItems != null) {
             mItems.clear();
             notifyDataSetChanged();

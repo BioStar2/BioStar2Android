@@ -25,6 +25,7 @@ import android.widget.ListView;
 import com.supremainc.biostar2.R;
 import com.supremainc.biostar2.adapter.base.BaseEventTypeAdapter;
 import com.supremainc.biostar2.adapter.base.BaseListAdapter;
+import com.supremainc.biostar2.sdk.datatype.v2.Common.VersionData;
 import com.supremainc.biostar2.sdk.datatype.v2.EventLog.EventType;
 import com.supremainc.biostar2.sdk.provider.EventDataProvider;
 import com.supremainc.biostar2.widget.popup.Popup;
@@ -63,8 +64,11 @@ public class SimpleEventTypeAdapter extends BaseEventTypeAdapter {
         }
         EventType item = mItems.get(position);
         if (item != null) {
-//            viewHolder.mName.setText(item.name);
-            viewHolder.mName.setText(item.description);
+            if (VersionData.getCloudVersion(mActivity) < 2) {
+                viewHolder.mName.setText(item.name);
+            } else {
+                viewHolder.mName.setText(item.description);
+            }
             setSelector(viewHolder.mRoot, viewHolder.mLink, position, true);
         }
         return viewHolder.mRoot;

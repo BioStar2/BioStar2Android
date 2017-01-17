@@ -101,13 +101,13 @@ public class PermissionDataProvider extends BaseDataProvider {
     public void getCloudRoles(String tag, Response.Listener<CloudRoles> listener, Response.ErrorListener errorListener, Object deliverParam) {
         sendRequest(tag, CloudRoles.class, Method.GET, NetWork.PARAM_REFERENCE_CODES, null, null, null, listener, errorListener, deliverParam);
     }
-    public void getPrivilege(String tag, Response.Listener<UserPermissions> listener, Response.ErrorListener errorListener, Object deliverParam) {
+    public void getPermissions(String tag, Response.Listener<UserPermissions> listener, Response.ErrorListener errorListener, Object deliverParam) {
         if (VersionData.getCloudVersion(mContext) < 2) {
             if (errorListener != null) {
                 errorListener.onErrorResponse(new VolleyError("V2 API"),deliverParam);
             }
         } else {
-            sendRequest(tag, UserPermissions.class, Method.GET, NetWork.PARAM_PRIVILEGE, null, null, null, listener, errorListener, deliverParam);
+            sendRequest(tag, UserPermissions.class, Method.GET, createUrl(NetWork.PARAM_SETTING,  NetWork.PARAM_PERMISSION_LIST), null, null, null, listener, errorListener, deliverParam);
         }
     }
 

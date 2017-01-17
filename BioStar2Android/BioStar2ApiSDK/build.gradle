@@ -5,11 +5,14 @@ android {
     compileSdkVersion 23
     buildToolsVersion '23.0.2'
     compileOptions.encoding = 'UTF-8'
+    lintOptions {
+        lintConfig file("lint.xml")
+    }
     defaultConfig {
         minSdkVersion 10
         targetSdkVersion 23
-        versionCode 7
-        versionName "1.1.0"
+        versionCode 8
+        versionName "2.4.0"
     }
 
     buildTypes {
@@ -24,7 +27,7 @@ publish {
     userOrg = 'biostar2'
     groupId = 'com.supremainc.biostar2'
     artifactId = 'biostar2sdk'
-    publishVersion = '1.1.0'
+    publishVersion = '2.4.0'
     desc = 'BioStar2 Android SDK'
     website = 'https://github.com/BioStar2/BioStar2Android'
     issueTracker = "${website}/issues"

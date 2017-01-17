@@ -54,30 +54,32 @@ public class ListDeviceType extends BaseDeviceType implements Cloneable, Seriali
     public boolean isSupport(int deviceSupport) {
         if (ConfigDataProvider.TEST_RELEASE_DELETE) {
             int support = 0;
-            int numberID = Integer.valueOf(id);
-            switch (numberID) {
-                case 1:
-                case 2:
-                    support = com.supremainc.biostar2.sdk.datatype.v2.Device.ListDeviceType.SUPPORT_BLACKFIN | com.supremainc.biostar2.sdk.datatype.v2.Device.ListDeviceType.SUPPORT_FINGERPRINT | com.supremainc.biostar2.sdk.datatype.v2.Device.ListDeviceType.SUPPORT_CARD;
-                    break;
-                case 3:
-                    support = com.supremainc.biostar2.sdk.datatype.v2.Device.ListDeviceType.SUPPORT_DISPLAY | com.supremainc.biostar2.sdk.datatype.v2.Device.ListDeviceType.SUPPORT_BLACKFIN | com.supremainc.biostar2.sdk.datatype.v2.Device.ListDeviceType.SUPPORT_FINGERPRINT | com.supremainc.biostar2.sdk.datatype.v2.Device.ListDeviceType.SUPPORT_CARD | com.supremainc.biostar2.sdk.datatype.v2.Device.ListDeviceType.SUPPORT_KEYPAD;
-                    break;
-                case 4:
-                case 5:
-                    support = com.supremainc.biostar2.sdk.datatype.v2.Device.ListDeviceType.SUPPORT_BLACKFIN | com.supremainc.biostar2.sdk.datatype.v2.Device.ListDeviceType.SUPPORT_CARD | com.supremainc.biostar2.sdk.datatype.v2.Device.ListDeviceType.SUPPORT_CARD_ONLY;
-                    break;
-                case 6:
-                case 7:
-                    support = com.supremainc.biostar2.sdk.datatype.v2.Device.ListDeviceType.SUPPORT_ONLY_SLAVE;
-                    break;
-                case 8:
-                case 9:
-                case 10:
-                    support = com.supremainc.biostar2.sdk.datatype.v2.Device.ListDeviceType.SUPPORT_DISPLAY | com.supremainc.biostar2.sdk.datatype.v2.Device.ListDeviceType.SUPPORT_FINGERPRINT | com.supremainc.biostar2.sdk.datatype.v2.Device.ListDeviceType.SUPPORT_CARD | com.supremainc.biostar2.sdk.datatype.v2.Device.ListDeviceType.SUPPORT_KEYPAD | com.supremainc.biostar2.sdk.datatype.v2.Device.ListDeviceType.SUPPORT_VOLUME;
-                    break;
-                default:
-                    break;
+            if (id != null) {
+                int numberID = Integer.valueOf(id);
+                switch (numberID) {
+                    case 1:
+                    case 2:
+                        support = com.supremainc.biostar2.sdk.datatype.v2.Device.ListDeviceType.SUPPORT_BLACKFIN | com.supremainc.biostar2.sdk.datatype.v2.Device.ListDeviceType.SUPPORT_FINGERPRINT | com.supremainc.biostar2.sdk.datatype.v2.Device.ListDeviceType.SUPPORT_CARD;
+                        break;
+                    case 3:
+                        support = com.supremainc.biostar2.sdk.datatype.v2.Device.ListDeviceType.SUPPORT_DISPLAY | com.supremainc.biostar2.sdk.datatype.v2.Device.ListDeviceType.SUPPORT_BLACKFIN | com.supremainc.biostar2.sdk.datatype.v2.Device.ListDeviceType.SUPPORT_FINGERPRINT | com.supremainc.biostar2.sdk.datatype.v2.Device.ListDeviceType.SUPPORT_CARD | com.supremainc.biostar2.sdk.datatype.v2.Device.ListDeviceType.SUPPORT_KEYPAD;
+                        break;
+                    case 4:
+                    case 5:
+                        support = com.supremainc.biostar2.sdk.datatype.v2.Device.ListDeviceType.SUPPORT_BLACKFIN | com.supremainc.biostar2.sdk.datatype.v2.Device.ListDeviceType.SUPPORT_CARD | com.supremainc.biostar2.sdk.datatype.v2.Device.ListDeviceType.SUPPORT_CARD_ONLY;
+                        break;
+                    case 6:
+                    case 7:
+                        support = com.supremainc.biostar2.sdk.datatype.v2.Device.ListDeviceType.SUPPORT_ONLY_SLAVE;
+                        break;
+                    case 8:
+                    case 9:
+                    case 10:
+                        support = com.supremainc.biostar2.sdk.datatype.v2.Device.ListDeviceType.SUPPORT_DISPLAY | com.supremainc.biostar2.sdk.datatype.v2.Device.ListDeviceType.SUPPORT_FINGERPRINT | com.supremainc.biostar2.sdk.datatype.v2.Device.ListDeviceType.SUPPORT_CARD | com.supremainc.biostar2.sdk.datatype.v2.Device.ListDeviceType.SUPPORT_KEYPAD | com.supremainc.biostar2.sdk.datatype.v2.Device.ListDeviceType.SUPPORT_VOLUME;
+                        break;
+                    default:
+                        break;
+                }
             }
             if (scan_card) {
                 support = support | com.supremainc.biostar2.sdk.datatype.v2.Device.ListDeviceType.SUPPORT_CARD;

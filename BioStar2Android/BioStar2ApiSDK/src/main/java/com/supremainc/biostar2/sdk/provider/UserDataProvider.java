@@ -160,11 +160,9 @@ public class UserDataProvider extends BaseDataProvider {
             if (i != 0) {
                 sb.append(",");
             }
+            sb.append("\"");
             sb.append(users.get(i).user_id);
-            sb.append(" ");
-//			if (sb.length() > 200) {
-//				break;
-//			}
+            sb.append("\"");
         }
         sb.append("]}");
 

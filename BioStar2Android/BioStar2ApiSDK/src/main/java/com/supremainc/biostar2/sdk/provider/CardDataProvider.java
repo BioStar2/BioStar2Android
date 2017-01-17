@@ -16,6 +16,7 @@
 package com.supremainc.biostar2.sdk.provider;
 
 import android.content.Context;
+import android.os.AsyncTask;
 import android.os.Build;
 import android.provider.Settings;
 
@@ -25,6 +26,7 @@ import com.google.gson.JsonPrimitive;
 import com.supremainc.biostar2.sdk.datatype.v2.Card.BaseCard;
 import com.supremainc.biostar2.sdk.datatype.v2.Card.Card;
 import com.supremainc.biostar2.sdk.datatype.v2.Card.Cards;
+import com.supremainc.biostar2.sdk.datatype.v2.Card.ListCard;
 import com.supremainc.biostar2.sdk.datatype.v2.Card.MobileCardRaw;
 import com.supremainc.biostar2.sdk.datatype.v2.Card.MobileCards;
 import com.supremainc.biostar2.sdk.datatype.v2.Card.SmartCardLayouts;
@@ -40,6 +42,7 @@ import com.supremainc.biostar2.sdk.volley.Response.ErrorListener;
 import com.supremainc.biostar2.sdk.volley.Response.Listener;
 import com.supremainc.biostar2.sdk.volley.VolleyError;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
@@ -97,7 +100,7 @@ public class CardDataProvider extends BaseDataProvider {
             return;
         }
         String body = mGson.toJson(wiegandFormat);
-        sendRequest(tag, ResponseStatus.class, Method.POST, createUrl(NetWork.PARAM_CARDS,NetWork.PARAM_WIEGAND_CARDS), null, null, body, listener, errorListener, deliverParam);
+        sendRequest(tag, ResponseStatus.class, Method.POST, createUrl(NetWork.PARAM_CARDS,NetWork.PARAM_WIEGAND_CARD), null, null, body, listener, errorListener, deliverParam);
     }
 
 
@@ -144,7 +147,7 @@ public class CardDataProvider extends BaseDataProvider {
         String body = mGson.toJson(object);
         sendRequest(tag, ResponseStatus.class, Method.POST, createUrl(NetWork.PARAM_CARDS,NetWork.PARAM_CARDS_SECURE_CREDENTIAL), null, null, body, listener, errorListener, deliverParam);
     }
-
+//    private static int test_count=0;
     public void getUnassignedCards(String tag, Listener<Cards> listener, ErrorListener errorListener, int offset, int limit, String query, Object deliverParam) {
         Map<String, String> params = new HashMap<String, String>();
         params.put("limit", String.valueOf(limit));
@@ -152,8 +155,26 @@ public class CardDataProvider extends BaseDataProvider {
         if (query != null) {
             params.put("text", query);
         }
-
         sendRequest(tag, Cards.class, Method.GET, createUrl(NetWork.PARAM_CARDS,NetWork.PARAM_UNASSIGNED), null, params, null, listener, errorListener, deliverParam);
+
+//        Cards items = new Cards();
+//        ArrayList<ListCard> list = new ArrayList<ListCard>();
+//        if (test_count > 500) {
+//            listener.onResponse(null,deliverParam);
+//            return;
+//        }
+//        int count = test_count +limit;
+//        for (int i=test_count; i < count ; i++) {
+//            ListCard item = new ListCard();
+//            item.id = String.valueOf(test_count);
+//            item.card_id = String.valueOf(test_count);
+//            item.type = Card.CSN;
+//            list.add(item);
+//            test_count++;
+//        }
+//        items.total = 500;
+//        items.records = list;
+//        listener.onResponse(items,deliverParam);
     }
 
     public void getWiegandFormats(String tag, Listener<WiegandFormats> listener, ErrorListener errorListener, Object deliverParam) {
@@ -198,16 +219,17 @@ public class CardDataProvider extends BaseDataProvider {
             }
             return;
         }
-        String udid = Settings.Secure.ANDROID_ID+ Build.SERIAL;
-        if (udid != null && udid.length() > 256) {
-            udid = udid.substring(0,256);
+
+        String udid =  Settings.Secure.getString(mContext.getContentResolver(),Settings.Secure.ANDROID_ID)+ Build.SERIAL;
+        if (udid != null && udid.length() > 128) {
+            udid = udid.substring(0,128);
         }
 
         String url = createUrl(NetWork.PARAM_USERS, NetWork.PARAM_MYPROFILE, NetWork.PARAM_CARDS_MOBILE_CREDENTIAL,cardID,mNetwork.PARAM_REGISTER);
         JsonObject object = new JsonObject();
         object.addProperty("udid", udid);
         String body = mGson.toJson(object);
-        sendRequest(tag, MobileCardRaw.class, Request.Method.GET, url, null, null, body, listener, errorListener, deliverParam);
+        sendRequest(tag, MobileCardRaw.class, Request.Method.POST, url, null, null, body, listener, errorListener, deliverParam);
     }
 
     public void issueMobileCard(String tag, Listener<ResponseStatus> listener, ErrorListener errorListener,String userID, String cardID, ArrayList<Integer> fingerprint, String layoutID,SmartCardType type, Object deliverParam) {

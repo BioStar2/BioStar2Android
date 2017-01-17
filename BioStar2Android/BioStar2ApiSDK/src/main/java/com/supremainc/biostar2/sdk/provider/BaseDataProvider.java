@@ -18,6 +18,7 @@ package com.supremainc.biostar2.sdk.provider;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.SystemClock;
 import android.util.Log;
 
 import com.google.gson.Gson;
@@ -47,8 +48,10 @@ public class BaseDataProvider {
     protected static FileUtil mFileUtil;
     protected static Map<String, Boolean> mPermissionMap;
     protected static User mUserInfo;
+    protected static long mSimpleLoginTick=0L;
     protected static com.supremainc.biostar2.sdk.datatype.v2.User.User mUserInfoV2;
-    private static String mPasswordLevel;
+    protected static String mPasswordLevel;
+    protected static boolean mAlphaNumericUserID;
     protected final String TAG = getClass().getSimpleName();
 
 
@@ -131,6 +134,18 @@ public class BaseDataProvider {
         }
     }
 
+    public void getServerVersion(final Listener<VersionData> listener, final ErrorListener errorListener, final Object deliverParam) {
+        String domain = ConfigDataProvider.getLatestDomain(mContext);
+        String url = ConfigDataProvider.getLatestURL(mContext);
+        if (domain == null || url == null) {
+            if (errorListener != null) {
+                errorListener.onErrorResponse(new VolleyError("param is null"),deliverParam);
+            }
+            return;
+        }
+        getServerVersion(domain,url,listener,errorListener,deliverParam);
+    }
+
     public void getServerVersion(final String domain,final String url,final Listener<VersionData> listener, final ErrorListener errorListener, final Object deliverParam) {
         final Response.Listener<VersionData> versionListener = new Response.Listener<VersionData>() {
             @Override
@@ -144,7 +159,12 @@ public class BaseDataProvider {
                     }
                     return;
                 }
-                response.init(mContext);
+                if (!response.init(mContext)) {
+                    if (errorListener != null) {
+                        errorListener.onErrorResponse(new VolleyError("BioStar 2 AC Version invalid"),null);
+                    }
+                    return;
+                }
                 ConfigDataProvider.setLatestDomain(mContext,domain);
                 ConfigDataProvider.setLatestURL(mContext,url);
                 if (listener != null) {
@@ -167,6 +187,12 @@ public class BaseDataProvider {
         }
     }
 
+    public void simpleLoginCheck() {
+        long base = 43200000;
+        if (SystemClock.elapsedRealtime() - mSimpleLoginTick > base){
+            simpleLogin(null,null,null);
+        }
+    }
 
     public void simpleLogin(final Listener<User> listener, final ErrorListener errorListener, final Object deliverParam) {
         final Response.Listener<User> loginListener = new Response.Listener<User>() {
@@ -181,8 +207,13 @@ public class BaseDataProvider {
                     }
                     return;
                 }
+                mSimpleLoginTick = SystemClock.elapsedRealtime();
                 mUserInfo = response;
-                mPasswordLevel = mUserInfo.password_strength_level;
+                if (VersionData.getCloudVersion(mContext) < 2) {
+                    if (mUserInfo.password_strength_level != null) {
+                        mPasswordLevel = mUserInfo.password_strength_level;
+                    }
+                }
                 initPermission();
                 if (listener != null) {
                     listener.onResponse(response, deliverParam);
@@ -202,6 +233,14 @@ public class BaseDataProvider {
             return true;
         }
         return false;
+    }
+
+    public boolean isAlphaNumericUserID() {
+        if (VersionData.getCloudVersion(mContext) > 1) {
+            return mAlphaNumericUserID;
+        } else {
+            return false;
+        }
     }
 
     public boolean isLogined() {
@@ -237,12 +276,13 @@ public class BaseDataProvider {
 
                 NetWork.SERVER_ADDRESS = ConfigDataProvider.getFullURL(mContext);
                 ConfigDataProvider.setLatestUserID(mContext,id);
-                mUserInfo = response;
-                mPasswordLevel = mUserInfo.password_strength_level;
+//                mUserInfo = response;
+//                mPasswordLevel = mUserInfo.password_strength_level;
                 initPermission();
-                if (listener != null) {
-                    listener.onResponse(response, deliverParam);
-                }
+                simpleLogin(listener,errorListener,deliverParam);
+//                if (listener != null) {
+//                    listener.onResponse(response, deliverParam);
+//                }
             }
         };
         mNetwork.login(domain, ConfigDataProvider.getFullURL(mContext), id, password, token, loginListener, errorListener, deliverParam);
@@ -386,8 +426,4 @@ public class BaseDataProvider {
     public String getServerAddress() {
         return NetWork.SERVER_ADDRESS;
     }
-
-
-
-
 }

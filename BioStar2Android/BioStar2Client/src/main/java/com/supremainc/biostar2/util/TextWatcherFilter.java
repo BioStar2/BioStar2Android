@@ -17,7 +17,10 @@ package com.supremainc.biostar2.util;
 
 import android.app.Activity;
 import android.content.Context;
-import android.support.design.BuildConfig;
+import com.supremainc.biostar2.BuildConfig;
+
+import android.os.Handler;
+import android.os.Looper;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
@@ -36,7 +39,7 @@ public class TextWatcherFilter implements TextWatcher {
     private ToastPopup mToastPopup;
     private EDIT_TYPE mType;
     private boolean mIsLock;
-    private int mMaxSize;
+    private long mMaxSize;
 
     private boolean mIsMax = false;
     private boolean mIsCheckZero = false;
@@ -48,7 +51,7 @@ public class TextWatcherFilter implements TextWatcher {
         mMaxLength = maxSize;
     }
 
-    public void setMaxSize(int maxSize,boolean set) {
+    public void setMaxSize(long maxSize,boolean set) {
         mMaxSize = maxSize;
         mIsMax = set;
     }
@@ -63,220 +66,297 @@ public class TextWatcherFilter implements TextWatcher {
 
     @Override
     public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-        if (mIsLock) {
-            mIsLock = false;
-            return;
-        }
-        mBefore = s.toString();
-        mBeforeIndex = mEditText.getSelectionStart();
+//        if (BuildConfig.DEBUG) {
+//            Log.e(TAG,"beforeTextChanged :"+s.toString()+" mIsLock:"+mIsLock+ " length:"+s.toString().length());
+//        }
+//        if (BuildConfig.DEBUG) {
+//            Log.e(TAG,"beforeTextChanged start:"+start+" count:"+count+ " after:"+after);
+//        }
+//        if (mIsLock) {
+//            mIsLock = false;
+//            return;
+//        }
+//        mBefore = s.toString();
+//        mBeforeIndex = mEditText.getSelectionStart();
     }
 
     @Override
     public void onTextChanged(CharSequence s, int start, int before, int count) {
-        if (s == null || s.length() < 1 || mType == null) {
+        if (s == null ||  mType == null) {
             return;
+        }
+        if ( s.length() < 1 ) {
+            mBefore = "";
+            mBeforeIndex = 0;
+            return;
+        }
+        if (mBefore == null) {
+            mBefore = "";
+            mBeforeIndex = 0;
         }
         String source = s.toString();
-        if (BuildConfig.DEBUG) {
-            Log.e(TAG,"source.length(:"+source.length()+" mMaxLength:"+mMaxLength);
-        }
-        if (source.length() > mMaxLength) {
-            if (BuildConfig.DEBUG) {
-                Log.e(TAG,"onTextChanged:"+s+" mBefore:"+mBefore);
-            }
-            if (mBefore == null || mBefore.length() > mMaxLength) {
-                mBefore = "";
-                mBeforeIndex = 0;
-            }
-            restore();
-            return;
-        }
+//        if (BuildConfig.DEBUG) {
+//            Log.e(TAG,"source.length:"+source.length()+" mMaxLength:"+mMaxLength);
+//            Log.e(TAG,"source:"+source.toString());
+//        }
+//        if (BuildConfig.DEBUG) {
+//            Log.e(TAG,"onTextChanged start:"+start+" count:"+count+ " before:"+before);
+//        }
         switch (mType) {
             case LOGIN_ID:
-                filterLoginID(source, start, count);
+                if (filterLoginID(mBefore, false)) {
+                    mBefore = "";
+                    mBeforeIndex = 0;
+                }
+                if (filterLoginID(source, true)) {
+                    restore();
+                    return;
+                }
                 break;
             case PASSWORD:
-                filterLoginPassword(source, start, count);
+                if (filterLoginPassword(mBefore, false)) {
+                    mBefore = "";
+                    mBeforeIndex = 0;
+                }
+                if (filterLoginPassword(source, true)) {
+                    restore();
+                    return;
+                }
                 break;
             case EMAIL:
-                filterEmail(source, start, count);
+                if (filterEmail(mBefore, false)) {
+                    mBefore = "";
+                    mBeforeIndex = 0;
+                }
+                if(filterEmail(source, true)) {
+                    restore();
+                    return;
+                }
                 break;
             case TELEPHONE:
-                filterTelephone(source, start, count);
+                if (filterTelephone(mBefore, false)) {
+                    mBefore = "";
+                    mBeforeIndex = 0;
+                }
+                if (filterTelephone(source, true)) {
+                    restore();
+                    return;
+                }
                 break;
             case USER_ID:
-                filterUserID(source, start, count);
+                if (filterUserID(mBefore, false)) {
+                    mBefore = "";
+                    mBeforeIndex = 0;
+                }
+                if (filterUserID(source, true)) {
+                    restore();
+                    return;
+                }
                 break;
             case PIN:
-                filterPIN(source, start, count);
+                if (filterPIN(mBefore, false)) {
+                    mBefore = "";
+                    mBeforeIndex = 0;
+                }
+                if (filterPIN(source, true)) {
+                    restore();
+                    return;
+                }
                 break;
             case NUMBER:
-                filterNumber(source, start, count);
+                if (filterNumber(mBefore, false)) {
+                    mBefore = "";
+                    mBeforeIndex = 0;
+                }
+                if (filterNumber(source, true)) {
+                    restore();
+                    return;
+                }
                 break;
             case USER_NAME:
                 break;
             default:
                 break;
         }
+        if (source.length() > mMaxLength) {
+//            mToastPopup.show(R.string.over_value, -1);
+            restore();
+            return;
+        }
+        mBefore = s.toString();
+        mBeforeIndex = mEditText.getSelectionStart();
+        if (BuildConfig.DEBUG) {
+            Log.e(TAG,"save succes  before length:"+mBefore.length()+" maxlength:"+mMaxLength);
+        }
+//        if (BuildConfig.DEBUG) {
+//            Log.e(TAG,"save succes  before length:"+mBefore.length()+" maxlength:"+mMaxLength);
+//            Log.e(TAG,"mBeforeIndex succes  mBeforeIndex:"+mBeforeIndex+" mBefore:"+mBefore);
+//        }
     }
 
     private void restore() {
-        mIsLock = true;
-        String old = mBefore;
-        int oldIndex = mBeforeIndex;
-        mEditText.setText(old);
-        if (old.length() > oldIndex) {
-            mEditText.setSelection(oldIndex);
-        } else {
-            mEditText.setSelection(old.length());
+//        if (BuildConfig.DEBUG) {
+//            Log.e(TAG,"restore before:"+mBefore+" mBeforeIndex:"+mBeforeIndex);
+//        }
+        if (mBefore == null) {
+            mBefore = "";
+            mBeforeIndex = 0;
+        }else if (mBefore != null && mBefore.length() > mMaxLength) {
+//            if (BuildConfig.DEBUG) {
+//                Log.e(TAG,"restore before length:"+mBefore.length()+" maxlength:"+mMaxLength);
+//            }
+            mBefore = mBefore.substring(0,mMaxLength);
         }
+        Handler handler = new Handler(Looper.getMainLooper());
+        handler.post(new Runnable() {
+            @Override
+            public void run() {
+                int index = mBeforeIndex;
+                if (mBefore.equals("")) {
+                    mEditText.getText().clear();
+                } else {
+                    mEditText.setText(mBefore);
+                    if (index <= mBefore.length()) {
+                        mEditText.setSelection(index);
+                        mBeforeIndex = index;
+                    } else {
+                        mEditText.setSelection(mBefore.length());
+                        mBeforeIndex = mBefore.length();
+                    }
+                }
+            }
+        });
+
     }
 
     @Override
     public void afterTextChanged(Editable s) {
     }
 
-    private void filterEmail(String source, int start, int count) {
-        boolean isWhiteSpace = false;
+    private boolean filterEmail(String source, boolean warnning) {
         if (source.contains(" ")) {
-            source = source.replace(" ","");
-            isWhiteSpace = true;
+            if (warnning)
+                mToastPopup.show(R.string.invalid_email, -1);
+            return true;
         }
         if (!source.matches("[a-zA-Z0-9\\@\\.\\-\\_]+")) {
-            restore();
-            mToastPopup.show(R.string.invalid_email, -1);
-            return;
+            if (warnning)
+                mToastPopup.show(R.string.invalid_email, -1);
+            return true;
         }
         if (source.contains("..")) {
-            restore();
-            mToastPopup.show(R.string.invalid_email, -1);
-            return;
+            if (warnning)
+                mToastPopup.show(R.string.invalid_email, -1);
+            return true;
         }
         int find = source.indexOf("@", 0);
         if (find > -1) {
             if (source.indexOf("@", find + 1) > -1) {
-                restore();
-                mToastPopup.show(R.string.invalid_email, -1);
-                return;
+                if (warnning)
+                    mToastPopup.show(R.string.invalid_email, -1);
+                return true;
             }
         }
-        if (isWhiteSpace) {
-            mIsLock = true;
-            mEditText.setText(source);
-            mEditText.setSelection(source.length());
-        }
+        return false;
     }
 
-    private void filterLoginID(String source, int start, int count) {
-        boolean isWhiteSpace = false;
+    private boolean filterLoginID(String source,  boolean warnning) {
         if (source.contains(" ")) {
-            source = source.replace(" ","");
-            isWhiteSpace = true;
+            if (warnning)
+                mToastPopup.show(R.string.only_alpha_num_special, -1);
+            return true;
         }
         if (!source.matches("[a-zA-Z0-9\\-\\_]+")) {
-            restore();
-            mToastPopup.show(R.string.only_alpha_num_special, -1);
-            return;
+            if (warnning)
+                mToastPopup.show(R.string.only_alpha_num_special, -1);
+            return true;
         }
-        if (isWhiteSpace) {
-            mIsLock = true;
-            mEditText.setText(source);
-            mEditText.setSelection(source.length());
-        }
+        return false;
     }
 
-    private void filterLoginPassword(String source, int start, int count) {
-        boolean isWhiteSpace = false;
+    private boolean filterLoginPassword(String source,  boolean warnning) {
         if (source.contains(" ")) {
-            source = source.replace(" ","");
-            isWhiteSpace = true;
+            if (warnning)
+                mToastPopup.show(R.string.only_alpha_num_special, -1);
+            return true;
         }
         if (!source.matches("[a-zA-Z0-9\\!\\@\\#\\$\\%\\^\\&\\*\\(\\)\\-\\_\\=\\+\\{\\}\\[\\]\\:\\;\\,\\.\\<\\>\\?\\/\\~\\`\\|\\\\]+")) {
-            restore();
-            mToastPopup.show(R.string.only_alpha_num_special, -1);
-            return;
+            if (warnning)
+                mToastPopup.show(R.string.only_alpha_num_special, -1);
+            return true;
         }
-        if (isWhiteSpace) {
-            mIsLock = true;
-            mEditText.setText(source);
-            mEditText.setSelection(source.length());
-        }
+            return false;
     }
 
-    private void filterPIN(String source, int start, int count) {
-        if (!source.matches("[0-9]+")) {
-            restore();
-            mToastPopup.show(R.string.only_number, -1);
-        }
-    }
-
-    private void filterTelephone(String source, int start, int count) {
-        boolean isWhiteSpace = false;
+    private boolean filterPIN(String source,  boolean warnning) {
         if (source.contains(" ")) {
-            source = source.replace(" ","");
-            isWhiteSpace = true;
+            if (warnning)
+                mToastPopup.show(R.string.only_number_dash, -1);
+            return true;
+        }
+        if (!source.matches("[0-9]+")) {
+            if (warnning)
+                mToastPopup.show(R.string.only_number, -1);
+            return true;
+        }
+        return false;
+    }
+
+    private boolean filterTelephone(String source, boolean warnning) {
+        if (source.contains(" ")) {
+            if (warnning)
+                mToastPopup.show(R.string.only_number_dash, -1);
+            return true;
         }
         if (!source.matches("[0-9\\-\\+]+")) {
-            restore();
-            mToastPopup.show(R.string.only_number_dash, -1);
-            return;
+            if (warnning)
+                mToastPopup.show(R.string.only_number_dash, -1);
+            return true;
         }
-        if (isWhiteSpace) {
-            mIsLock = true;
-            mEditText.setText(source);
-            mEditText.setSelection(source.length());
-        }
+        return false;
     }
 
-    private void filterUserID(String source, int start, int count) {
-        boolean isWhiteSpace = false;
+    private boolean filterUserID(String source,  boolean warnning) {
         if (source.contains(" ")) {
-            source = source.replace(" ","");
-            isWhiteSpace = true;
+            if (warnning)
+                mToastPopup.show(R.string.only_alpha_num_special, -1);
+            return true;
         }
         if (!source.matches("[a-zA-Z0-9\\-\\_]+")) {
-            restore();
-            mToastPopup.show(R.string.only_alpha_num_special, -1);
-            return;
+            if (warnning)
+                mToastPopup.show(R.string.only_alpha_num_special, -1);
+            return false;
         }
-        if (isWhiteSpace) {
-            mIsLock = true;
-            mEditText.setText(source);
-            mEditText.setSelection(source.length());
-        }
+        return false;
     }
 
-    private void filterNumber(String source, int start, int count) {
-        boolean isWhiteSpace = false;
+    private boolean filterNumber(String source,  boolean warnning) {
         if (source.contains(" ")) {
-            source = source.replace(" ","");
-            isWhiteSpace = true;
+            if (warnning)
+                mToastPopup.show(R.string.only_number, -1);
+            return true;
         }
         if (!source.matches("[0-9]+")) {
-            restore();
-            mToastPopup.show(R.string.only_number, -1);
-            return;
+            if (warnning)
+                mToastPopup.show(R.string.only_number, -1);
+            return true;
         }
         if (mIsMax) {
-            int value = Integer.valueOf(source);
+            long value = Long.valueOf(source);
             if (value > mMaxSize) {
-                restore();
-                mToastPopup.show(R.string.over_value, String.valueOf(mMaxSize));
-                return;
+                if (warnning)
+                    mToastPopup.show(R.string.over_value, String.valueOf(mMaxSize));
+                return true;
             }
         }
         if (mIsCheckZero) {
             if (source.startsWith("0")) {
-                restore();
-                mToastPopup.show(R.string.invalid_card_id, -1);
-                return;
+                if (warnning)
+                    mToastPopup.show(R.string.invalid_card_id, -1);
+                return true;
             }
         }
-        if (isWhiteSpace) {
-            mIsLock = true;
-            mEditText.setText(source);
-            mEditText.setSelection(source.length());
-        }
+        return false;
     }
 
 

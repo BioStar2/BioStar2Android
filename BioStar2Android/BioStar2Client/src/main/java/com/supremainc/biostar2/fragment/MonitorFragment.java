@@ -42,6 +42,7 @@ import com.supremainc.biostar2.sdk.datatype.v2.Device.ListDevice;
 import com.supremainc.biostar2.sdk.datatype.v2.Door.BaseDoor;
 import com.supremainc.biostar2.sdk.datatype.v2.Door.Door;
 import com.supremainc.biostar2.sdk.datatype.v2.EventLog.EventLog;
+import com.supremainc.biostar2.sdk.datatype.v2.EventLog.EventType;
 import com.supremainc.biostar2.sdk.datatype.v2.EventLog.Query;
 import com.supremainc.biostar2.sdk.datatype.v2.User.ListUser;
 import com.supremainc.biostar2.sdk.datatype.v2.User.User;
@@ -136,11 +137,15 @@ public class MonitorFragment extends BaseFragment {
     };
     private OnItemsListener mOnItemsListener = new OnItemsListener() {
         @Override
-        public void onSuccessNull() {
+        public void onSuccessNull(int total) {
             mIsDataReceived = true;
-            if (mTotal == 0 ) {
-                mToastPopup.show(getString(R.string.none_data), null);
-            }
+            mTotal = total;
+        }
+
+        @Override
+        public void onNoMoreData() {
+            mIsDataReceived = true;
+            mToastPopup.show(getString(R.string.none_data), null);
         }
 
         @Override
@@ -355,8 +360,31 @@ public class MonitorFragment extends BaseFragment {
             mMonitorAdapter.clearItems();
         }
     }
+//    private static int testCount=0;
+//    Runnable mrun =new Runnable() {
+//        @Override
+//        public void run() {
+//            mQuery = mFilterView.getQuery();
+//
+//            {
+//                ArrayList<EventType> items = mEventDataProvider.getEventTypeList();
+//                if (testCount >= items.size()) {
+//                    testCount = 0;
+//                    return;
+//                }
+//                ArrayList<String> eventId = new ArrayList<String>();
+//                EventType type = items.get(testCount);
+//                testCount++;
+//                eventId.add(String.valueOf(type.code));
+//                mQuery.event_type_code = eventId;
+//                Log.e(TAG,"type:"+type.description+" code:"+type.code+" testCount:"+testCount);
+//            }
+//            mMonitorAdapter.getItems(mQuery);
+//            mHandler.postDelayed(mrun,5000);
+//        }
+//    };
 
-    @Override
+        @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (super.onOptionsItemSelected(item)) {
             return true;
@@ -370,10 +398,25 @@ public class MonitorFragment extends BaseFragment {
                 if (mFilterView == null) {
                     return true;
                 }
+//                testCount=0;
+//                mHandler.postDelayed(mrun,3000);
                 mQuery = mFilterView.getQuery();
                 mMonitorAdapter.getItems(mQuery);
-                mToastPopup.show(ToastPopup.TYPE_LOG, getString(R.string.applied_filter), getString(R.string.user) + ": " + mFilterView.getUserCount() + " / " + getString(R.string.device) + ": "
-                        + mFilterView.getDeviceCount() + " / " + getString(R.string.event) + ": " + mFilterView.getEventCount());
+                String userCount = getString(R.string.all_users);
+                if (mFilterView.getUserCount() != 0) {
+                    userCount = String.valueOf(mFilterView.getUserCount());
+                }
+                String devicesCount = getString(R.string.all_devices);
+                if (mFilterView.getDeviceCount() != 0) {
+                    devicesCount = String.valueOf(mFilterView.getDeviceCount());
+                }
+                String eventsCount = getString(R.string.all_events);
+                if (mFilterView.getEventCount() != 0) {
+                    eventsCount = String.valueOf(mFilterView.getEventCount());
+                }
+
+                mToastPopup.show(ToastPopup.TYPE_LOG, getString(R.string.applied_filter), getString(R.string.user) + ": " +userCount + " / " + getString(R.string.device) + ": "
+                        + devicesCount + " / " + getString(R.string.event) + ": " + eventsCount);
                 return true;
             case R.id.action_restore:
                 mFilterView.setDefault();

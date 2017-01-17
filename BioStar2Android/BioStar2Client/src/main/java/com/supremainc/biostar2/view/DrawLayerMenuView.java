@@ -166,7 +166,9 @@ public class DrawLayerMenuView extends LinearLayout {
         if (user.name != null) {
             name.setText(user.name);
         }
-        if (user.roles != null) {
+        if (user.permission != null) {
+            permission.setText(user.permission.name);
+        }else if (user.roles != null) {
             int size = user.roles.size();
             size--;
             if (size == 0) {

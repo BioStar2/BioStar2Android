@@ -20,11 +20,13 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
+import android.widget.ImageView;
 import android.widget.ListView;
 
 import com.supremainc.biostar2.R;
 import com.supremainc.biostar2.adapter.base.BaseCardAdapter;
 import com.supremainc.biostar2.sdk.datatype.v2.Card.ListCard;
+import com.supremainc.biostar2.view.StyledTextView;
 import com.supremainc.biostar2.widget.popup.Popup;
 
 import java.util.ArrayList;
@@ -67,7 +69,7 @@ public class CardAdapter extends BaseCardAdapter {
             }
             return;
         }
-        SimpleItemViewHolder viewHolder = (SimpleItemViewHolder) view.getTag();
+        ItemViewHolder viewHolder = (ItemViewHolder) view.getTag();
         setSelector(view, viewHolder.mLink, position);
         super.onItemClick(parent, view, position, id);
     }
@@ -79,18 +81,18 @@ public class CardAdapter extends BaseCardAdapter {
         }
         if (null == convertView) {
             convertView = mInflater.inflate(R.layout.list_item_card, parent, false);
-            SimpleItemViewHolder viewHolder = new SimpleItemViewHolder(convertView);
+            ItemViewHolder viewHolder = new ItemViewHolder(convertView);
             convertView.setTag(viewHolder);
         }
-        SimpleItemViewHolder vh = (SimpleItemViewHolder) convertView.getTag();
+        ItemViewHolder vh = (ItemViewHolder) convertView.getTag();
         if (vh == null) {
-            vh = new SimpleItemViewHolder(convertView);
+            vh = new ItemViewHolder(convertView);
             convertView.setTag(vh);
         }
 
         ListCard item = mItems.get(position);
         if (item != null) {
-            vh.mName.setText(getName(position) + " / " + mActivity.getString(R.string.id) + " " + item.card_id);
+            vh.mID.setText(getName(position) + " / " + mActivity.getString(R.string.id) + " " + item.card_id);
         }
         if (mIsEditDisable) {
             setSelector(vh.mRoot, vh.mLink, position, false);
@@ -98,5 +100,29 @@ public class CardAdapter extends BaseCardAdapter {
             setSelector(vh.mRoot, vh.mLink, position, true);
         }
         return vh.mRoot;
+    }
+
+    private class ItemViewHolder {
+        public View mRoot;
+        public StyledTextView mCardType;
+        public StyledTextView mID;
+        public StyledTextView mBlock;
+        public StyledTextView mUnblock;
+        public ImageView mMobileCard;
+        public ImageView mLink;
+
+        public ItemViewHolder(View root) {
+            mRoot = root;
+            mLink = (ImageView) root.findViewById(R.id.info);
+            mMobileCard = (ImageView) root.findViewById(R.id.info_mobilecard);
+            mMobileCard.setVisibility(View.GONE);
+            mUnblock = (StyledTextView) root.findViewById(R.id.info_unblock);
+            mUnblock.setVisibility(View.GONE);
+            mBlock = (StyledTextView) root.findViewById(R.id.info_block);
+            mBlock.setVisibility(View.GONE);
+            mID = (StyledTextView) root.findViewById(R.id.card_id);
+            mCardType = (StyledTextView) root.findViewById(R.id.card_type);
+            mCardType.setVisibility(View.GONE);
+        }
     }
 }

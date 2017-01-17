@@ -56,6 +56,7 @@ public class NetWork {
     public static final String PARAM_UNASSIGNED =  "unassigned";
     public static final String PARAM_CSN_CARD = "csn_card";
     public static final String PARAM_WIEGAND_CARDS = "wiegand_cards";
+    public static final String PARAM_WIEGAND_CARD = "wiegand_card";
     public static final String PARAM_FORMATS = "formats";
     public static final String PARAM_SMART_CARDS = "smart_cards";
     public static final String PARAM_LAYOUTS = "layouts";
@@ -86,12 +87,13 @@ public class NetWork {
     public static final String PARAM_MONITORING_SEARCH = PARAM_MONITORING + "/event_log/search_more";
     public static final String PARAM_SCHEDULES = "schedules";
     public static final String PARAM_PERMISSIONS = "permissions";
+    public static final String PARAM_PERMISSION_LIST = "permission_list";
     public static final String PARAM_SETTING = "setting";
+    public static final String PARAM_BIOSTAR_AC = "biostar_ac";
     //	public static final String PARAM_SETTING_NOTIFICATIONTOKEN = PARAM_SETTING + "/updateNotificationToken";
     public static final String PARAM_SETTING_NOTIFICATIONTOKEN = PARAM_SETTING + "/update_notification_token";
     public static final String PARAM_VERSION = "admin/app_versions";
     public static final String PARAM_LOGOUT = "logout";
-    public static final String PARAM_PRIVILEGE =  "privileges";
     public static final String PARAM_REFERENCE = "references";
     public static final String PARAM_BIOSTAR_VERSION = "biostar_version";
     public static final String PARAM_REFERENCE_CODES = PARAM_REFERENCE + "/role_codes";
