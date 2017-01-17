@@ -325,7 +325,7 @@ public class TextWatcherFilter implements TextWatcher {
         if (!source.matches("[a-zA-Z0-9\\-\\_]+")) {
             if (warnning)
                 mToastPopup.show(R.string.only_alpha_num_special, -1);
-            return false;
+            return true;
         }
         return false;
     }
