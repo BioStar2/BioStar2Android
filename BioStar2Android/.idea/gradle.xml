@@ -13,14 +13,7 @@
             <option value="$PROJECT_DIR$/libBioMini1.3" />
           </set>
         </option>
-        <option name="myModules">
-          <set>
-            <option value="$PROJECT_DIR$" />
-            <option value="$PROJECT_DIR$/BioStar2ApiSDK" />
-            <option value="$PROJECT_DIR$/BioStar2Client" />
-            <option value="$PROJECT_DIR$/libBioMini1.3" />
-          </set>
-        </option>
+        <option name="resolveModulePerSourceSet" value="false" />
       </GradleProjectSettings>
     </option>
   </component>

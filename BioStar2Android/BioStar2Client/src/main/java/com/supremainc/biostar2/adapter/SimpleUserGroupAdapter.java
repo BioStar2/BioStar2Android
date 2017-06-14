@@ -24,7 +24,7 @@ import android.widget.ListView;
 
 import com.supremainc.biostar2.R;
 import com.supremainc.biostar2.adapter.base.BaseUserGroupAdapter;
-import com.supremainc.biostar2.sdk.datatype.v2.User.UserGroup;
+import com.supremainc.biostar2.sdk.models.v2.user.UserGroup;
 import com.supremainc.biostar2.widget.popup.Popup;
 
 import java.util.ArrayList;

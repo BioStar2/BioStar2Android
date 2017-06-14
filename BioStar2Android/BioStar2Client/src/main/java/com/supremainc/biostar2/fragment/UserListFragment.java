@@ -35,22 +35,18 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 
 import com.supremainc.biostar2.R;
-import com.supremainc.biostar2.meta.Setting;
 import com.supremainc.biostar2.adapter.PhotoUserAdapter;
 import com.supremainc.biostar2.adapter.base.BaseListAdapter.OnItemsListener;
-import com.supremainc.biostar2.sdk.datatype.v2.Card.ListCard;
-import com.supremainc.biostar2.sdk.datatype.v2.Common.BioStarSetting;
-import com.supremainc.biostar2.sdk.datatype.v2.Common.ResponseStatus;
-import com.supremainc.biostar2.sdk.datatype.v2.Common.VersionData;
-import com.supremainc.biostar2.sdk.datatype.v2.Permission.PermissionModule;
-import com.supremainc.biostar2.sdk.datatype.v2.User.ListUser;
-import com.supremainc.biostar2.sdk.datatype.v2.User.User;
-import com.supremainc.biostar2.sdk.datatype.v2.User.UserGroup;
-import com.supremainc.biostar2.sdk.volley.Response;
-import com.supremainc.biostar2.sdk.volley.Response.Listener;
-import com.supremainc.biostar2.sdk.volley.VolleyError;
+import com.supremainc.biostar2.meta.Setting;
+import com.supremainc.biostar2.sdk.models.v2.common.BioStarSetting;
+import com.supremainc.biostar2.sdk.models.v2.common.ResponseStatus;
+import com.supremainc.biostar2.sdk.models.v2.common.VersionData;
+import com.supremainc.biostar2.sdk.models.v2.permission.PermissionModule;
+import com.supremainc.biostar2.sdk.models.v2.user.ListUser;
+import com.supremainc.biostar2.sdk.models.v2.user.User;
+import com.supremainc.biostar2.sdk.models.v2.user.UserGroup;
+import com.supremainc.biostar2.sdk.models.v2.user.UserGroups;
 import com.supremainc.biostar2.view.SubToolbar;
-import com.supremainc.biostar2.widget.ScreenControl;
 import com.supremainc.biostar2.widget.ScreenControl.ScreenType;
 import com.supremainc.biostar2.widget.popup.Popup.OnPopupClickListener;
 import com.supremainc.biostar2.widget.popup.Popup.PopupType;
@@ -59,6 +55,12 @@ import com.supremainc.biostar2.widget.popup.SelectPopup.OnSelectResultListener;
 import com.supremainc.biostar2.widget.popup.SelectPopup.SelectType;
 
 import java.util.ArrayList;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
+import static com.supremainc.biostar2.R.string.all_users;
 
 public class UserListFragment extends BaseFragment {
     protected static final int MODE_DELETE = 1;
@@ -69,108 +71,81 @@ public class UserListFragment extends BaseFragment {
     private PhotoUserAdapter mUserAdapter;
     private int mTotal = 0;
     private UserGroup mUserGroup;
-    private Response.Listener<User> mItemClickListener = new Response.Listener<User>() {
+    private int mRequestDeleteUserCount;
+    private Callback<User> mItemClickListener = new Callback<User>() {
         @Override
-        public void onResponse(User response, Object deliverParam) {
-            if (isInValidCheck(null)) {
+        public void onFailure(Call<User> call, Throwable t) {
+            if (isIgnoreCallback(call, true)) {
                 return;
             }
-            mPopup.dismissWiat();
-            if (response == null) {
-                mErrorItemClickListener.onErrorResponse(new VolleyError(getString(R.string.server_null)), deliverParam);
+            showErrorPopup(t.getMessage(),false);
+        }
+
+        @Override
+        public void onResponse(Call<User> call, Response<User> response) {
+            if (isIgnoreCallback(call, response, true)) {
                 return;
             }
-            ScreenControl screenControl = ScreenControl.getInstance();
-            User arg = null;
+            if (isInvalidResponse(response, true, false)) {
+                return;
+            }
             try {
-                arg = response.clone();
+                User arg = response.body().clone();
+                Bundle bundle = new Bundle();
+                bundle.putSerializable(User.TAG, arg);
+                mScreenControl.addScreen(ScreenType.USER_INQURIY, bundle);
             } catch (Exception e) {
-                Log.e(TAG, "selected user clone fail");
-                e.printStackTrace();
+                showErrorPopup(e.getMessage(),false);
             }
-            Bundle bundle = new Bundle();
-            bundle.putSerializable(User.TAG, arg);
-            screenControl.addScreen(ScreenType.USER_INQURIY, bundle);
         }
     };
-    private Response.ErrorListener mErrorItemClickListener = new Response.ErrorListener() {
+
+    private Callback<UserGroups> mUserGroupsListener = new Callback<UserGroups>() {
         @Override
-        public void onErrorResponse(VolleyError error, final Object deliverParam) {
-            if (isInValidCheck(error)) {
+        public void onFailure(Call<UserGroups> call, Throwable t) {
+            if (isIgnoreCallback(call, true)) {
                 return;
             }
-            mPopup.dismissWiat();
-            mPopup.show(PopupType.ALERT, mContext.getString(R.string.fail_retry), Setting.getErrorMessage(error, mContext), new OnPopupClickListener() {
-                @Override
-                public void OnNegative() {
-
-                }
-
-                @Override
-                public void OnPositive() {
-                    mHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            mPopup.showWait(true);
-                            mUserDataProvider.getUser(TAG, (String) deliverParam, mItemClickListener, mErrorItemClickListener, (String) deliverParam);
-                        }
-                    });
-                }
-            }, mContext.getString(R.string.ok), mContext.getString(R.string.cancel));
+            showErrorPopup(t.getMessage(),false);
         }
-    };
 
-    private void addUser() {
-        if (mUserGroup == null) {
-            mScreenControl.addScreen(ScreenType.USER_MODIFY, null);
-        } else {
-            UserGroup userGroup = null;
+        @Override
+        public void onResponse(Call<UserGroups> call, Response<UserGroups> response) {
+            if (isIgnoreCallback(call, response, true)) {
+                return;
+            }
+            if (isInvalidResponse(response, true, false)) {
+                return;
+            }
             try {
-                userGroup = mUserGroup.clone();
-            } catch (CloneNotSupportedException e) {
-                Log.e(TAG, "selected user clone fail");
-                e.printStackTrace();
+                Bundle bundle = new Bundle();
+                bundle.putSerializable(UserGroup.TAG, response.body().records.get(0));
+                mScreenControl.addScreen(ScreenType.USER_MODIFY, bundle);
+            } catch (Exception e) {
+                showErrorPopup(e.getMessage(),false);
             }
-            Bundle bundle = new Bundle();
-            bundle.putSerializable(UserGroup.TAG, userGroup);
-            mScreenControl.addScreen(ScreenType.USER_MODIFY, bundle);
         }
-    }
+    };
 
-    private Response.Listener<BioStarSetting> mSettingListener = new Response.Listener<BioStarSetting>() {
+    private Callback<BioStarSetting> mSettingListener = new Callback<BioStarSetting>() {
         @Override
-        public void onResponse(BioStarSetting response, Object deliverParam) {
-            if (isInValidCheck(null)) {
+        public void onFailure(Call<BioStarSetting> call, Throwable t) {
+            if (isIgnoreCallback(call, true)) {
                 return;
             }
-            mPopup.dismissWiat();
+            addUser();
+        }
+
+        @Override
+        public void onResponse(Call<BioStarSetting> call, Response<BioStarSetting> response) {
+            if (isIgnoreCallback(call, response, true)) {
+                return;
+            }
             addUser();
         }
     };
 
-    private Response.ErrorListener mSettingErrorListener = new Response.ErrorListener() {
-        @Override
-        public void onErrorResponse(VolleyError volleyError, Object deliverParam) {
-            if (isInValidCheck(null)) {
-                return;
-            }
-            mPopup.dismissWiat();
-            addUser();
-        }
-    };
-
-    private void setTotal(int total) {
-        if (mTotal != total) {
-            mSubToolbar.setTotal(total);
-            mTotal = total;
-            if (mSearchText == null && mUserAdapter != null && mUserAdapter.getuserGroupId().equals("1")) {
-                sendLocalBroadcast(Setting.BROADCAST_USER_COUNT, total);
-            }
-        }
-    }
-
-    private OnItemsListener mOnUsersListener = new OnItemsListener()
-    {
+    private OnItemsListener mOnUsersListener = new OnItemsListener() {
         @Override
         public void onSuccessNull(int total) {
             mIsDataReceived = true;
@@ -178,7 +153,7 @@ public class UserListFragment extends BaseFragment {
         }
 
         @Override
-        public void onNoMoreData() {
+        public void onNoneData() {
             mToastPopup.show(getString(R.string.none_data), null);
             setTotal(0);
         }
@@ -189,10 +164,23 @@ public class UserListFragment extends BaseFragment {
             setTotal(total);
         }
     };
-    private Listener<ResponseStatus> mDeleteListener = new Response.Listener<ResponseStatus>() {
+
+
+    private Callback<ResponseStatus> mDeleteListener = new Callback<ResponseStatus>() {
         @Override
-        public void onResponse(ResponseStatus response, Object deliverParam) {
-            if (mIsDestroy) {
+        public void onFailure(Call<ResponseStatus> call, Throwable t) {
+            if (isIgnoreCallback(call, true)) {
+                return;
+            }
+            showErrorPopup(t.getMessage(),false);
+        }
+
+        @Override
+        public void onResponse(Call<ResponseStatus> call, Response<ResponseStatus> response) {
+            if (isIgnoreCallback(call, response, true)) {
+                return;
+            }
+            if (isInvalidResponse(response, true, false)) {
                 return;
             }
             mUserAdapter.clearChoices();
@@ -200,27 +188,7 @@ public class UserListFragment extends BaseFragment {
             if (mSubToolbar != null) {
                 mSubToolbar.setSelectedCount(0);
             }
-            mToastPopup.show(getString(R.string.deleted_user) + " " + (Integer) deliverParam, null);
-        }
-    };
-    private Response.ErrorListener mDeleteErrorListener = new Response.ErrorListener() {
-        @Override
-        public void onErrorResponse(VolleyError error, Object deliverParam) {
-            if (isInValidCheck(error)) {
-                return;
-            }
-            mPopup.dismiss();
-            mPopup.show(PopupType.ALERT, mContext.getString(R.string.fail_retry), Setting.getErrorMessage(error, mContext), new OnPopupClickListener() {
-                @Override
-                public void OnPositive() {
-                    deleteDo();
-                }
-
-                @Override
-                public void OnNegative() {
-
-                }
-            }, mContext.getString(R.string.ok), mContext.getString(R.string.cancel), false);
+            mPopup.show(PopupType.CONFIRM, getString(R.string.info), getString(R.string.deleted_user) + " " + mRequestDeleteUserCount, null, getString(R.string.ok), null);
         }
     };
 
@@ -245,6 +213,61 @@ public class UserListFragment extends BaseFragment {
         super();
         setType(ScreenType.USER);
         TAG = getClass().getSimpleName() + String.valueOf(System.currentTimeMillis());
+    }
+
+    private void addUser() {
+        UserGroup userGroup = null;
+        if (mUserGroup == null) {
+            ArrayList<String> list = mPermissionDataProvider.getDefaultAllowUserGroupSize();
+            for (String groupID : list) {
+                if (groupID.equals("1")) {
+                    userGroup = new UserGroup(getString(R.string.all_users), "1");
+                    Bundle bundle = new Bundle();
+                    bundle.putSerializable(UserGroup.TAG, userGroup);
+                    mScreenControl.addScreen(ScreenType.USER_MODIFY, bundle);
+                    return;
+                }
+            }
+            if (list.size() == 1) {
+                mPopup.showWait(mCancelExitListener);
+                request(mUserDataProvider.getUserGroups( 0, 1, null, mUserGroupsListener));
+                return;
+            }
+            mSelectUserGroupsPopup.show(SelectType.USER_GROUPS, new OnSelectResultListener<UserGroup>() {
+                @Override
+                public void OnResult(ArrayList<UserGroup> selectedItem, boolean isPositive) {
+                    if (isInValidCheck()) {
+                        return;
+                    }
+                    if (selectedItem == null) {
+                        return;
+                    }
+                    Bundle bundle = new Bundle();
+                    bundle.putSerializable(UserGroup.TAG, selectedItem.get(0));
+                    mScreenControl.addScreen(ScreenType.USER_MODIFY, bundle);
+                }
+            }, null, getString(R.string.select_user_group), false, true);
+        } else {
+            try {
+                userGroup = mUserGroup.clone();
+            } catch (CloneNotSupportedException e) {
+                Log.e(TAG, "selected user clone fail");
+                e.printStackTrace();
+            }
+            Bundle bundle = new Bundle();
+            bundle.putSerializable(UserGroup.TAG, userGroup);
+            mScreenControl.addScreen(ScreenType.USER_MODIFY, bundle);
+        }
+    }
+
+    private void setTotal(int total) {
+        if (mTotal != total) {
+            mSubToolbar.setTotal(total);
+            mTotal = total;
+            if (mSearchText == null && mUserAdapter != null && (mUserAdapter.getuserGroupId() == null)) {
+                sendLocalBroadcast(Setting.BROADCAST_USER_COUNT, total);
+            }
+        }
     }
 
     private void applyPermission() {
@@ -272,13 +295,14 @@ public class UserListFragment extends BaseFragment {
             public void run() {
                 mPopup.showWait(mCancelExitListener);
                 ArrayList<ListUser> users = mUserAdapter.getCheckedItems();
-                mUserDataProvider.deleteUsers(TAG, users, mDeleteListener, mDeleteErrorListener, null);
+                mRequestDeleteUserCount = users.size();
+                request(mUserDataProvider.deleteUsers(users, mDeleteListener));
             }
         });
     }
 
     private void initValue() {
-        mSelectUserGroupsPopup = new SelectPopup<UserGroup>(mContext, mPopup);
+        mSelectUserGroupsPopup = new SelectPopup<UserGroup>(mActivity, mPopup);
         if (mSubToolbar == null) {
             mSubToolbar = (SubToolbar) mRootView.findViewById(R.id.subtoolbar);
             mSubToolbar.init(getActivity());
@@ -299,7 +323,7 @@ public class UserListFragment extends BaseFragment {
         }
 
         if (mUserAdapter == null) {
-            mUserAdapter = new PhotoUserAdapter(mContext, null, getListView(), new OnItemClickListener() {
+            mUserAdapter = new PhotoUserAdapter(mActivity, null, getListView(), new OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                     if (mSubToolbar == null) {
@@ -307,17 +331,24 @@ public class UserListFragment extends BaseFragment {
                     }
                     if (mSubMode == MODE_DELETE) {
                         mSubToolbar.setSelectAllViewOff();
-                        mSubToolbar.setSelectedCount(mUserAdapter.getCheckedItemCount());
+                        int count = mUserAdapter.getCheckedItemCount();
+                        mSubToolbar.setSelectedCount(count);
+                        if (count == mUserAdapter.getCount()) {
+                            if (!mSubToolbar.getSelectAll()) {
+                                mSubToolbar.showReverseSelectAll();
+                            }
+                        }
                     } else {
                         ListUser user = (ListUser) mUserAdapter.getItem(position);
                         if (user == null) {
                             return;
                         }
-                        mPopup.showWait(true);
-                        mUserDataProvider.getUser(TAG, user.user_id, mItemClickListener, mErrorItemClickListener, user.user_id);
+                        mPopup.showWait(mCancelStayListener);
+                        request(mUserDataProvider.getUser(user.user_id, mItemClickListener));
                     }
                 }
             }, mPopup, mOnUsersListener);
+//            mUserAdapter.setUserGroupId(mPermissionDataProvider.getDefaultAllowUserGroup());
             mUserAdapter.setSwipyRefreshLayout(getSwipeyLayout(), getFab());
         }
     }
@@ -386,7 +417,7 @@ public class UserListFragment extends BaseFragment {
                 setSubMode(MODE_DELETE);
                 break;
             case R.id.action_add:
-                if (VersionData.getCloudVersion(mContext) > 1) {
+                if (VersionData.getCloudVersion(mActivity) > 1) {
 //                    String message = "";
 //                    if (!mPermissionDataProvider.getPermission(PermissionModule.ACCESS_GROUP, false)) {
 //                        message = getString(R.string.guide_feature_permission)+"\n"+PermissionModule.ACCESS_GROUP.mName;
@@ -396,17 +427,17 @@ public class UserListFragment extends BaseFragment {
 //                        mPopup.show(PopupType.ALERT, message, null, null, null);
 //                        return true;
 //                    }
-                    mPopup.showWait(mCancelExitListener);
-                    mCommonDataProvider.getBioStarSetting(mSettingListener, mSettingErrorListener, null);
+                    mPopup.showWait(mCancelStayListener);
+                    request(mCommonDataProvider.getBioStarSetting(mSettingListener));
                 } else {
                     addUser();
                 }
                 return true;
-            case R.id.action_usergroups:
+            case R.id.action_filter:
                 mSelectUserGroupsPopup.show(SelectType.USER_GROUPS, new OnSelectResultListener<UserGroup>() {
                     @Override
-                    public void OnResult(ArrayList<UserGroup> selectedItem,boolean isPositive) {
-                        if (isInValidCheck(null)) {
+                    public void OnResult(ArrayList<UserGroup> selectedItem, boolean isPositive) {
+                        if (isInValidCheck()) {
                             return;
                         }
                         if (selectedItem == null) {
@@ -415,11 +446,12 @@ public class UserListFragment extends BaseFragment {
                         mUserGroup = selectedItem.get(0);
                         if (mUserAdapter != null) {
                             mUserAdapter.setUserGroupId(mUserGroup.id);
+                            mUserAdapter.getItems(mSearchText);
                         }
                         mTitle = mUserGroup.name;
                         initActionbar(mUserGroup.name);
                     }
-                }, null, getString(R.string.select_user_group), false);
+                }, null, getString(R.string.select_user_group), false, true);
                 break;
             default:
                 break;
@@ -470,7 +502,7 @@ public class UserListFragment extends BaseFragment {
                         if (user == null) {
                             return;
                         }
-                        mUserAdapter.modifyCardItem(user.user_id,user.card_count);
+                        mUserAdapter.modifyCardItem(user.user_id, user.card_count);
                         return;
                     } else if (action.equals(Setting.BROADCAST_UPDATE_FINGER)) {
                         User user = getExtraData(Setting.BROADCAST_UPDATE_FINGER, intent);
@@ -478,15 +510,22 @@ public class UserListFragment extends BaseFragment {
                             return;
                         }
 
-                        Log.e(TAG,"user.user_id"+user.user_id);
-                        Log.e(TAG,"user.fingerprint_count"+user.fingerprint_count);
-                        Log.e(TAG,"user.fingerprint_template_count"+user.fingerprint_template_count);
-                        if (VersionData.getCloudVersion(mContext) < 2) {
-                            mUserAdapter.modifyFingerPrintItem(user.user_id,user.fingerprint_count);
+                        Log.e(TAG, "user.user_id" + user.user_id);
+                        Log.e(TAG, "user.fingerprint_count" + user.fingerprint_count);
+                        Log.e(TAG, "user.fingerprint_template_count" + user.fingerprint_template_count);
+                        if (VersionData.getCloudVersion(mActivity) < 2) {
+                            mUserAdapter.modifyFingerPrintItem(user.user_id, user.fingerprint_count);
                         } else {
-                            mUserAdapter.modifyFingerPrintItem(user.user_id,user.fingerprint_template_count);
+                            mUserAdapter.modifyFingerPrintItem(user.user_id, user.fingerprint_template_count);
                         }
 
+                        return;
+                    } else if (action.equals(Setting.BROADCAST_UPDATE_FACE)) {
+                        User user = getExtraData(Setting.BROADCAST_UPDATE_FACE, intent);
+                        if (user == null) {
+                            return;
+                        }
+                        mUserAdapter.modifyFaceItem(user);
                         return;
                     }
 
@@ -495,12 +534,13 @@ public class UserListFragment extends BaseFragment {
             IntentFilter intentFilter = new IntentFilter();
             intentFilter.addAction(Setting.BROADCAST_USER);
             intentFilter.addAction(Setting.BROADCAST_REROGIN);
-            if (VersionData.getCloudVersion(mContext) > 1) {
+            if (VersionData.getCloudVersion(mActivity) > 1) {
                 intentFilter.addAction(Setting.BROADCAST_UPDATE_CARD);
             }
-            if (VersionData.getCloudVersion(mContext) > 1) {
+            if (VersionData.getCloudVersion(mActivity) > 1) {
                 intentFilter.addAction(Setting.BROADCAST_UPDATE_FINGER);
             }
+            intentFilter.addAction(Setting.BROADCAST_UPDATE_FACE);
 
             LocalBroadcastManager.getInstance(getActivity()).registerReceiver(mReceiver, intentFilter);
         }
@@ -528,7 +568,7 @@ public class UserListFragment extends BaseFragment {
         super.onCreateView(inflater, container, savedInstanceState);
         if (!mIsReUsed) {
             initValue();
-            mTitle = getString(R.string.all_users);
+            mTitle = getString(all_users);
             initActionbar(mTitle);
             mRootView.invalidate();
         }
@@ -538,7 +578,7 @@ public class UserListFragment extends BaseFragment {
     @Override
     public void onPrepareOptionsMenu(Menu menu) {
         menu.clear();
-        MenuInflater inflater = mContext.getMenuInflater();
+        MenuInflater inflater = mActivity.getMenuInflater();
         if (mPermissionDataProvider.getPermission(PermissionModule.USER, true)) {
             switch (mSubMode) {
                 default:
@@ -547,12 +587,17 @@ public class UserListFragment extends BaseFragment {
                     inflater.inflate(R.menu.user_list_admin, menu);
                     break;
                 case MODE_DELETE:
-                    initActionbar(getString(R.string.delete) + " " + getString(R.string.user));
+                    String lang = getString(R.string.language);
+                    if ("ko".equals(lang) || "ja".equals(lang)) {
+                        initActionbar(getString(R.string.user) + " " + getString(R.string.delete));
+                    } else {
+                        initActionbar(getString(R.string.delete) + " " + getString(R.string.user));
+                    }
                     inflater.inflate(R.menu.delete_confirm, menu);
                     break;
             }
         } else {
-            inflater.inflate(R.menu.menu, menu);
+            inflater.inflate(R.menu.filter, menu);
         }
         super.onPrepareOptionsMenu(menu);
     }

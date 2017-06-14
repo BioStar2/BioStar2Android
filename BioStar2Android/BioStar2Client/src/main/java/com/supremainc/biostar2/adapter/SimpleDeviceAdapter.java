@@ -16,7 +16,6 @@
 package com.supremainc.biostar2.adapter;
 
 import android.app.Activity;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -25,7 +24,7 @@ import android.widget.ListView;
 
 import com.supremainc.biostar2.R;
 import com.supremainc.biostar2.adapter.base.BaseDeviceAdapter;
-import com.supremainc.biostar2.sdk.datatype.v2.Device.ListDevice;
+import com.supremainc.biostar2.sdk.models.v2.device.ListDevice;
 import com.supremainc.biostar2.widget.popup.Popup;
 
 import java.util.ArrayList;

@@ -16,70 +16,44 @@
 package com.supremainc.biostar2.sdk.provider;
 
 import android.content.Context;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.os.AsyncTask;
+import android.os.SystemClock;
+import android.util.Log;
 
-import com.supremainc.biostar2.sdk.datatype.v2.Common.BioStarSetting;
-import com.supremainc.biostar2.sdk.datatype.v2.Common.ResponseStatus;
-import com.supremainc.biostar2.sdk.datatype.v2.Common.UpdateData;
-import com.supremainc.biostar2.sdk.datatype.v2.Preferrence.Preference;
-import com.supremainc.biostar2.sdk.utils.PreferenceUtil;
-import com.supremainc.biostar2.sdk.volley.Request.Method;
-import com.supremainc.biostar2.sdk.volley.Response.ErrorListener;
-import com.supremainc.biostar2.sdk.volley.Response.Listener;
-import com.supremainc.biostar2.sdk.volley.VolleyError;
+import com.supremainc.biostar2.sdk.models.enumtype.LocalStorage;
+import com.supremainc.biostar2.sdk.models.v1.permission.CloudPermission;
+import com.supremainc.biostar2.sdk.models.v2.common.BioStarSetting;
+import com.supremainc.biostar2.sdk.models.v2.common.ResponseStatus;
+import com.supremainc.biostar2.sdk.models.v2.common.UpdateData;
+import com.supremainc.biostar2.sdk.models.v2.common.VersionData;
+import com.supremainc.biostar2.sdk.models.v2.login.Login;
+import com.supremainc.biostar2.sdk.models.v2.permission.PermissionItem;
+import com.supremainc.biostar2.sdk.models.v2.preferrence.Preference;
+import com.supremainc.biostar2.sdk.models.v2.user.User;
 
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
+import java.io.BufferedReader;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
-import java.util.TimeZone;
 
-public class CommonDataProvider extends BaseDataProvider {
-    public static final String PREF_DATE_FORMAT = "date_format";
-    public static final String PREF_TIME_FORMAT = "time_format";
-    public static final String PREF_LANGUAGE = "language";
-    public static final SimpleDateFormat mFormatterServer = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SS'Z'", Locale.ENGLISH);
-    /**
-     * yyyy-MM-dd'T'HH:mm:ss.SS'Z'
-     */
-    protected static SimpleDateFormat mFormmaterWeek = new SimpleDateFormat("EEE");
+import okhttp3.ResponseBody;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
+import static com.supremainc.biostar2.sdk.models.v2.common.VersionData.getCloudVersionString;
+
+public class CommonDataProvider extends BaseDataProvider{
+    protected final String TAG = getClass().getSimpleName();
     private static CommonDataProvider mSelf = null;
-    @SuppressWarnings("unused")
-    private final String TAG = getClass().getSimpleName();
-    /**
-     * a hh:mm:ss : default
-     * HH:mm:ss
-     * hh:mm:ss a
-     */
-    protected SimpleDateFormat mFormmaterHourMinSec;
-    /**
-     * a hh:mm : default
-     * HH:mm
-     * hh:mm a
-     */
-    protected SimpleDateFormat mFormmaterHourMin;
-    /**
-     * Date + a hh:mm:ss : default
-     * Date + HH:mm:ss
-     * Date + hh:mm:ss a
-     */
-    protected SimpleDateFormat mFormmaterDateHourMinSec;
-    /**
-     * Date + a hh:mm : default
-     * Date + HH:mm
-     * Date + hh:mm a
-     */
-    protected SimpleDateFormat mFormmaterDateHourMin;
-    /**
-     * yyyy/MM/dd : default
-     * MM/dd/yyyy
-     */
-    protected SimpleDateFormat mFormmaterDate;
-    Map<String, String> mMssageTable = new HashMap<String, String>();
-    private long TIME_ZONE_ADJUST = -1;
-    private int TIME_ZONE_INDEX = -1;
-    private String DATE_FORMAT;
-    private String TIME_FORMAT;
+    private static String mPasswordLevel;
+    private static boolean mIsUseAlphaNumericUserID;
+    private static boolean mIsSupportMobileCredential;
 
     private CommonDataProvider(Context context) {
         super(context);
@@ -92,264 +66,454 @@ public class CommonDataProvider extends BaseDataProvider {
         return mSelf;
     }
 
-    public static CommonDataProvider getInstance() {
-        if (mSelf != null) {
-            return mSelf;
+    private Call<VersionData> getServerVersion(final Callback<VersionData> callback, String domain,String subdomain) {
+        if (!checkObject(subdomain,domain)) {
+            onParamError(callback);
+            return null;
         }
-        if (mContext != null) {
-            mSelf = new CommonDataProvider(mContext);
-            return mSelf;
+        createApiInterface(domain);
+        Call<VersionData> call = mApiInterface.getServerVersion("v2",subdomain);
+
+        Callback<VersionData> innerCallback = new Callback<VersionData>() {
+            @Override
+            public void onResponse(Call<VersionData> call, Response<VersionData> response) {
+                VersionData versionData = response.body();
+                if (response.isSuccessful() && versionData != null) {
+                    if (!versionData.init(mContext)) {
+                        onFailure(call,new Throwable("BioStar Server Version String Invalid"));
+                        return;
+                    }
+                    if (callback != null) {
+                        callback.onResponse(call,response);
+                    }
+                } else {
+                    if (!call.isCanceled()) {
+                        removeCookie();
+                    }
+                    ResponseBody body = response.errorBody();
+                    if (body == null) {
+                        onFailure(call,new Throwable("Request Fail:"+response.code()));
+                    } else {
+                        String error = "";
+                        try {
+                            ResponseStatus responseClass = (ResponseStatus) mGson.fromJson(body.string(), ResponseStatus.class);
+                            error = responseClass.message;
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        //mGson.convert = 에러 변환 메세지 넣어서준다. 401이면 removeCookie
+                        onFailure(call,new Throwable(error+"\n"+"code: "+response.code()));
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<VersionData> call, Throwable t) {
+                //todo    callback.onFailure(new IOException("Canceled"));
+                if (callback != null) {
+                    callback.onFailure(call,t);
+                }
+            }
+        };
+        call.enqueue(innerCallback);
+        return call;
+    }
+
+    public boolean login(final Callback<User> callback,String domain,final Login login) {
+        if (login == null || login.isInvalid()) {
+            onParamError(callback);
+            return false;
+        }
+        if (mContext == null) {
+            if (callback != null) {
+                callback.onFailure(null, new Throwable(""));
+            }
+            return false;
+        }
+        if (mApiInterface == null) {
+            init(mContext);
+        }
+        removeCookie();
+        setLocalStorage(LocalStorage.DOMAIN,domain);
+        setLocalStorage(LocalStorage.SUBDOMAIN,login.name);
+        setLocalStorage(LocalStorage.USER_LOGIN_ID,login.user_id);
+        Callback<VersionData> innerCallback = new Callback<VersionData>() {
+            @Override
+            public void onResponse(Call<VersionData> call, Response<VersionData> response) {
+                Call<User> callLogin = mApiInterface.login(getCloudVersionString(mContext),login);
+                Callback<User> innerLoginCallback = new Callback<User>() {
+                    @Override
+                    public void onResponse(Call<User> call, Response<User> response) {
+                        if (call.isCanceled()) {
+                            callback.onResponse(call,response);
+                            return;
+                        }
+                        if (response.isSuccessful()) {
+                            simpleLogin(callback);
+                        } else {
+                            removeCookie();
+                            ResponseBody body = response.errorBody();
+                            String error = "Login Failed";
+                            if (body != null) {
+                                try {
+                                    ResponseStatus responseClass = (ResponseStatus) mGson.fromJson(body.string(), ResponseStatus.class);
+                                    error = responseClass.message;
+                                } catch (Exception e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                            onFailure(call,new Throwable(error+"\n"+"code: "+response.code()));
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<User> call, Throwable t) {
+                        if (callback != null) {
+                            callback.onFailure(null,t);
+                        }
+                    }
+                };
+                callLogin.enqueue(innerLoginCallback);
+            }
+
+            @Override
+            public void onFailure(Call<VersionData> call, Throwable t) {
+                if (callback != null) {
+                    callback.onFailure(null,t);
+                }
+            }
+        };
+        getServerVersion(innerCallback, domain, login.name);
+        return true;
+    }
+//if(user.isCanceled() || "Canceled".equals(t.getMessage())) {
+    public Call<User> simpleLogin(final Callback<User> callback) {
+        if (!checkAPI(callback)) {
+            return null;
+        }
+        Call<User> call = mApiInterface.simplelogin(getCloudVersionString(mContext));
+        Callback<User> innerLoginCallback = new Callback<User>() {
+            @Override
+            public void onResponse(Call<User> call, Response<User> response) {
+                if (call.isCanceled()) {
+                    callback.onResponse(call,response);
+                    return;
+                }
+                if (response.isSuccessful() && response.body() != null) {
+                    mSimpleLoginTick = SystemClock.elapsedRealtime();
+                    mUserInfo = response.body();
+                    if (VersionData.getCloudVersion(mContext) < 2) {
+                        if (mUserInfo.password_strength_level != null) {
+                            mPasswordLevel = mUserInfo.password_strength_level;
+                        }
+                    }
+                    initPermission();
+                    if (callback != null) {
+                        callback.onResponse(call,response);
+                    }
+                } else {
+                    if (!call.isCanceled()) {
+                        removeCookie();
+                    }
+                    ResponseBody body = response.errorBody();
+                    if (body == null) {
+                        onFailure(call,new Throwable("\nhcode:"+response.code()));
+                    } else {
+                        String error = "";
+                        try {
+                            ResponseStatus responseClass = (ResponseStatus) mGson.fromJson(body.string(), ResponseStatus.class);
+                            error = responseClass.message + "\n"+"scode: "+responseClass.status_code;
+                        } catch (Exception e) {
+                            e.printStackTrace();
+                        }
+                        //mGson.convert = 에러 변환 메세지 넣어서준다. 401이면 removeCookie
+                        onFailure(call,new Throwable(error+"\n"+"hcode: "+response.code()));
+                    }
+                }
+            }
+
+            @Override
+            public void onFailure(Call<User> call, Throwable t) {
+                if (t != null && t.getMessage() != null) {
+                    if (t.getMessage().contains("bs-cloud-session-id")) {
+                        removeCookie();
+                    }
+                }
+                if (callback != null) {
+                    callback.onFailure(call,t);
+                }
+            }
+        };
+        call.enqueue(innerLoginCallback);
+        return call;
+    }
+
+    private void initPermission() {
+        if (mPermissionMap != null) {
+            mPermissionMap.clear();
+        }
+        if (mUserInfo == null) {
+            return;
+        }
+        // V2
+        if (mUserInfo.permission != null && mUserInfo.permission.permissions != null) {
+            for (PermissionItem item : mUserInfo.permission.permissions) {
+                String key = item.module + PermissionItem.ROLE_WRITE;
+                if (item.write) {
+                    if (item.read == false) {
+                        item.read = true;
+                    }
+                    mPermissionMap.put(key, true);
+                }
+                if (item.module != null) {
+                    key = item.module + PermissionItem.ROLE_READ;
+                    if (item.read) {
+                        if (ConfigDataProvider.DEBUG) {
+                            Log.i(TAG, key);
+                        }
+                        mPermissionMap.put(key, true);
+                    }
+                }
+            }
+            return;
+        }
+
+        if (mUserInfo.permissions == null || mUserInfo.permissions.size() < 1) {
+            return;
+        }
+        // V1
+        for (CloudPermission permission : mUserInfo.permissions) {
+            if (permission.module != null) {
+                String key = permission.module + PermissionItem.ROLE_WRITE;
+                if (permission.write) {
+                    if (permission.read == false) {
+                        permission.read = true;
+                    }
+                    mPermissionMap.put(key, true);
+                }
+                key = permission.module + PermissionItem.ROLE_READ;
+                if (permission.read) {
+                    mPermissionMap.put(key, true);
+                }
+            }
+        }
+    }
+
+    public void simpleLoginCheck() {
+        long base = 43200000;
+        if (SystemClock.elapsedRealtime() - mSimpleLoginTick > base){
+            simpleLogin(null);
+        }
+    }
+
+    public boolean isStrongPassword() {
+        if (mPasswordLevel == null) {
+            return true;
+        }
+        if (mPasswordLevel.equals("STRONG")) {
+            return true;
+        }
+        return false;
+    }
+
+    public boolean isAlphaNumericUserID() {
+        if (VersionData.getCloudVersion(mContext) > 1) {
+            return mIsUseAlphaNumericUserID;
+        } else {
+            return false;
+        }
+    }
+    public boolean isSupportMobileCredential() {
+        if (VersionData.getCloudVersion(mContext) > 1) {
+            return mIsSupportMobileCredential;
+        } else {
+            return false;
+        }
+    }
+
+
+    public Call<ResponseStatus> logout(Callback<ResponseStatus> callback) {
+        if (!checkAPI(callback)) {
+            return null;
+        }
+        Call<ResponseStatus> call = mApiInterface.logout(getCloudVersionString(mContext));
+        call.enqueue(callback);
+        return call;
+    }
+
+
+    public Call<ResponseStatus>  setSetting(final Preference content,final Callback<ResponseStatus> callback) {
+        if (!checkParamAndAPI(callback,mUserInfo,content)) {
+            return null;
+        }
+        Callback<ResponseStatus> innerCallback = new Callback<ResponseStatus>() {
+            @Override
+            public void onResponse(Call<ResponseStatus> call, Response<ResponseStatus> response) {
+                if (response.isSuccessful()) {
+                    DateTimeDataProvider.getInstance(mContext).setDateTimeFormat(content.date_format, content.time_format);
+                }
+                if (callback != null) {
+                    callback.onResponse(call,response);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<ResponseStatus> call, Throwable t) {
+                if (callback != null) {
+                    callback.onFailure(call,t);
+                }
+            }
+        };
+        Call<ResponseStatus> call = mApiInterface.put_setting(getCloudVersionString(mContext),content);
+        call.enqueue(innerCallback);
+        return call;
+    }
+
+    public Call<Preference> getPreference(final Callback<Preference> callback) {
+        if (!checkAPI(callback)) {
+            return null;
+        }
+        Callback<Preference> innerCallback = new Callback<Preference>() {
+            @Override
+            public void onResponse(Call<Preference> call, Response<Preference> response) {
+                if (response.isSuccessful()) {
+                    DateTimeDataProvider.getInstance(mContext).setDateTimeFormat(response.body().date_format, response.body().time_format);
+                }
+                if (callback != null) {
+                    callback.onResponse(call,response);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<Preference> call, Throwable t) {
+                if (callback != null) {
+                    callback.onFailure(call,t);
+                }
+            }
+        };
+        Call<Preference> call = mApiInterface.get_setting(getCloudVersionString(mContext));
+        call.enqueue(innerCallback);
+        return call;
+    }
+
+    public Call<BioStarSetting> getBioStarSetting(final Callback<BioStarSetting> callback) {
+        if (!checkAPI(callback)) {
+            return null;
+        }
+        Callback<BioStarSetting> innerCallback = new Callback<BioStarSetting>() {
+            @Override
+            public void onResponse(Call<BioStarSetting> call, Response<BioStarSetting> response) {
+                if (response.isSuccessful()) {
+                    mPasswordLevel = response.body().password_strength_level;
+                    mIsUseAlphaNumericUserID = response.body().use_alphanumeric_user_id;
+                    mIsSupportMobileCredential = response.body().support_mobile_credential;
+                }
+                if (callback != null) {
+                    callback.onResponse(call,response);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<BioStarSetting> call, Throwable t) {
+                if (callback != null) {
+                    callback.onFailure(call,t);
+                }
+            }
+        };
+        Call<BioStarSetting> call = mApiInterface.get_setting_biostar_ac(getCloudVersionString(mContext));
+        call.enqueue(innerCallback);
+        return call;
+    }
+
+    public Call<UpdateData> getAppVersion(Callback<UpdateData> callback) {
+        if (mContext == null) {
+            if (callback != null) {
+                callback.onFailure(null,new Throwable());
+            }
+            return null;
+        }
+        if (mApiInterface == null) {
+            init(mContext);
+        }
+        try {
+            PackageInfo i = mContext.getPackageManager().getPackageInfo(mContext.getPackageName(), 0);
+            String name = i.packageName;
+            Map<String, String> params = new HashMap<String, String>();
+            params.put("mobile_device_type", "ANDROID");
+            Call<UpdateData> call = mApiInterface.get_app_versions(name,params);
+            call.enqueue(callback);
+            return call;
+        } catch (PackageManager.NameNotFoundException e) {
+            if (ConfigDataProvider.DEBUG) {
+                e.printStackTrace();
+            }
+            if (callback != null) {
+                callback.onFailure(null,new Throwable(e.getMessage()));
+            }
         }
         return null;
     }
 
-    public ArrayList<String> getDateFormatList() {
-        ArrayList<String> list = new ArrayList<String>();
-        list.add("yyyy/MM/dd");
-        list.add("MM/dd/yyyy");
-        list.add("dd/MM/yyyy");
-        return list;
-    }
-
-    public ArrayList<String> getTimeFormatList() {
-        ArrayList<String> list = new ArrayList<String>();
-        list.add("HH:mm");
-        list.add("a hh:mm");
-        list.add("hh:mm a");
-        return list;
-    }
-
-    public void getAppVersion(String tag, Listener<UpdateData> listener, ErrorListener errorListener, String appName, Object deliverParam) {
-        Map<String, String> params = new HashMap<String, String>();
-        params.put("mobile_device_type", "ANDROID");
-        sendRequest(tag, UpdateData.class, Method.GET, NetWork.PARAM_VERSION + "/" + appName, null, params, null, listener, errorListener, deliverParam);
-    }
-
-    public void setPreference(Preference content, final Listener<ResponseStatus> listener, ErrorListener errorListener, final Object deliverParam) {
-        if (getLoginUserInfo() == null || content == null) {
-            if (errorListener != null) {
-                errorListener.onErrorResponse(new VolleyError(), deliverParam);
-            }
-            return;
+    private class HttpUtil extends AsyncTask<String, Void, Void> {
+        private Callback<UpdateData> mCallback;
+        private UpdateData mUpdateData;
+        private String mError;
+        public HttpUtil(Callback<UpdateData> callback)  {
+            mCallback = callback;
         }
+        @Override
+        public Void doInBackground(String... params) {
+            HttpURLConnection conn = null;
+            try {
+                URL url = new URL("https://api.biostar2.com/v2/register/app_versions/"+params[0]+"?mobile_device_type=ANDROID");
+                conn = (HttpURLConnection) url.openConnection();
+                conn.setReadTimeout(10000);
+                conn.setConnectTimeout(15000);
+                conn.setRequestMethod("GET");
+                conn.setDoInput(true);
+//                conn.setDoOutput(true);
+                conn.setRequestProperty("Content-Type","application/json");
+                conn.connect();
+                int retCode = conn.getResponseCode();
 
-        final String json = mGson.toJson(content);
-        String url = NetWork.PARAM_SETTING;
+                InputStream is = conn.getInputStream();
+                BufferedReader br = new BufferedReader(new InputStreamReader(is));
+                String line;
+                StringBuffer response = new StringBuffer();
+                while((line = br.readLine()) != null) {
+                    response.append(line);
+                    response.append('\r');
+                }
+                br.close();
+                String res = response.toString();
+                mUpdateData = mGson.fromJson(res,UpdateData.class);
 
-        final Listener<ResponseStatus> innerListener = new Listener<ResponseStatus>() {
-            @Override
-            public void onResponse(ResponseStatus response, Object param) {
-                Preference content = (Preference) param;
-                setDateTimeFormat(mContext, content.date_format, content.time_format);
-                if (listener != null) {
-                    listener.onResponse(response, deliverParam);
+            } catch (Exception e) {
+                mError = e.getMessage();
+            } finally {
+                if (conn != null) {
+                    conn.disconnect();
                 }
             }
-        };
-
-        // ErrorListener inErrorListerner = new ErrorListener() {
-        // @Override
-        // public void onErrorResponse(VolleyError error, Object param) {
-        // if (error.getCode().equals(608)) {
-        // Preference content = (Preference)param;
-        // mNetwork.sendRequest(null, ResponseStatus.class, Method.POST,
-        // NetWork.PARAM_SETTING, null, null, json, innerListener,
-        // errorListener, content);
-        // } else if (errorListener != null){
-        // errorListener.onErrorResponse(error, deliverParam);
-        // }
-        // }
-        // };
-
-        mNetwork.sendRequest(null, ResponseStatus.class, Method.PUT, url, null, null, json, innerListener, errorListener, content);
-    }
-
-    public void getPreference(final Listener<Preference> listener, final ErrorListener errorListener, Object deliverParam) {
-        Listener<Preference> inListener = new Listener<Preference>() {
-            @Override
-            public void onResponse(Preference response, Object param) {
-                if (response == null) {
-                    errorListener.onErrorResponse(new VolleyError(""), param);
-                    return;
-                }
-                setDateTimeFormat(mContext, response.date_format, response.time_format);
-                listener.onResponse(response, param);
-            }
-        };
-        if (getLoginUserInfo() == null) {
-            if (errorListener != null) {
-                errorListener.onErrorResponse(new VolleyError(), deliverParam);
-            }
-            return;
+            return null;
         }
-        String url = NetWork.PARAM_SETTING;
-        mNetwork.sendRequest(null, Preference.class, Method.GET, url, null, null, null, inListener, errorListener, deliverParam);
-    }
 
-    public void getBioStarSetting(final Listener<BioStarSetting> listener, final ErrorListener errorListener, Object deliverParam) {
-        Listener<BioStarSetting> inListener = new Listener<BioStarSetting>() {
-            @Override
-            public void onResponse(BioStarSetting response, Object param) {
-                if (response == null) {
-                    if (errorListener != null) {
-                        errorListener.onErrorResponse(new VolleyError(""), param);
+        @Override
+        protected void onPostExecute(Void aVoid) {
+            super.onPostExecute(aVoid);
+            if (mCallback == null) {
+                return;
+            }
+            if (mUpdateData != null) {
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        mCallback.onResponse(null,Response.success(mUpdateData));
                     }
-                    return;
-                }
-                mPasswordLevel = response.password_strength_level;
-                mAlphaNumericUserID = response.use_alphanumeric_user_id;
-                if (listener != null) {
-                    listener.onResponse(response, param);
-                }
-            }
-        };
-
-        mNetwork.sendRequest(null, BioStarSetting.class, Method.GET, createUrl( NetWork.PARAM_SETTING, NetWork.PARAM_BIOSTAR_AC), null, null, null, inListener, errorListener, deliverParam);
-    }
-
-
-    public boolean getSavedPrefrence() {
-        Preference content = new Preference();
-        getTimeZoneAdjust();
-        content.date_format = "yyyy/MM/dd";
-        content.time_format = "a hh:mm";
-        setDateTimeFormat(mContext, content.date_format, content.time_format);
-
-        if (!generatorFormatter()) {
-            return false;
-        }
-        return true;
-    }
-
-    public long getTimeZoneAdjust() {
-        if (TIME_ZONE_ADJUST == -1) {
-            setTimeZoneAdjust();
-        }
-        return TIME_ZONE_ADJUST;
-    }
-
-    public String getTimeZoneName() {
-        TimeZone tz = TimeZone.getDefault();
-        TIME_ZONE_ADJUST = tz.getRawOffset();
-        return tz.getDisplayName();
-    }
-
-    public void setTimeZoneAdjust() {
-        TimeZone tz = TimeZone.getDefault();
-        TIME_ZONE_ADJUST = tz.getRawOffset();
-    }
-
-    public String getDateFormat() {
-        if (DATE_FORMAT == null) {
-            DATE_FORMAT = PreferenceUtil.getSharedPreference(mContext, PREF_DATE_FORMAT);
-        }
-        return DATE_FORMAT;
-    }
-
-    public String getTimeFormat() {
-        if (TIME_FORMAT == null) {
-            TIME_FORMAT = PreferenceUtil.getSharedPreference(mContext, PREF_TIME_FORMAT);
-        }
-        return TIME_FORMAT;
-    }
-
-    public void setDateTimeFormat(Context context, String date, String time) {
-        DATE_FORMAT = date;
-        TIME_FORMAT = time;
-        PreferenceUtil.putSharedPreference(context, PREF_DATE_FORMAT, date);
-        PreferenceUtil.putSharedPreference(context, PREF_TIME_FORMAT, time);
-        mFormmaterDate = null;
-        mFormmaterHourMin = null;
-        mFormmaterHourMinSec = null;
-        mFormmaterHourMin = null;
-        mFormmaterHourMinSec = null;
-        generatorFormatter();
-    }
-
-    protected boolean generatorFormatter() {
-        getTimeZoneAdjust();
-        getDateFormat();
-        getTimeFormat();
-
-        if (DATE_FORMAT == null || TIME_FORMAT == null) {
-            return false;
-        }
-        if (mFormmaterDate == null) {
-            mFormmaterDate = new SimpleDateFormat(DATE_FORMAT);
-        }
-        if (mFormmaterDateHourMin == null || mFormmaterHourMin == null) {
-            String format = TIME_FORMAT;
-            format = format.replaceAll(" ", "");
-            if (format.startsWith("a")) {
-                format = format.replace("a", "");
-                format = "a " + format;
-            } else if (format.endsWith("a")) {
-                format = format.replace("a", "");
-                format = format + " a";
-            }
-            mFormmaterDateHourMin = new SimpleDateFormat(DATE_FORMAT + " " + format);
-            mFormmaterHourMin = new SimpleDateFormat(format);
-        }
-        if (mFormmaterDateHourMinSec == null || mFormmaterHourMinSec == null) {
-            String format = TIME_FORMAT;
-            if (format.startsWith("a")) {
-                format = format.replace("a", "");
-                format = "a " + format + ":ss";
-            } else if (format.endsWith("a")) {
-                format = format.replace("a", "");
-                format = format + ":ss" + " a";
+                });
             } else {
-                format = format + ":ss";
+                mCallback.onFailure(null,new Throwable(mError));
             }
-            mFormmaterDateHourMinSec = new SimpleDateFormat(DATE_FORMAT + " " + format);
-            mFormmaterHourMinSec = new SimpleDateFormat(format);
         }
-        return true;
     }
-
-
-//	@SuppressWarnings("deprecation")
-//	private String convertTime(SimpleDateFormat srcFormat, SimpleDateFormat targetFormat, String srcTime, long timZone, boolean isDateEnd) {
-//		try {
-//			Date date = srcFormat.parse(srcTime);
-//			if (isDateEnd) {
-//				date.setHours(23);
-//				date.setMinutes(59);
-//				date.setSeconds(59);
-//			}
-//			date.setTime(date.getTime() + timZone);
-//			return targetFormat.format(date);
-//		} catch (Exception e) {
-//			Log.e("convert time", "" + e.getMessage());
-//		}
-//		return null;
-//	}
-//
-//	public String convertClientTimeToServerTime(DATE_TYPE clientTimetype, String clientTime, boolean isApplyTimeZone) {
-//		SimpleDateFormat clientFormatter = getClientTimeFormat(mContext, clientTimetype);
-//		long timZone = 0;
-//		if (isApplyTimeZone) {
-//			timZone = getTimeZoneAdjust() * -1;
-//		}
-//		return convertTime(clientFormatter, mFormatterServer, clientTime, timZone, false);
-//	}
-//
-//	public String convertClientTimeToServerTimeDateEnd(DATE_TYPE clientTimetype, String clientTime, boolean isApplyTimeZone) {
-//		SimpleDateFormat clientFormatter = getClientTimeFormat(mContext, clientTimetype);
-//		long timZone = 0;
-//		if (isApplyTimeZone) {
-//			timZone = getTimeZoneAdjust() * -1;
-//		}
-//		return convertTime(clientFormatter, mFormatterServer, clientTime, timZone, true);
-//	}
-//
-//	public String convertServerTimeToClientTime(DATE_TYPE clientTimetype, String serverTime, boolean isApplyTimeZone) {
-//		SimpleDateFormat clientFormatter = getClientTimeFormat(mContext, clientTimetype);
-//		long timZone = 0;
-//		if (isApplyTimeZone) {
-//			timZone = getTimeZoneAdjust();
-//		}
-//		return convertTime(mFormatterServer, clientFormatter, serverTime, timZone, false);
-//	}
-
 }

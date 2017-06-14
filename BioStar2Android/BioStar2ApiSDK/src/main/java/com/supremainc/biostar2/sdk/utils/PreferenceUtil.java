@@ -28,6 +28,13 @@ public class PreferenceUtil {
         editor.commit();
     }
 
+    public static void removeSharedPreference(Context context, String key) {
+        SharedPreferences preferences = context.getSharedPreferences(SETTING_PREF, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = preferences.edit();
+        editor.remove(key);
+        editor.commit();
+    }
+
     public static void putSharedPreference(Context context, String key, boolean value) {
         SharedPreferences preferences = context.getSharedPreferences(SETTING_PREF, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = preferences.edit();

@@ -1,9 +1,9 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:androidfont="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:gravity="center"
-    android:orientation="vertical">
+             xmlns:androidfont="http://schemas.android.com/apk/res-auto"
+             android:layout_width="match_parent"
+             android:layout_height="match_parent"
+             android:gravity="center"
+             android:orientation="vertical">
 
     <LinearLayout
         android:id="@+id/splash_after"
@@ -24,7 +24,7 @@
             android:contentDescription="@string/image"
             android:gravity="center|right"
             android:scaleType="fitCenter"
-            android:src="@drawable/selector_btn_guide" />
+            android:src="@drawable/selector_btn_guide"/>
 
         <ImageView
             android:layout_width="153.33dp"
@@ -35,7 +35,7 @@
             android:contentDescription="@string/image"
             android:gravity="center"
             android:scaleType="fitCenter"
-            android:src="@drawable/logo" />
+            android:src="@drawable/logo"/>
 
         <LinearLayout
             android:layout_width="wrap_content"
@@ -51,31 +51,40 @@
                 android:text="@string/biostar2"
                 android:textColor="@color/white"
                 android:textSize="19dp"
-                androidfont:typeface="roboto_black.ttf" />
+                androidfont:typeface="roboto_black.ttf"/>
 
             <com.supremainc.biostar2.view.StyledTextView
                 android:layout_width="wrap_content"
                 android:layout_height="18.6dp"
-                android:background="@drawable/login_top"
                 android:gravity="top|center"
-                android:paddingLeft="8dp"
+                android:paddingLeft="4dp"
                 android:paddingRight="8dp"
                 android:text="@string/mobile"
                 android:textColor="@color/white"
                 android:textSize="12dp"
-                androidfont:typeface="roboto_bold.ttf" />
+                androidfont:typeface="roboto_bold.ttf"/>
+
+            <com.supremainc.biostar2.view.StyledTextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:paddingLeft="2dp"
+                android:text="@string/app_version"
+                android:textColor="@color/white"
+                android:textSize="11dp"
+                androidfont:typeface="roboto_regular.ttf"/>
         </LinearLayout>
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:orientation="vertical" />
+            android:orientation="vertical"/>
 
         <com.supremainc.biostar2.view.LoginView
             android:id="@+id/login_view"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"/>
     </LinearLayout>
 
     <LinearLayout
@@ -90,7 +99,7 @@
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="290" />
+            android:layout_weight="290"/>
 
         <ImageView
             android:layout_width="wrap_content"
@@ -100,12 +109,12 @@
             android:contentDescription="@string/image"
             android:gravity="center"
             android:scaleType="fitCenter"
-            android:src="@drawable/suprema_ci" />
+            android:src="@drawable/suprema_ci"/>
 
         <FrameLayout
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="340" />
+            android:layout_weight="340"/>
     </LinearLayout>
 
 </FrameLayout>

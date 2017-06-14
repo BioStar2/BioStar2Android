@@ -33,8 +33,8 @@ import android.widget.ImageView;
 
 import com.supremainc.biostar2.BuildConfig;
 import com.supremainc.biostar2.R;
-import com.supremainc.biostar2.meta.Setting;
 import com.supremainc.biostar2.impl.OnSingleClickListener;
+import com.supremainc.biostar2.meta.Setting;
 
 
 public class GuideActivity extends Activity {

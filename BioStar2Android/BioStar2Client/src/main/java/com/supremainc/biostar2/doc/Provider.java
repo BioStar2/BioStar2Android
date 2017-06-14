@@ -16,42 +16,41 @@
 package com.supremainc.biostar2.doc;
 
 /**
- * @startuml
-note "Message Code Table\nEvent Table " as N1
-note "domain,subdomain,read guide,user/door count" as N2
-note "manage network requst/response" as N3
-note "real network protocol lib" as N4
-note "DB TABLE,COLUMN" as N5
-note "SQLiteDatabase handle" as N6
-note "device,door,user,card,access group,permission,etc..." as N7
-note "provider is singletone\nprovider is several by feature" as N8
-Provider .. N8
-"Memory" .. N1
-"Preference Storage" .. N2
-"Volley" .. N3
-"OKhttp" .. N4
-"DB Adapter(Notification)" .. N5
-"SQL DB" .. N6
-N5 .. "DB Adapter(Search Suggestion)"
-Provider .. N7
-Provider *-- "DB Adapter(Notification)" : use
-Provider *-- "DB Adapter(Search Suggestion)" : use
-Provider *-- "Preference Storage" : use
-Provider *-- "Security Storage" : use
-Provider *-- "Volley" : use
-Provider *-- "Memory" : use
-"Volley" *-- "OKhttp" : use
-"OKhttp"  .. "BioStar Cloud" : network
-"BioStar Cloud" .. "BioStar AC Server" : network
-"DB Adapter(Notification)" <|- "SQL DB"
-"DB Adapter(Search Suggestion)" <|- "SQL DB"
-Activity *-- Provider : use
-Fragment *-- Provider : use
-Adapter *-- Provider : use
+ * @startuml note "Message Code Table\nEvent Table " as N1
+ * note "domain,subdomain,read guide,user/door count" as N2
+ * note "manage network requst/response" as N3
+ * note "real network protocol lib" as N4
+ * note "DB TABLE,COLUMN" as N5
+ * note "SQLiteDatabase handle" as N6
+ * note "device,door,user,card,access group,permission,etc..." as N7
+ * note "provider is singletone\nprovider is several by feature" as N8
+ * Provider .. N8
+ * "Memory" .. N1
+ * "Preference Storage" .. N2
+ * "Volley" .. N3
+ * "OKhttp" .. N4
+ * "DB Adapter(Notification)" .. N5
+ * "SQL DB" .. N6
+ * N5 .. "DB Adapter(Search Suggestion)"
+ * Provider .. N7
+ * Provider *-- "DB Adapter(Notification)" : use
+ * Provider *-- "DB Adapter(Search Suggestion)" : use
+ * Provider *-- "Preference Storage" : use
+ * Provider *-- "Security Storage" : use
+ * Provider *-- "Volley" : use
+ * Provider *-- "Memory" : use
+ * "Volley" *-- "OKhttp" : use
+ * "OKhttp"  .. "BioStar Cloud" : network
+ * "BioStar Cloud" .. "BioStar AC Server" : network
+ * "DB Adapter(Notification)" <|- "SQL DB"
+ * "DB Adapter(Search Suggestion)" <|- "SQL DB"
+ * Activity *-- Provider : use
+ * Fragment *-- Provider : use
+ * Adapter *-- Provider : use
  * @enduml
  */
 
-public class Provider{
+public class Provider {
 
 }
 

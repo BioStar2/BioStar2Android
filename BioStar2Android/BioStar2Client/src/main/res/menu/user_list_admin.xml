@@ -1,5 +1,5 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+      xmlns:app="http://schemas.android.com/apk/res-auto"
     >
 
 
@@ -8,19 +8,19 @@
         android:icon="@drawable/selector_btn_add"
         android:orderInCategory="101"
         android:title="@string/user_add"
-        app:showAsAction="always" />
+        app:showAsAction="always"/>
 
     <item
         android:id="@+id/action_delete"
         android:icon="@drawable/selector_btn_delete"
         android:orderInCategory="102"
         android:title="@string/delete"
-        app:showAsAction="always" />
+        app:showAsAction="always"/>
 
     <item
-        android:id="@+id/action_usergroups"
+        android:id="@+id/action_filter"
         android:icon="@drawable/selector_btn_filter"
         android:orderInCategory="103"
         android:title="@string/filter"
-        app:showAsAction="always" />
+        app:showAsAction="always"/>
 </menu>

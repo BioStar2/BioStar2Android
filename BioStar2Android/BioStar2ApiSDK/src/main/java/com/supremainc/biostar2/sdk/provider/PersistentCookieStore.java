@@ -2,13 +2,22 @@ package com.supremainc.biostar2.sdk.provider;
 
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.os.Build;
+import android.security.KeyPairGeneratorSpec;
+import android.security.keystore.KeyProperties;
+import android.util.Base64;
 import android.util.Log;
 
+import java.math.BigInteger;
 import java.net.CookieStore;
 import java.net.HttpCookie;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.KeyStore;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -16,6 +25,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+
+import javax.crypto.Cipher;
+import javax.security.auth.x500.X500Principal;
 
 /*
  * Copyright (c) 2015 Fran Montiel
@@ -41,12 +53,12 @@ public class PersistentCookieStore implements CookieStore {
     private static final String SP_KEY_DELIMITER = "|"; // Unusual char in URL
     private static final String SP_KEY_DELIMITER_REGEX = "\\" + SP_KEY_DELIMITER;
     private SharedPreferences sharedPreferences;
-
     // In memory
     private Map<URI, Set<HttpCookie>> allCookies;
 
     public PersistentCookieStore(Context context) {
         sharedPreferences = context.getSharedPreferences(SP_COOKIE_STORE, Context.MODE_PRIVATE);
+        createNewKey(context);
         loadAllFromPersistence();
     }
 
@@ -70,7 +82,9 @@ public class PersistentCookieStore implements CookieStore {
             try {
                 cookieUri = new URI(uri.getScheme() == null ? "http" : uri.getScheme(), domain, cookie.getPath() == null ? "/" : cookie.getPath(), null);
             } catch (URISyntaxException e) {
-                Log.w(TAG, e);
+                if (ConfigDataProvider.DEBUG) {
+                    Log.w(TAG, e);
+                }
             }
         }
         return cookieUri;
@@ -106,6 +120,10 @@ public class PersistentCookieStore implements CookieStore {
                 URI uri = new URI(uriAndName[0]);
                 String encodedCookie = (String) entry.getValue();
                 HttpCookie cookie = new SerializableHttpCookie().decode(encodedCookie);
+                String value = decrypt(cookie.getValue());
+                if (value != null && !value.isEmpty()) {
+                    cookie.setValue(value);
+                }
                 Set<HttpCookie> targetCookies = allCookies.get(uri);
                 if (targetCookies == null) {
                     targetCookies = new HashSet<HttpCookie>();
@@ -115,7 +133,9 @@ public class PersistentCookieStore implements CookieStore {
                 // targetCookies.remove(cookie)
                 targetCookies.add(cookie);
             } catch (URISyntaxException e) {
-                Log.w(TAG, e);
+                if (ConfigDataProvider.DEBUG) {
+                    Log.w(TAG, "e:" + e.getMessage());
+                }
             }
         }
     }
@@ -135,11 +155,95 @@ public class PersistentCookieStore implements CookieStore {
         saveToPersistence(uri, cookie);
     }
 
+    private boolean createNewKey(Context context) {
+        if (Build.VERSION.SDK_INT >= 19) {
+            KeyStore keyStore = null;
+            try {
+                keyStore = KeyStore.getInstance("AndroidKeyStore");
+                keyStore.load(null);
+
+                String alias = "master";
+                if (!keyStore.containsAlias(alias)) {
+                    Calendar start = Calendar.getInstance();
+                    start.set(Calendar.YEAR, 2000);
+                    Calendar end = Calendar.getInstance();
+                    end.set(Calendar.YEAR, 3000);
+                    KeyPairGeneratorSpec spec = new KeyPairGeneratorSpec.Builder(context)
+                            .setAlias(alias)
+                            //                        .setSubject(new X500Principal("CN=Sample Name, O=Android Authority"))
+                            .setSubject(new X500Principal("CN=" + alias))
+                            .setSerialNumber(BigInteger.TEN)
+                            .setStartDate(start.getTime())
+                            .setEndDate(end.getTime())
+                            .build();
+
+                    KeyPairGenerator generator = KeyPairGenerator.getInstance(KeyProperties.KEY_ALGORITHM_RSA, "AndroidKeyStore");
+                    generator.initialize(spec);
+                    KeyPair keyPair = generator.generateKeyPair();
+                }
+            } catch (Exception e) {
+                return false;
+            }
+            return true;
+        }
+        return false;
+    }
+
+    private String encrypt(String data) {
+        if (Build.VERSION.SDK_INT >= 19) {
+            try {
+                KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
+                keyStore.load(null);
+                KeyStore.PrivateKeyEntry privateKeyEntry = (KeyStore.PrivateKeyEntry) keyStore.getEntry("master", null);
+                Cipher inputCipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+                inputCipher.init(Cipher.ENCRYPT_MODE, privateKeyEntry.getCertificate().getPublicKey());
+                byte[] encdoed = inputCipher.doFinal(data.getBytes("UTF-8"));
+                return Base64.encodeToString(encdoed, Base64.DEFAULT);
+            } catch (Exception e) {
+                if (ConfigDataProvider.DEBUG) {
+                    Log.e(TAG, "e:" + e.getMessage());
+                }
+            }
+        }
+        return null;
+    }
+
+    private String decrypt(String data) {
+        if (Build.VERSION.SDK_INT >= 19) {
+            try {
+                KeyStore keyStore = KeyStore.getInstance("AndroidKeyStore");
+                keyStore.load(null);
+                KeyStore.PrivateKeyEntry privateKeyEntry = (KeyStore.PrivateKeyEntry)keyStore.getEntry("master", null);
+                Cipher output = Cipher.getInstance("RSA/ECB/PKCS1Padding");
+                output.init(Cipher.DECRYPT_MODE, privateKeyEntry.getPrivateKey());
+                byte[] result = output.doFinal(Base64.decode(data, Base64.DEFAULT));
+                return new String(result);
+            } catch (Exception e) {
+                if (ConfigDataProvider.DEBUG) {
+                    Log.e(TAG, "e:" + e.getMessage());
+                }
+            }
+        }
+        return null;
+    }
+
+
     private void saveToPersistence(URI uri, HttpCookie cookie) {
+        HttpCookie cookie2;
+        try {
+            cookie2 = (HttpCookie)cookie.clone();
+            String value = encrypt(cookie.getValue());
+            if (value != null && !value.isEmpty()) {
+                cookie2.setValue(value);
+            }
+        } catch (Exception e) {
+            cookie2 = cookie;
+            if (ConfigDataProvider.DEBUG) {
+                Log.e(TAG, "e:" + e.getMessage());
+            }
+        }
         SharedPreferences.Editor editor = sharedPreferences.edit();
-
-        editor.putString(uri.toString() + SP_KEY_DELIMITER + cookie.getName(), new SerializableHttpCookie().encode(cookie));
-
+        editor.putString(uri.toString() + SP_KEY_DELIMITER + cookie.getName(), new SerializableHttpCookie().encode(cookie2));
         editor.apply();
     }
 
@@ -341,5 +445,4 @@ public class PersistentCookieStore implements CookieStore {
     private void removeAllFromPersistence() {
         sharedPreferences.edit().clear().apply();
     }
-
 }

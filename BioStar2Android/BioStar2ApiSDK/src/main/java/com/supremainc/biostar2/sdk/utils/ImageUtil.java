@@ -62,9 +62,13 @@ public class ImageUtil {
     }
 
     public static Bitmap byteArrayToBitmap(byte[] byteArray) {
-        Bitmap bitmap = BitmapFactory.decodeByteArray(byteArray, 0,
-                byteArray.length);
-        return bitmap;
+        try {
+            Bitmap bitmap = BitmapFactory.decodeByteArray(byteArray, 0,
+                    byteArray.length);
+            return bitmap;
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     public static Bitmap fastBlur(Bitmap sentBitmap, int radius) {

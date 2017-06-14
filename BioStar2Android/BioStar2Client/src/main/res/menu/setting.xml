@@ -1,0 +1,13 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:app="http://schemas.android.com/apk/res-auto"
+    >
+
+    <item
+        android:id="@+id/action_setting"
+        android:icon="@drawable/selector_btn_setting"
+        android:orderInCategory="102"
+        android:title="@string/preference"
+        app:showAsAction="always"/>
+
+
+</menu>

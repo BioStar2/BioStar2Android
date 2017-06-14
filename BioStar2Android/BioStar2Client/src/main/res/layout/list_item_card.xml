@@ -1,35 +1,36 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:androidfont="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/container"
-    android:layout_width="match_parent"
-    android:layout_height="54.8dp"
-    android:gravity="center"
-    android:orientation="vertical">
+              xmlns:app="http://schemas.android.com/apk/res-auto"
+              android:id="@+id/container"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:gravity="center"
+              android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:layout_marginLeft="18dp"
         android:layout_marginRight="18dp"
         android:gravity="center"
+        android:minHeight="55dp"
         android:orientation="horizontal">
 
         <LinearLayout
             android:layout_width="0dp"
-            android:layout_height="match_parent"
+            android:layout_height="wrap_content"
             android:layout_weight="1"
             android:gravity="center"
             android:orientation="vertical">
 
-        <com.supremainc.biostar2.view.StyledTextView
-            android:id="@+id/card_type"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="left"
-            android:textColor="@color/select_text"
-            android:textSize="14dp"
-            androidfont:typeface="roboto_medium.ttf" />
+            <com.supremainc.biostar2.view.StyledTextView
+                android:id="@+id/card_type"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="left"
+                android:textColor="@color/select_text"
+                android:textSize="14dp"
+                app:typeface="roboto_medium.ttf"/>
 
             <com.supremainc.biostar2.view.StyledTextView
                 android:id="@+id/card_id"
@@ -38,46 +39,23 @@
                 android:gravity="left"
                 android:textColor="@color/select_text"
                 android:textSize="16dp"
-                androidfont:typeface="roboto_medium.ttf" />
+                app:typeface="roboto_medium.ttf"/>
         </LinearLayout>
 
-
-        <com.supremainc.biostar2.view.StyledTextView
-            android:id="@+id/info_block"
+        <com.supremainc.biostar2.view.SwitchView
+            android:id="@+id/status_switch"
             android:layout_width="wrap_content"
-            android:layout_height="35dp"
-            android:paddingLeft="3dp"
-            android:paddingRight="3dp"
-            android:gravity="center"
-            android:textColor="@color/white"
-            android:textSize="18dp"
-            android:text="@string/block"
-            android:background="@drawable/selector_btn_block"
-            androidfont:typeface="roboto_medium.ttf" />
-
-
-        <com.supremainc.biostar2.view.StyledTextView
-            android:id="@+id/info_unblock"
-            android:layout_width="wrap_content"
-            android:layout_height="35dp"
-            android:paddingLeft="3dp"
-            android:paddingRight="3dp"
-            android:gravity="center"
-            android:textColor="@color/white"
-            android:textSize="18dp"
-            android:text="@string/unblock"
-            android:background="@drawable/selector_btn_unblock"
-            androidfont:typeface="roboto_medium.ttf" />
+            android:layout_height="wrap_content"/>
 
         <ImageView
             android:id="@+id/info_mobilecard"
             android:layout_width="24dp"
             android:layout_height="32dp"
             android:layout_gravity="center|right"
+            android:layout_marginLeft="5dp"
             android:contentDescription="@string/image"
             android:gravity="center|right"
-            android:layout_marginLeft="5dp"
-            android:scaleType="fitXY" />
+            android:scaleType="fitXY"/>
 
         <ImageView
             android:id="@+id/info"
@@ -85,15 +63,15 @@
             android:layout_height="22.67dp"
             android:layout_gravity="center|right"
             android:contentDescription="@string/image"
-            android:src="@drawable/selector_list_check"
             android:gravity="center|right"
-            android:scaleType="fitXY" />
+            android:scaleType="fitXY"
+            android:src="@drawable/selector_list_check"/>
 
     </LinearLayout>
 
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0.8dp"
-        android:background="@color/list_devider" />
+        android:background="@color/list_devider"/>
 
 </LinearLayout>

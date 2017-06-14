@@ -19,6 +19,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.DialogInterface.OnCancelListener;
+import android.graphics.Bitmap;
 import android.os.Handler;
 import android.os.Looper;
 import android.util.DisplayMetrics;
@@ -41,6 +42,7 @@ public class Popup {
     private CustomDialog mWaitPopup = null;
     private CustomDialog mDialog;
     private Handler mHandler;
+    private int mValue;
     private OnCancelListener cancelListener = new OnCancelListener() {
         @Override
         public void onCancel(DialogInterface mDialog) {
@@ -80,6 +82,19 @@ public class Popup {
         return (int) (dp * scale + 0.5f);
     }
 
+    public boolean isShownPopup() {
+        if (mDialog == null) {
+            return false;
+        }
+        if (mContext.isFinishing()) {
+            return false;
+        }
+        if (mDialog.isShowing()) {
+            return true;
+        }
+        return false;
+    }
+
     public boolean isShownWait() {
         if (mWaitPopup == null) {
             return false;
@@ -99,18 +114,27 @@ public class Popup {
     }
 
     public void show(PopupType type, String content, final OnPopupClickListener listener, String positive, String negative) {
-        show(type, null, content, listener, positive, negative, true);
+        show(type, null, null, content, listener, positive, negative, true);
     }
 
     public void show(PopupType type, String title, String content, final OnPopupClickListener listener, String positive, String negative) {
-        show(type, title, content, listener, positive, negative, true);
+        show(type, null, title, content, listener, positive, negative, true);
     }
 
     public void show(PopupType type, String title, String content, final OnPopupClickListener listener, String positive, String negative, boolean cancelable) {
+        show(type, null, title, content, listener, positive, negative, cancelable);
+    }
+
+    public int getValue() {
+        return mValue;
+    }
+
+    public void show(PopupType type, Bitmap bmp, String title, String content, final OnPopupClickListener listener, String positive, String negative, boolean cancelable) {
         if (mContext.isFinishing()) {
             return;
         }
         dismiss();
+        mValue = 0;
         mDialog = new CustomDialog(mContext);
         LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         ViewGroup layout = null;
@@ -118,6 +142,24 @@ public class Popup {
         switch (type) {
             case CARD_CONFIRM:
                 layout = (ViewGroup) inflater.inflate(R.layout.popup_card, null);
+                break;
+            case FACE_CONFIRM:
+                layout = (ViewGroup) inflater.inflate(R.layout.popup_face, null);
+                View container = layout.findViewById(R.id.container_select);
+                container.setOnClickListener(new View.OnClickListener() {
+                    @Override
+                    public void onClick(View v) {
+                        if (mValue == 0) {
+                            ImageView iv = (ImageView) v.findViewById(R.id.set_select);
+                            iv.setImageResource(R.drawable.check_box);
+                            mValue = 1;
+                        } else {
+                            ImageView iv = (ImageView) v.findViewById(R.id.set_select);
+                            iv.setImageResource(R.drawable.check_box_blank);
+                            mValue = 0;
+                        }
+                    }
+                });
                 break;
             default:
                 layout = (ViewGroup) inflater.inflate(R.layout.popup_common, null);
@@ -158,6 +200,14 @@ public class Popup {
         ImageView popupType = (ImageView) layout.findViewById(R.id.type);
         boolean isRunHeight = true;
         switch (type) {
+            case FACE_CONFIRM:
+                isRunHeight = false;
+                if (bmp != null) {
+                    popupType.setImageBitmap(bmp);
+                } else {
+                    popupType.setImageResource(R.drawable.user_face);
+                }
+                break;
             case CONFIRM:
                 popupType.setImageResource(R.drawable.popup_check_ic);
                 break;
@@ -182,6 +232,9 @@ public class Popup {
             case FINGERPRINT:
                 popupType.setImageResource(R.drawable.user_fp1);
                 break;
+            case FACE:
+                popupType.setImageResource(R.drawable.user_face);
+                break;
             case FINGERPRINT_AGAGIN:
                 popupType.setImageResource(R.drawable.user_fp2);
                 break;
@@ -190,6 +243,8 @@ public class Popup {
                 break;
             case CARD_CONFIRM:
                 isRunHeight = false;
+            case NONE:
+                popupType.setVisibility(View.GONE);
                 break;
         }
         if (content == null) {
@@ -216,7 +271,7 @@ public class Popup {
             negativeView.setVisibility(View.GONE);
         }
 
-       final ScrollView contentContainer = (ScrollView) layout.findViewById(R.id.scroll);
+        final ScrollView contentContainer = (ScrollView) layout.findViewById(R.id.scroll);
 
         mDialog.setLayout(layout);
         if (isRunHeight) {
@@ -224,16 +279,30 @@ public class Popup {
             mHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    Log.e("popup", "line:" + contentView.getLineCount());
+                    Log.e("popup", "line2:" + contentView.getLineCount());
                     int count = contentView.getLineCount();
-                    if (count > 4 || count < 1) {
+                    if (count < 1) {
                         count = 4;
                     }
 
-                    contentContainer.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, dpToPx(157 + count * 18)));
+                    ImageView popupType = (ImageView) mainView.findViewById(R.id.type);
+                    if (popupType.getVisibility() == View.GONE) {
+
+                        int dp = count * 25;
+                        if (dp > 229) {
+                            dp = 229;
+                        }
+                        Log.e("popup", "dp:" + dp);
+                        contentContainer.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, dpToPx(dp)));
+                    } else {
+                        if (count > 4) {
+                            count = 4;
+                        }
+                        contentContainer.setLayoutParams(new LinearLayout.LayoutParams(LayoutParams.MATCH_PARENT, dpToPx(157 + count * 18)));
+                    }
                     mainView.setVisibility(View.VISIBLE);
                 }
-            },500);
+            }, 500);
         }
 
         if (mContext.isFinishing()) {
@@ -273,7 +342,7 @@ public class Popup {
     }
 
     public enum PopupType {
-        CONFIRM, ALARM, ALERT, INFO, DOOR, FIRE, CARD, CARD_CONFIRM, FINGERPRINT, FINGERPRINT_AGAGIN, FINGERPRINT_CONFIRM
+        NONE, CONFIRM, ALARM, ALERT, INFO, DOOR, FIRE, CARD, CARD_CONFIRM, FINGERPRINT, FINGERPRINT_AGAGIN, FACE, FINGERPRINT_CONFIRM, FACE_CONFIRM
     }
 
     public interface OnPopupClickListener {

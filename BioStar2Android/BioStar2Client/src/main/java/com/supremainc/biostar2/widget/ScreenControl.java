@@ -51,6 +51,13 @@ public class ScreenControl {
         mDrawMenuSelectionListener.addScreen(type, args);
     }
 
+    public void addScreenNoEffect(ScreenType type, Bundle args) {
+        if (mDrawMenuSelectionListener == null) {
+            return;
+        }
+        mDrawMenuSelectionListener.addScreenNoEffect(type, args);
+    }
+
     public void backScreen() {
         if (mDrawMenuSelectionListener == null) {
             return;
@@ -95,7 +102,7 @@ public class ScreenControl {
     }
 
     public enum ScreenType {
-        INIT, MAIN, USER, USER_MODIFY, USER_INQURIY, USER_ACCESS_GROUP, DOOR_LIST, DOOR, MONITOR, CARD,CARD_RIGISTER, MOBILE_CARD_LIST,MOBILE_CARD_GUIDE,
+        INIT, MAIN, USER, USER_MODIFY, USER_INQURIY, USER_ACCESS_GROUP, DOOR_LIST, DOOR, MONITOR, CARD, CARD_RIGISTER, MOBILE_CARD_LIST, FACE,
         FINGERPRINT_REGISTER, ALARM, ALARM_LIST, TA, LOG_OUT, ACCESS_CONTROL, ACCESS_GROUP_MODIFY, ACCESS_LEVEL_MODIFY, OPEN_MENU, PREFERENCE, ACCESS_GROUP_SELECT, MYPROFILE, USER_PERMISSION
     }
 

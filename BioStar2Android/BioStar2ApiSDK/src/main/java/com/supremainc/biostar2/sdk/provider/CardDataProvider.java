@@ -16,36 +16,25 @@
 package com.supremainc.biostar2.sdk.provider;
 
 import android.content.Context;
-import android.os.AsyncTask;
-import android.os.Build;
-import android.provider.Settings;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
-import com.supremainc.biostar2.sdk.datatype.v2.Card.BaseCard;
-import com.supremainc.biostar2.sdk.datatype.v2.Card.Card;
-import com.supremainc.biostar2.sdk.datatype.v2.Card.Cards;
-import com.supremainc.biostar2.sdk.datatype.v2.Card.ListCard;
-import com.supremainc.biostar2.sdk.datatype.v2.Card.MobileCardRaw;
-import com.supremainc.biostar2.sdk.datatype.v2.Card.MobileCards;
-import com.supremainc.biostar2.sdk.datatype.v2.Card.SmartCardLayouts;
-import com.supremainc.biostar2.sdk.datatype.v2.Card.WiegandFormat;
-import com.supremainc.biostar2.sdk.datatype.v2.Card.WiegandFormats;
-import com.supremainc.biostar2.sdk.datatype.v2.Common.ResponseStatus;
-import com.supremainc.biostar2.sdk.datatype.v2.Common.SimpleDatas;
-import com.supremainc.biostar2.sdk.volley.Network;
-import com.supremainc.biostar2.sdk.volley.Request;
-import com.supremainc.biostar2.sdk.volley.Request.Method;
-import com.supremainc.biostar2.sdk.volley.Response;
-import com.supremainc.biostar2.sdk.volley.Response.ErrorListener;
-import com.supremainc.biostar2.sdk.volley.Response.Listener;
-import com.supremainc.biostar2.sdk.volley.VolleyError;
+import com.supremainc.biostar2.sdk.models.v2.card.Card;
+import com.supremainc.biostar2.sdk.models.v2.card.Cards;
+import com.supremainc.biostar2.sdk.models.v2.card.SmartCardLayouts;
+import com.supremainc.biostar2.sdk.models.v2.card.WiegandFormat;
+import com.supremainc.biostar2.sdk.models.v2.card.WiegandFormats;
+import com.supremainc.biostar2.sdk.models.v2.common.ResponseStatus;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+
+import static com.supremainc.biostar2.sdk.models.v2.common.VersionData.getCloudVersionString;
 
 public class CardDataProvider extends BaseDataProvider {
     private static CardDataProvider mSelf = null;
@@ -78,40 +67,31 @@ public class CardDataProvider extends BaseDataProvider {
         return null;
     }
 
-    public void registerCSN(String tag, Listener<ResponseStatus> listener, ErrorListener errorListener, String cardID, Object deliverParam) {
-        if (cardID == null || cardID.isEmpty()) {
-            if (errorListener != null) {
-                errorListener.onErrorResponse(new VolleyError("param is null"), deliverParam);
-            }
-            return;
+    public Call<ResponseStatus> registerCSN(String cardID,Callback<ResponseStatus> callback) {
+        if (!checkParamAndAPI(callback,cardID)) {
+            return null;
         }
-
         JsonObject object = new JsonObject();
         object.addProperty(Card.CARD_ID, cardID);
-        String body = mGson.toJson(object);
-        sendRequest(tag, ResponseStatus.class, Method.POST, createUrl(NetWork.PARAM_CARDS,NetWork.PARAM_CSN_CARD), null, null, body, listener, errorListener, deliverParam);
+        Call<ResponseStatus> call = mApiInterface.post_cards_csn(getCloudVersionString(mContext),object);
+        call.enqueue(callback);
+        return call;
     }
 
-    public void registerWiegand(String tag, Listener<ResponseStatus> listener, ErrorListener errorListener, WiegandFormat wiegandFormat, Object deliverParam) {
-        if (wiegandFormat == null) {
-            if (errorListener != null) {
-                errorListener.onErrorResponse(new VolleyError("param is null"), deliverParam);
-            }
-            return;
+    public Call<ResponseStatus> registerWiegand(WiegandFormat wiegandFormat, Callback<ResponseStatus> callback) {
+        if (!checkParamAndAPI(callback,wiegandFormat)) {
+            return null;
         }
-        String body = mGson.toJson(wiegandFormat);
-        sendRequest(tag, ResponseStatus.class, Method.POST, createUrl(NetWork.PARAM_CARDS,NetWork.PARAM_WIEGAND_CARD), null, null, body, listener, errorListener, deliverParam);
+        Call<ResponseStatus> call = mApiInterface.post_wiegand_card(getCloudVersionString(mContext),wiegandFormat);
+        call.enqueue(callback);
+        return call;
     }
 
 
-    public void issueAccessOn(String tag, Listener<ResponseStatus> listener, ErrorListener errorListener, String deviceID,ArrayList<Integer> fingerPrintIndexs,String userID, Object deliverParam) {
-        if (deviceID == null || deviceID.isEmpty() || fingerPrintIndexs == null || userID == null || userID.isEmpty()) {
-            if (errorListener != null) {
-                errorListener.onErrorResponse(new VolleyError("param is null"), deliverParam);
-            }
-            return;
+    public Call<ResponseStatus>  issueAccessOn(String deviceID,ArrayList<Integer> fingerPrintIndexs,String userID,Callback<ResponseStatus> callback) {
+        if (!checkParamAndAPI(callback,deviceID,userID,fingerPrintIndexs)) {
+            return null;
         }
-
         JsonObject object = new JsonObject();
         object.addProperty("device_id", deviceID);
         object.addProperty("user_id", userID);
@@ -120,21 +100,18 @@ public class CardDataProvider extends BaseDataProvider {
             arr.add(new JsonPrimitive(index));
         }
         object.add("fingerprint_index_list",arr);
-        String body = mGson.toJson(object);
-        sendRequest(tag, ResponseStatus.class, Method.POST, createUrl(NetWork.PARAM_CARDS,NetWork.PARAM_ACCESS_ON), null, null, body, listener, errorListener, deliverParam);
+        Call<ResponseStatus> call = mApiInterface.post_access_on_card(getCloudVersionString(mContext),object);
+        call.enqueue(callback);
+        return call;
     }
 
-    public void issueSecureCredential(String tag, Listener<ResponseStatus> listener, ErrorListener errorListener, String deviceID,ArrayList<Integer> fingerPrintIndexs,String userID,String cardID, Object deliverParam) {
-        if (deviceID == null || deviceID.isEmpty() || fingerPrintIndexs == null || userID == null || userID.isEmpty()) {
-            if (errorListener != null) {
-                errorListener.onErrorResponse(new VolleyError("param is null"), deliverParam);
-            }
-            return;
+    public Call<ResponseStatus> issueSecureCredential(String deviceID,ArrayList<Integer> fingerPrintIndexs,String userID,String cardID,Callback<ResponseStatus> callback) {
+        if (!checkParamAndAPI(callback,deviceID,userID,fingerPrintIndexs)) {
+            return null;
         }
         if (cardID == null) {
             cardID = userID;
         }
-
         JsonObject object = new JsonObject();
         object.addProperty("device_id", deviceID);
         object.addProperty("user_id", userID);
@@ -144,153 +121,73 @@ public class CardDataProvider extends BaseDataProvider {
             arr.add(new JsonPrimitive(index));
         }
         object.add("fingerprint_index_list",arr);
-        String body = mGson.toJson(object);
-        sendRequest(tag, ResponseStatus.class, Method.POST, createUrl(NetWork.PARAM_CARDS,NetWork.PARAM_CARDS_SECURE_CREDENTIAL), null, null, body, listener, errorListener, deliverParam);
+        Call<ResponseStatus> call = mApiInterface.post_secure_credential_card(getCloudVersionString(mContext),object);
+        call.enqueue(callback);
+        return call;
     }
-//    private static int test_count=0;
-    public void getUnassignedCards(String tag, Listener<Cards> listener, ErrorListener errorListener, int offset, int limit, String query, Object deliverParam) {
+
+    public Call<Cards> getUnassignedCards(int offset, int limit, String query, Callback<Cards> callback) {
+        if (offset < -1 || limit < 1) {
+            onParamError(callback);
+            return null;
+        }
+        if (!checkAPI(callback)) {
+            return null;
+        }
         Map<String, String> params = new HashMap<String, String>();
         params.put("limit", String.valueOf(limit));
         params.put("offset", String.valueOf(offset));
         if (query != null) {
             params.put("text", query);
         }
-        sendRequest(tag, Cards.class, Method.GET, createUrl(NetWork.PARAM_CARDS,NetWork.PARAM_UNASSIGNED), null, params, null, listener, errorListener, deliverParam);
-
-//        Cards items = new Cards();
-//        ArrayList<ListCard> list = new ArrayList<ListCard>();
-//        if (test_count > 500) {
-//            listener.onResponse(null,deliverParam);
-//            return;
-//        }
-//        int count = test_count +limit;
-//        for (int i=test_count; i < count ; i++) {
-//            ListCard item = new ListCard();
-//            item.id = String.valueOf(test_count);
-//            item.card_id = String.valueOf(test_count);
-//            item.type = Card.CSN;
-//            list.add(item);
-//            test_count++;
-//        }
-//        items.total = 500;
-//        items.records = list;
-//        listener.onResponse(items,deliverParam);
+        Call<Cards> call = mApiInterface.get_cards_unassigned(getCloudVersionString(mContext),params);
+        call.enqueue(callback);
+        return call;
     }
 
-    public void getWiegandFormats(String tag, Listener<WiegandFormats> listener, ErrorListener errorListener, Object deliverParam) {
-        String url = createUrl(NetWork.PARAM_CARDS,NetWork.PARAM_WIEGAND_CARDS, NetWork.PARAM_FORMATS);
-//        Map<String, String> params = new HashMap<String, String>();
-////        params.put("limit", String.valueOf(limit));
-////        params.put("offset", String.valueOf(offset));
-////        if (query != null) {
-////            params.put("text", query);
-////        }
-        sendRequest(tag, WiegandFormats.class, Method.GET, url, null, null, null, listener, errorListener, deliverParam);
+    public Call<WiegandFormats> getWiegandFormats(Callback<WiegandFormats> callback) {
+        if (!checkAPI(callback)) {
+            return null;
+        }
+        Call<WiegandFormats> call = mApiInterface.get_cards_wiegand_cards_formats(getCloudVersionString(mContext));
+        call.enqueue(callback);
+        return call;
     }
 
-    public void getSmartCardLayout(String tag, Listener<SmartCardLayouts> listener, ErrorListener errorListener, int offset, int limit, String query, Object deliverParam) {
-        String url = createUrl(NetWork.PARAM_CARDS,NetWork.PARAM_SMART_CARDS,NetWork.PARAM_LAYOUTS);
+    public Call<SmartCardLayouts> getSmartCardLayout(int offset, int limit, String query,Callback<SmartCardLayouts> callback) {
+        if (offset < -1 || limit < 1) {
+            onParamError(callback);
+            return null;
+        }
+        if (!checkAPI(callback)) {
+            return null;
+        }
         Map<String, String> params = new HashMap<String, String>();
         params.put("limit", String.valueOf(limit));
         params.put("offset", String.valueOf(offset));
         if (query != null) {
             params.put("text", query);
         }
-        sendRequest(tag, SmartCardLayouts.class, Method.GET, url, null, params, null, listener, errorListener, deliverParam);
+        Call<SmartCardLayouts> call = mApiInterface.get_cards_smartcards_layouts(getCloudVersionString(mContext),params);
+        call.enqueue(callback);
+        return call;
     }
 
-    public void getMobileCards(String tag, Response.Listener<MobileCards> listener,
-                                    Response.ErrorListener errorListener,String userID, Object deliverParam) {
-        if (userID == null || userID.isEmpty()) {
-            if (errorListener != null) {
-                errorListener.onErrorResponse(new VolleyError("param is null"), deliverParam);
-            }
-            return;
+    public Call<ResponseStatus>  block(String cardID, Callback<ResponseStatus> callback) {
+        if (!checkParamAndAPI(callback,cardID)) {
+            return null;
         }
-        String url = createUrl(NetWork.PARAM_USERS, userID, NetWork.PARAM_CARDS_MOBILE_CREDENTIAL);
-        sendRequest(tag, MobileCards.class, Request.Method.GET, url, null, null, null, listener, errorListener, deliverParam);
+        Call<ResponseStatus> call = mApiInterface.post_cards_block(getCloudVersionString(mContext),cardID);
+        call.enqueue(callback);
+        return call;
     }
 
-    public void registerMobileCard(String tag, Response.Listener<MobileCardRaw> listener,
-                                   Response.ErrorListener errorListener,String cardID, Object deliverParam) {
-        if (cardID == null || cardID.isEmpty()) {
-            if (errorListener != null) {
-                errorListener.onErrorResponse(new VolleyError("param is null"), deliverParam);
-            }
-            return;
+    public Call<ResponseStatus> unblock(String cardID, Callback<ResponseStatus> callback) {
+        if (!checkParamAndAPI(callback,cardID)) {
+            return null;
         }
-
-        String udid =  Settings.Secure.getString(mContext.getContentResolver(),Settings.Secure.ANDROID_ID)+ Build.SERIAL;
-        if (udid != null && udid.length() > 128) {
-            udid = udid.substring(0,128);
-        }
-
-        String url = createUrl(NetWork.PARAM_USERS, NetWork.PARAM_MYPROFILE, NetWork.PARAM_CARDS_MOBILE_CREDENTIAL,cardID,mNetwork.PARAM_REGISTER);
-        JsonObject object = new JsonObject();
-        object.addProperty("udid", udid);
-        String body = mGson.toJson(object);
-        sendRequest(tag, MobileCardRaw.class, Request.Method.POST, url, null, null, body, listener, errorListener, deliverParam);
-    }
-
-    public void issueMobileCard(String tag, Listener<ResponseStatus> listener, ErrorListener errorListener,String userID, String cardID, ArrayList<Integer> fingerprint, String layoutID,SmartCardType type, Object deliverParam) {
-        if (cardID == null || cardID.isEmpty() || fingerprint == null || layoutID == null || layoutID.isEmpty() ||  type == null || userID == null || userID.isEmpty()) {
-            if (errorListener != null) {
-                errorListener.onErrorResponse(new VolleyError("param is null"), deliverParam);
-            }
-            return;
-        }
-        String url  = createUrl(NetWork.PARAM_USERS, userID,NetWork.PARAM_CARDS_MOBILE_CREDENTIAL,NetWork.PARAM_CARDS_ISSUE) ;
-
-        JsonObject object = new JsonObject();
-        object.addProperty("card_id", cardID);
-        object.addProperty("layout_id", layoutID);
-        switch (type) {
-            case ACCESS_ON:
-                object.addProperty("type", Card.ACCESS_ON);
-                break;
-            case SECURE_CREDENTIAL:
-                object.addProperty("type", Card.SECURE_CREDENTIAL);
-                  break;
-        }
-        JsonArray arr = new JsonArray();
-        for (Integer index:fingerprint) {
-            arr.add(new JsonPrimitive(index));
-        }
-        object.add("fingerprint_index_list",arr);
-        String body = mGson.toJson(object);
-        sendRequest(tag, ResponseStatus.class, Method.POST, url, null, null, body, listener, errorListener, deliverParam);
-    }
-
-    public void block(String tag, Listener<ResponseStatus> listener, ErrorListener errorListener, String cardID, Object deliverParam) {
-        if (cardID == null) {
-            if (errorListener != null) {
-                errorListener.onErrorResponse(new VolleyError("param is null"), deliverParam);
-            }
-            return;
-        }
-        String url  = createUrl(NetWork.PARAM_CARDS,cardID,NetWork.PARAM_CARDS_BLOCK);
-        sendRequest(tag, ResponseStatus.class, Method.POST, url, null, null, null, listener, errorListener, deliverParam);
-    }
-
-    public void unblock(String tag, Listener<ResponseStatus> listener, ErrorListener errorListener, String cardID, Object deliverParam) {
-        if (cardID == null) {
-            if (errorListener != null) {
-                errorListener.onErrorResponse(new VolleyError("param is null"), deliverParam);
-            }
-            return;
-        }
-        String url  = createUrl(NetWork.PARAM_CARDS,cardID,NetWork.PARAM_CARDS_UNBLOCK);
-        sendRequest(tag, ResponseStatus.class, Method.POST, url, null, null, null, listener, errorListener, deliverParam);
-    }
-
-    public void reissue(String tag, Listener<ResponseStatus> listener, ErrorListener errorListener,String userID, String cardID, Object deliverParam) {
-        if (cardID == null) {
-            if (errorListener != null) {
-                errorListener.onErrorResponse(new VolleyError("param is null"), deliverParam);
-            }
-            return;
-        }
-        String url  = createUrl(NetWork.PARAM_USERS,userID,NetWork.PARAM_CARDS_MOBILE_CREDENTIAL,cardID,NetWork.PARAM_CARDS_REISSUE);
-        sendRequest(tag, ResponseStatus.class, Method.POST, url, null, null, null, listener, errorListener, deliverParam);
+        Call<ResponseStatus> call = mApiInterface.post_cards_unblock(getCloudVersionString(mContext),cardID);
+        call.enqueue(callback);
+        return call;
     }
 }

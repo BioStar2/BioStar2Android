@@ -24,8 +24,8 @@ import android.view.KeyEvent;
 import android.view.View;
 import android.widget.ListView;
 
-import com.supremainc.biostar2.sdk.datatype.v1.Permission.CloudRole;
-import com.supremainc.biostar2.sdk.datatype.v2.User.ListUser;
+import com.supremainc.biostar2.sdk.models.v1.permission.CloudRole;
+import com.supremainc.biostar2.sdk.models.v2.user.ListUser;
 import com.supremainc.biostar2.widget.popup.Popup;
 
 import org.hamcrest.Description;

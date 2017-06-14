@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:androidfont="http://schemas.android.com/apk/res-auto"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:background="@color/black4"
-    android:orientation="vertical">
+              xmlns:androidfont="http://schemas.android.com/apk/res-auto"
+              android:layout_width="fill_parent"
+              android:layout_height="fill_parent"
+              android:background="@color/black4"
+              android:orientation="vertical">
 
     <FrameLayout
         android:layout_width="match_parent"
@@ -19,7 +19,7 @@
             android:text="@string/biostar2"
             android:textColor="@color/white"
             android:textSize="18dp"
-            androidfont:typeface="roboto_bold.ttf" />
+            androidfont:typeface="roboto_bold.ttf"/>
     </FrameLayout>
 
     <LinearLayout
@@ -38,7 +38,7 @@
             android:layout_marginTop="27.8dp"
             android:gravity="left|top"
             android:scaleType="fitXY"
-            android:src="@drawable/user_photo_bg" />
+            android:src="@drawable/user_photo_bg"/>
 
         <LinearLayout
             android:layout_width="0dp"
@@ -58,7 +58,7 @@
                 android:text=" "
                 android:textColor="@color/gray_11"
                 android:textSize="16dp"
-                androidfont:typeface="roboto_bold.ttf" />
+                androidfont:typeface="roboto_bold.ttf"/>
 
             <com.supremainc.biostar2.view.StyledTextView
                 android:id="@+id/side_menu_user_permission"
@@ -72,13 +72,13 @@
                 android:text=" "
                 android:textColor="@color/gray_11"
                 android:textSize="13dp"
-                androidfont:typeface="roboto_medium.ttf" />
+                androidfont:typeface="roboto_medium.ttf"/>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
-                android:orientation="vertical" />
+                android:orientation="vertical"/>
 
             <com.supremainc.biostar2.view.StyledTextView
                 android:id="@+id/side_menu_logout"
@@ -94,14 +94,14 @@
                 android:text="@string/log_out"
                 android:textColor="@color/white"
                 android:textSize="11dp"
-                androidfont:typeface="roboto_medium.ttf" />
+                androidfont:typeface="roboto_medium.ttf"/>
         </LinearLayout>
     </LinearLayout>
 
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0.6dp"
-        android:background="@color/drawer_devider" />
+        android:background="@color/drawer_devider"/>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -124,7 +124,7 @@
                 android:layout_marginLeft="24dp"
                 android:layout_marginRight="12dp"
                 android:gravity="left|center_vertical"
-                android:src="@drawable/list_user_ic" />
+                android:src="@drawable/list_user_ic"/>
 
             <com.supremainc.biostar2.view.StyledTextView
                 android:layout_width="0dp"
@@ -135,7 +135,7 @@
                 android:text="@string/user"
                 android:textColor="@color/gray_11"
                 android:textSize="17dp"
-                androidfont:typeface="roboto_bold.ttf" />
+                androidfont:typeface="roboto_bold.ttf"/>
 
             <com.supremainc.biostar2.view.StyledTextView
                 android:id="@+id/side_menu_user_count"
@@ -146,14 +146,14 @@
                 android:gravity="center"
                 android:textColor="@color/white"
                 android:textSize="11dp"
-                androidfont:typeface="roboto_regular.ttf" />
+                androidfont:typeface="roboto_regular.ttf"/>
         </LinearLayout>
 
         <FrameLayout
             android:id="@+id/side_menu_user_devider"
             android:layout_width="match_parent"
             android:layout_height="0.6dp"
-            android:background="@color/drawer_devider" />
+            android:background="@color/drawer_devider"/>
 
         <LinearLayout
             android:id="@+id/side_menu_door"
@@ -169,7 +169,7 @@
                 android:layout_marginLeft="24dp"
                 android:layout_marginRight="12dp"
                 android:gravity="left|center_vertical"
-                android:src="@drawable/list_door_ic" />
+                android:src="@drawable/list_door_ic"/>
 
             <com.supremainc.biostar2.view.StyledTextView
                 android:layout_width="0dp"
@@ -180,7 +180,7 @@
                 android:text="@string/door"
                 android:textColor="@color/gray_11"
                 android:textSize="17dp"
-                androidfont:typeface="roboto_bold.ttf" />
+                androidfont:typeface="roboto_bold.ttf"/>
 
             <com.supremainc.biostar2.view.StyledTextView
                 android:id="@+id/side_menu_door_count"
@@ -191,14 +191,14 @@
                 android:gravity="center"
                 android:textColor="@color/white"
                 android:textSize="11dp"
-                androidfont:typeface="roboto_regular.ttf" />
+                androidfont:typeface="roboto_regular.ttf"/>
         </LinearLayout>
 
         <FrameLayout
             android:id="@+id/side_menu_door_devider"
             android:layout_width="match_parent"
             android:layout_height="0.6dp"
-            android:background="@color/drawer_devider" />
+            android:background="@color/drawer_devider"/>
 
         <LinearLayout
             android:id="@+id/side_menu_monitor"
@@ -214,7 +214,7 @@
                 android:layout_marginLeft="24dp"
                 android:layout_marginRight="12dp"
                 android:gravity="left|center_vertical"
-                android:src="@drawable/list_monitor_ic" />
+                android:src="@drawable/list_monitor_ic"/>
 
             <com.supremainc.biostar2.view.StyledTextView
                 android:layout_width="0dp"
@@ -225,14 +225,14 @@
                 android:text="@string/monitoring"
                 android:textColor="@color/gray_11"
                 android:textSize="17dp"
-                androidfont:typeface="roboto_bold.ttf" />
+                androidfont:typeface="roboto_bold.ttf"/>
         </LinearLayout>
 
         <FrameLayout
             android:id="@+id/side_menu_monitor_devider"
             android:layout_width="match_parent"
             android:layout_height="0.6dp"
-            android:background="@color/drawer_devider" />
+            android:background="@color/drawer_devider"/>
 
         <LinearLayout
             android:id="@+id/side_menu_alram"
@@ -248,7 +248,7 @@
                 android:layout_marginLeft="24dp"
                 android:layout_marginRight="12dp"
                 android:gravity="left|center_vertical"
-                android:src="@drawable/list_alram_ic" />
+                android:src="@drawable/list_alram_ic"/>
 
             <com.supremainc.biostar2.view.StyledTextView
                 android:layout_width="0dp"
@@ -259,7 +259,7 @@
                 android:text="@string/alarm"
                 android:textColor="@color/gray_11"
                 android:textSize="17dp"
-                androidfont:typeface="roboto_bold.ttf" />
+                androidfont:typeface="roboto_bold.ttf"/>
 
             <com.supremainc.biostar2.view.StyledTextView
                 android:id="@+id/side_menu_alarm_count"
@@ -270,14 +270,14 @@
                 android:gravity="center"
                 android:textColor="@color/white"
                 android:textSize="11dp"
-                androidfont:typeface="roboto_regular.ttf" />
+                androidfont:typeface="roboto_regular.ttf"/>
         </LinearLayout>
 
         <FrameLayout
             android:id="@+id/side_menu_alram_devider"
             android:layout_width="match_parent"
             android:layout_height="0.6dp"
-            android:background="@color/drawer_devider" />
+            android:background="@color/drawer_devider"/>
 
         <LinearLayout
             android:id="@+id/side_menu_card"
@@ -293,7 +293,7 @@
                 android:layout_marginLeft="24dp"
                 android:layout_marginRight="12dp"
                 android:gravity="left|center_vertical"
-                android:src="@drawable/list_mobilecard_ic" />
+                android:src="@drawable/list_mobilecard_ic"/>
 
             <com.supremainc.biostar2.view.StyledTextView
                 android:layout_width="0dp"
@@ -304,14 +304,14 @@
                 android:text="@string/mobile_card"
                 android:textColor="@color/gray_11"
                 android:textSize="17dp"
-                androidfont:typeface="roboto_bold.ttf" />
+                androidfont:typeface="roboto_bold.ttf"/>
         </LinearLayout>
 
         <FrameLayout
             android:id="@+id/side_menu_card_devider"
             android:layout_width="match_parent"
             android:layout_height="0.6dp"
-            android:background="@color/drawer_devider" />
+            android:background="@color/drawer_devider"/>
     </LinearLayout>
 
     <LinearLayout
@@ -327,7 +327,7 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:orientation="vertical" />
+            android:orientation="vertical"/>
 
         <LinearLayout
             android:id="@+id/side_menu_version"
@@ -344,7 +344,7 @@
                 android:text="@string/biostar2"
                 android:textColor="@color/drawer_info"
                 android:textSize="18dp"
-                androidfont:typeface="roboto_bold.ttf" />
+                androidfont:typeface="roboto_bold.ttf"/>
 
             <com.supremainc.biostar2.view.StyledTextView
                 android:layout_width="wrap_content"
@@ -353,7 +353,7 @@
                 android:text="@string/app_version"
                 android:textColor="@color/drawer_info"
                 android:textSize="11dp"
-                androidfont:typeface="roboto_regular.ttf" />
+                androidfont:typeface="roboto_regular.ttf"/>
         </LinearLayout>
 
         <com.supremainc.biostar2.view.StyledTextView
@@ -365,7 +365,7 @@
             android:text="@string/designed"
             android:textColor="@color/drawer_info_30"
             android:textSize="11dp"
-            androidfont:typeface="roboto_regular.ttf" />
+            androidfont:typeface="roboto_regular.ttf"/>
     </LinearLayout>
 
 </LinearLayout>

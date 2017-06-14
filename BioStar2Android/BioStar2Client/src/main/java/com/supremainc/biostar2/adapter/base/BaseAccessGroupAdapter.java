@@ -20,47 +20,65 @@ import android.widget.AbsListView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 
-import com.supremainc.biostar2.R;
-import com.supremainc.biostar2.meta.Setting;
-import com.supremainc.biostar2.sdk.datatype.v2.AccessControl.AccessGroups;
-import com.supremainc.biostar2.sdk.datatype.v2.AccessControl.ListAccessGroup;
-import com.supremainc.biostar2.sdk.provider.AccessGroupDataProvider;
-import com.supremainc.biostar2.sdk.volley.Response;
-import com.supremainc.biostar2.sdk.volley.Response.Listener;
-import com.supremainc.biostar2.sdk.volley.VolleyError;
+import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutDirection;
+import com.supremainc.biostar2.sdk.models.v2.accesscontrol.AccessGroups;
+import com.supremainc.biostar2.sdk.models.v2.accesscontrol.ListAccessGroup;
+import com.supremainc.biostar2.sdk.provider.AccessControlDataProvider;
 import com.supremainc.biostar2.widget.popup.Popup;
 import com.supremainc.biostar2.widget.popup.Popup.OnPopupClickListener;
-import com.supremainc.biostar2.widget.popup.Popup.PopupType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 public abstract class BaseAccessGroupAdapter extends BaseListAdapter<ListAccessGroup> {
     protected static final int FIRST_LIMIT = 50;
-    protected AccessGroupDataProvider mAccessGroupDataProvider;
+    protected AccessControlDataProvider mAccessControlDataProvider;
     protected boolean mIsLastItemVisible = false;
     protected int mLimit = FIRST_LIMIT;
     protected int mOffset = 0;
     protected Map<String, ListAccessGroup> mDuplicateItemMap = new HashMap<String, ListAccessGroup>();
-    Listener<AccessGroups> mItemListener = new Response.Listener<AccessGroups>() {
+
+
+    private Callback<AccessGroups> mItemListener = new Callback<AccessGroups>() {
         @Override
-        public void onResponse(AccessGroups response, Object deliverParam) {
-            if (mPopup != null) {
-                mPopup.dismiss();
-            }
-            if (isDestroy()) {
+        public void onFailure(Call<AccessGroups> call, Throwable t) {
+            if (isIgnoreCallback(call, true)) {
                 return;
             }
-             if (mSwipyRefreshLayout != null) {
-                mSwipyRefreshLayout.setRefreshing(false);
+            showRetryPopup(t.getMessage(), new OnPopupClickListener() {
+                @Override
+                public void OnNegative() {
+
+                }
+
+                @Override
+                public void OnPositive() {
+                    getItems(mQuery);
+                }
+            });
+        }
+
+        @Override
+        public void onResponse(Call<AccessGroups> call, Response<AccessGroups> response) {
+            if (isIgnoreCallback(call, response, true)) {
+                return;
             }
-            if (response == null || response.records == null || response.records.size() < 1) {
+            if (isInvalidResponse(response, false, false)) {
+                mItemListener.onFailure(call, new Throwable(getResponseErrorMessage(response)));
+                return;
+            }
+            AccessGroups accessGroups = response.body();
+            if (accessGroups.records == null || accessGroups.records.size() < 1) {
                 if (mOnItemsListener != null) {
                     if (mItems == null || mItems.size() < 1) {
-                        mTotal =0;
-                        mOnItemsListener.onNoMoreData();
+                        mTotal = 0;
+                        mOnItemsListener.onNoneData();
                     } else {
                         mTotal = mItems.size();
                         mOnItemsListener.onSuccessNull(mItems.size());
@@ -68,85 +86,55 @@ public abstract class BaseAccessGroupAdapter extends BaseListAdapter<ListAccessG
                 }
                 return;
             }
-            mOffset = mOffset + response.records.size();
-            mTotal = response.total;
+            mOffset = mOffset + accessGroups.records.size();
+            mTotal = accessGroups.total;
             if (mDuplicateItems != null && mDuplicateItems.size() > 0) {
                 mDuplicateItemMap.clear();
-                for (ListAccessGroup item:mDuplicateItems) {
-                    mDuplicateItemMap.put(item.id,item);
+                for (ListAccessGroup item : mDuplicateItems) {
+                    mDuplicateItemMap.put(item.id, item);
                 }
-                mTotal = response.total - mDuplicateItems.size();
-                for(Iterator<ListAccessGroup> it = response.records.iterator(); it.hasNext() ; )
-                {
+                mTotal = accessGroups.total - mDuplicateItems.size();
+                for (Iterator<ListAccessGroup> it = accessGroups.records.iterator(); it.hasNext(); ) {
                     ListAccessGroup value = it.next();
                     if (mDuplicateItemMap.get(value.id) != null) {
                         it.remove();
                     }
                 }
             }
-            if (mTotal < response.records.size()) {
-                mTotal = response.records.size();
+            if (mTotal < accessGroups.records.size()) {
+                mTotal = accessGroups.records.size();
             }
             if (mOnItemsListener != null) {
                 mOnItemsListener.onTotalReceive(mTotal);
             }
-            setData(response.records);
+            setData(accessGroups.records);
         }
     };
-    Response.ErrorListener mItemErrorListener = new Response.ErrorListener() {
-        @Override
-        public void onErrorResponse(VolleyError error, Object deliverParam) {
-            if (mPopup != null) {
-                mPopup.dismiss();
-            }
-            if (isDestroy(error)) {
-                return;
-            }
-            if (mSwipyRefreshLayout != null) {
-                mSwipyRefreshLayout.setRefreshing(false);
-            }
-            if (mPopup != null) {
-                mPopup.show(PopupType.ALERT, mActivity.getString(R.string.fail_retry), Setting.getErrorMessage(error, mActivity), new OnPopupClickListener() {
-                    @Override
-                    public void OnNegative() {
-                        mCancelExitListener.onCancel(null);
-                    }
 
-                    @Override
-                    public void OnPositive() {
-                        getItems(mQuery);
-                    }
-                }, mActivity.getString(R.string.ok), mActivity.getString(R.string.cancel), false);
-            }
-        }
-    };
-    Runnable mRunGetItems = new Runnable() {
+    private Runnable mRunGetItems = new Runnable() {
         @Override
         public void run() {
 //            mAccessGroupDataProvider.getAccessGroups(TAG, mItemListener, mItemErrorListener,mOffset,mLimit,null, null);
-            if (isDestroy()) {
+            if (isInValidCheck()) {
                 return;
             }
-            mAccessGroupDataProvider.getAccessGroups(TAG, mItemListener, mItemErrorListener,mOffset,5000,null, null);
+            request(mAccessControlDataProvider.getAccessGroups(mOffset, 5000, null, mItemListener));
         }
     };
 
+
     public BaseAccessGroupAdapter(Activity context, ArrayList<ListAccessGroup> items, ListView listView, OnItemClickListener itemClickListener, Popup popup, OnItemsListener onItemsListener) {
         super(context, items, listView, itemClickListener, popup, onItemsListener);
-        mAccessGroupDataProvider = AccessGroupDataProvider.getInstance(context);
+        mAccessControlDataProvider = AccessControlDataProvider.getInstance(context);
         setOnScrollListener(new AbsListView.OnScrollListener() {
             @Override
             public void onScrollStateChanged(AbsListView view, int scrollState) {
                 if (scrollState == AbsListView.OnScrollListener.SCROLL_STATE_IDLE && mIsLastItemVisible && mTotal - 1 > mOffset) {
-                    if (mPopup != null) {
-                        mPopup.showWait(mCancelExitListener);
-                    }
+                    showWait(SwipyRefreshLayoutDirection.BOTTOM);
                     mHandler.removeCallbacks(mRunGetItems);
                     mHandler.postDelayed(mRunGetItems, 100);
                 } else {
-                    if (mPopup != null) {
-                        mPopup.dismissWiat();
-                    }
+                    dismissWait();
                 }
             }
 
@@ -163,10 +151,8 @@ public abstract class BaseAccessGroupAdapter extends BaseListAdapter<ListAccessG
         mOffset = 0;
         mTotal = 0;
         mHandler.removeCallbacks(mRunGetItems);
-        mAccessGroupDataProvider.cancelAll(TAG);
-        if (mPopup != null) {
-            mPopup.showWait(mCancelExitListener);
-        }
+        clearRequest();
+        showWait(SwipyRefreshLayoutDirection.TOP);
         if (mItems != null) {
             mItems.clear();
             notifyDataSetChanged();

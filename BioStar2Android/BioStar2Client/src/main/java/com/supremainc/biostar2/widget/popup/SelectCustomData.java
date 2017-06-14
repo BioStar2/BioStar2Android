@@ -21,6 +21,7 @@ public class SelectCustomData implements Cloneable, Serializable {
     private static final long serialVersionUID = 6226937693819768375L;
     public String mId;
     public boolean mIsSelected;
+    public boolean mIsDisable;
     public String mTitle;
 
     public SelectCustomData(String title, String id, boolean selected) {
@@ -33,6 +34,13 @@ public class SelectCustomData implements Cloneable, Serializable {
         mTitle = title;
         mId = String.valueOf(id);
         mIsSelected = selected;
+    }
+
+    public SelectCustomData(String title, int id, boolean selected,boolean disable) {
+        mTitle = title;
+        mId = String.valueOf(id);
+        mIsSelected = selected;
+        mIsDisable = disable;
     }
 
     public SelectCustomData clone() throws CloneNotSupportedException {

@@ -20,50 +20,79 @@ import android.widget.AbsListView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 
+import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutDirection;
 import com.supremainc.biostar2.R;
-import com.supremainc.biostar2.meta.Setting;
-import com.supremainc.biostar2.sdk.datatype.v2.Device.Devices;
-import com.supremainc.biostar2.sdk.datatype.v2.Device.ListDevice;
+import com.supremainc.biostar2.sdk.models.v2.device.Devices;
+import com.supremainc.biostar2.sdk.models.v2.device.ListDevice;
 import com.supremainc.biostar2.sdk.provider.DeviceDataProvider;
-import com.supremainc.biostar2.sdk.volley.Response;
-import com.supremainc.biostar2.sdk.volley.Response.Listener;
-import com.supremainc.biostar2.sdk.volley.VolleyError;
 import com.supremainc.biostar2.widget.popup.Popup;
 import com.supremainc.biostar2.widget.popup.Popup.OnPopupClickListener;
-import com.supremainc.biostar2.widget.popup.Popup.PopupType;
 
 import java.util.ArrayList;
 
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 public abstract class BaseDeviceAdapter extends BaseListAdapter<ListDevice> {
+    protected static final int FIRST_LIMIT = 50;
     protected DeviceDataProvider mDeviceDataProvider;
     protected int mDeviceSupport;
     protected boolean misWithOutSlave = false;
-    private ShowType mType=ShowType.DEVICE;
-    private int mAddedCount =0;
-    private int mRemovedCount =0;
     protected boolean mIsLastItemVisible = false;
     protected int mLimit = FIRST_LIMIT;
     protected int mOffset = 0;
-    protected static final int FIRST_LIMIT = 50;
-
-    public enum ShowType {
-        DEVICE,DEVICE_CARD, DEVICE_CARD_CSN, DEVICE_CARD_WIEGAND, DEVICE_CARD_SMARTCARD
-    }
-    Listener<Devices> mItemListener = new Listener<Devices>() {
+    private ShowType mType = ShowType.DEVICE;
+    private int mAddedCount = 0;
+    private int mRemovedCount = 0;
+    private Callback<Devices> mItemListener = new Callback<Devices>() {
         @Override
-        public void onResponse(Devices response, Object deliverParam) {
-            if (mPopup != null) {
-                mPopup.dismiss();
-            }
-            if (isDestroy()) {
+        public void onFailure(Call<Devices> call, Throwable t) {
+            if (isIgnoreCallback(call, true)) {
                 return;
             }
 
-            if (response == null || response.records == null || response.records.size() < 1) {
+            showRetryPopup(t.getMessage(), new OnPopupClickListener() {
+                @Override
+                public void OnNegative() {
+
+                }
+
+                @Override
+                public void OnPositive() {
+                    showWait(null);
+                    mHandler.removeCallbacks(mRunGetItems);
+                    mHandler.post(mRunGetItems);
+                }
+            });
+        }
+
+        @Override
+        public void onResponse(Call<Devices> call, Response<Devices> response) {
+            if (isIgnoreCallback(call, response, true)) {
+                return;
+            }
+            if (isInvalidResponse(response, false, false)) {
+                mItemListener.onFailure(call, new Throwable(getResponseErrorMessage(response)));
+                return;
+            }
+            if (mItems == null) {
+                mItems = new ArrayList<ListDevice>();
+            }
+            if (mType == ShowType.DEVICE_FINGERPRINT_BIOMINI) {
+                if (mItems.size() < 1) {
+                    ListDevice listDevice = new ListDevice();
+                    listDevice.name = mActivity.getString(R.string.portable);
+                    listDevice.id = "-10";
+                    mItems.add(listDevice);
+                }
+            }
+            Devices devices = response.body();
+            if (devices.records == null || devices.records.size() < 1) {
                 if (mOnItemsListener != null) {
                     if (mItems == null || mItems.size() < 1) {
-                        mTotal =0;
-                        mOnItemsListener.onNoMoreData();
+                        mTotal = 0;
+                        mOnItemsListener.onNoneData();
                     } else {
                         mTotal = mItems.size();
                         mOnItemsListener.onSuccessNull(mItems.size());
@@ -71,26 +100,23 @@ public abstract class BaseDeviceAdapter extends BaseListAdapter<ListDevice> {
                 }
                 return;
             }
-            if (mItems == null) {
-                mItems = new ArrayList<ListDevice>();
-            }
 
-            if (response.records.size() < 1) {
+            if (devices.records.size() < 1) {
                 return;
             }
-            int i = response.records.size() - 1;
-            mOffset = mOffset + response.records.size();
+            int i = devices.records.size() - 1;
+            mOffset = mOffset + devices.records.size();
             for (; i >= 0; i--) {
-                ListDevice device = response.records.get(i);
+                ListDevice device = devices.records.get(i);
                 if (!device.isSupport(misWithOutSlave, mDeviceSupport)) {
-                    response.records.remove(i);
+                    devices.records.remove(i);
                     mRemovedCount++;
                     continue;
                 }
                 switch (mType) {
-                    case  DEVICE_CARD_CSN:
+                    case DEVICE_CARD_CSN:
                         if (device.isSupportCSNWiegand()) {
-                            response.records.remove(i);
+                            devices.records.remove(i);
                             mRemovedCount++;
                             continue;
                         }
@@ -102,26 +128,29 @@ public abstract class BaseDeviceAdapter extends BaseListAdapter<ListDevice> {
                         break;
                     case DEVICE_CARD_SMARTCARD:
                         if (device.smart_card_layout == null) {
-                            response.records.remove(i);
+                            devices.records.remove(i);
                             mRemovedCount++;
                             continue;
                         }
                         break;
                     case DEVICE_CARD_WIEGAND:
                         if (!(device.isSupportWiegand() || device.isSupportCSNWiegand())) {
-                            response.records.remove(i);
+                            devices.records.remove(i);
                             mRemovedCount++;
                             continue;
                         }
                         break;
+                    case DEVICE_FINGERPRINT_BIOMINI:
+
+                        break;
                 }
             }
-            for (ListDevice listDevice : response.records) {
+            for (ListDevice listDevice : devices.records) {
                 mItems.add(listDevice);
                 mAddedCount++;
             }
             setData(mItems);
-            mTotal = response.total-mRemovedCount;
+            mTotal = devices.total - mRemovedCount;
             if (mTotal < 0) {
                 mTotal = 0;
             }
@@ -129,9 +158,7 @@ public abstract class BaseDeviceAdapter extends BaseListAdapter<ListDevice> {
                 mTotal = mItems.size();
             }
             if (mAddedCount < mLimit) {
-                if (mPopup != null) {
-                    mPopup.showWait(mCancelExitListener);
-                }
+                showWait(null);
                 mHandler.removeCallbacks(mRunGetItems);
                 mHandler.postDelayed(mRunGetItems, 100);
             }
@@ -141,48 +168,18 @@ public abstract class BaseDeviceAdapter extends BaseListAdapter<ListDevice> {
             }
         }
     };
-    Response.ErrorListener mItemErrorListener = new Response.ErrorListener() {
-        @Override
-        public void onErrorResponse(VolleyError error, Object deliverParam) {
-            if (mPopup != null) {
-                mPopup.dismiss();
-            }
-            if (isDestroy(error)) {
-                return;
-            }
-            if (mPopup != null) {
-                mPopup.show(PopupType.ALERT, mActivity.getString(R.string.fail_retry), Setting.getErrorMessage(error, mActivity), new OnPopupClickListener() {
-                    @Override
-                    public void OnNegative() {
-                        mCancelExitListener.onCancel(null);
-                    }
-
-                    @Override
-                    public void OnPositive() {
-                        mHandler.removeCallbacks(mRunGetItems);
-                        mHandler.post(mRunGetItems);
-                    }
-                }, mActivity.getString(R.string.ok), mActivity.getString(R.string.cancel), false);
-            }
-        }
-    };
-    Runnable mRunGetItems = new Runnable() {
+    private Runnable mRunGetItems = new Runnable() {
         @Override
         public void run() {
-            if (isDestroy()) {
+            if (isInValidCheck()) {
                 return;
             }
             if (isMemoryPoor()) {
-                if (mPopup != null) {
-                    mPopup.dismiss();
-                }
-                if (mSwipyRefreshLayout != null) {
-                    mSwipyRefreshLayout.setRefreshing(false);
-                }
+                dismissWait();
                 mToastPopup.show(mActivity.getString(R.string.memory_poor), null);
                 return;
             }
-            mDeviceDataProvider.getDevices(TAG, mItemListener, mItemErrorListener,mOffset, mLimit,mQuery, null);
+            request(mDeviceDataProvider.getDevices(mOffset, mLimit, mQuery, mItemListener));
         }
     };
 
@@ -193,15 +190,11 @@ public abstract class BaseDeviceAdapter extends BaseListAdapter<ListDevice> {
             @Override
             public void onScrollStateChanged(AbsListView view, int scrollState) {
                 if (scrollState == AbsListView.OnScrollListener.SCROLL_STATE_IDLE && mIsLastItemVisible && mTotal - 1 > mOffset) {
-                    if (mPopup != null) {
-                        mPopup.showWait(mCancelExitListener);
-                    }
+                    showWait(null);
                     mHandler.removeCallbacks(mRunGetItems);
                     mHandler.postDelayed(mRunGetItems, 100);
                 } else {
-                    if (mPopup != null) {
-                        mPopup.dismissWiat();
-                    }
+                    dismissWait();
                 }
             }
 
@@ -218,13 +211,11 @@ public abstract class BaseDeviceAdapter extends BaseListAdapter<ListDevice> {
         mOffset = 0;
         mTotal = 0;
         mAddedCount = 0;
-        mRemovedCount =0;
+        mRemovedCount = 0;
         mLimit = FIRST_LIMIT;
         mHandler.removeCallbacks(mRunGetItems);
-        mDeviceDataProvider.cancelAll(TAG);
-        if (mPopup != null) {
-            mPopup.showWait(mCancelExitListener);
-        }
+        clearRequest();
+        showWait(SwipyRefreshLayoutDirection.TOP);
         if (mItems != null) {
             mItems.clear();
             notifyDataSetChanged();
@@ -242,5 +233,9 @@ public abstract class BaseDeviceAdapter extends BaseListAdapter<ListDevice> {
 
     public void setMasterOnly(boolean b) {
         misWithOutSlave = b;
+    }
+
+    public enum ShowType {
+        DEVICE, DEVICE_CARD, DEVICE_CARD_CSN, DEVICE_CARD_WIEGAND, DEVICE_CARD_SMARTCARD, DEVICE_FINGERPRINT_BIOMINI
     }
 }

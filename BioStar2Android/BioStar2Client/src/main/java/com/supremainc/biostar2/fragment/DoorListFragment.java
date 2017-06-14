@@ -29,19 +29,18 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 
 import com.supremainc.biostar2.R;
-import com.supremainc.biostar2.meta.Setting;
 import com.supremainc.biostar2.adapter.DoorAdapter;
 import com.supremainc.biostar2.adapter.base.BaseListAdapter.OnItemsListener;
-import com.supremainc.biostar2.sdk.datatype.v2.Door.Door;
-import com.supremainc.biostar2.sdk.datatype.v2.Door.ListDoor;
-import com.supremainc.biostar2.sdk.volley.Response;
-import com.supremainc.biostar2.sdk.volley.Response.Listener;
-import com.supremainc.biostar2.sdk.volley.VolleyError;
+import com.supremainc.biostar2.meta.Setting;
+import com.supremainc.biostar2.sdk.models.v2.door.Door;
+import com.supremainc.biostar2.sdk.models.v2.door.ListDoor;
 import com.supremainc.biostar2.view.SubToolbar;
 import com.supremainc.biostar2.widget.ScreenControl;
 import com.supremainc.biostar2.widget.ScreenControl.ScreenType;
-import com.supremainc.biostar2.widget.popup.Popup.OnPopupClickListener;
-import com.supremainc.biostar2.widget.popup.Popup.PopupType;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class DoorListFragment extends BaseFragment {
     private DoorAdapter mDoorAdapter;
@@ -49,53 +48,39 @@ public class DoorListFragment extends BaseFragment {
     private SubToolbar mSubToolbar;
     private int mTotal = 0;
     private int mSelectedDoorPosition = -1;
-    private Listener<Door> mDoorListener = new Listener<Door>() {
-        @Override
-        public void onResponse(Door response, Object param) {
-            if (isInValidCheck(null)) {
+
+
+    private Callback<Door> mDoorListener = new Callback<Door>() {
+            @Override
+        public void onFailure(Call<Door> call, Throwable t) {
+            if (isIgnoreCallback(call, true)) {
                 return;
             }
-            mPopup.dismissWiat();
+            showErrorPopup(t.getMessage(), false);
+        }
+
+        @Override
+        public void onResponse(Call<Door> call, Response<Door> response) {
+            if (isIgnoreCallback(call, response, true)) {
+                return;
+            }
+            if (isInvalidResponse(response, true, false)) {
+                return;
+            }
             Bundle bundle = new Bundle();
             try {
-                bundle.putSerializable(Door.TAG, response);
+                bundle.putSerializable(Door.TAG, response.body());
                 if (mDoorAdapter != null && mSelectedDoorPosition > -1) {
-                    mDoorAdapter.setData(mSelectedDoorPosition, response);
+                    mDoorAdapter.setData(mSelectedDoorPosition, response.body());
                 }
             } catch (Exception e) {
-                e.printStackTrace();
                 return;
             }
             ScreenControl screenControl = ScreenControl.getInstance();
             screenControl.addScreen(ScreenType.DOOR, bundle);
         }
     };
-    private Response.ErrorListener mDoorErrorListener = new Response.ErrorListener() {
-        @Override
-        public void onErrorResponse(VolleyError error, final Object deliverParam) {
-            if (isInValidCheck(error)) {
-                return;
-            }
-            mPopup.dismissWiat();
-            mPopup.show(PopupType.ALERT, mContext.getString(R.string.fail_retry), Setting.getErrorMessage(error, mContext), new OnPopupClickListener() {
-                @Override
-                public void OnNegative() {
 
-                }
-
-                @Override
-                public void OnPositive() {
-                    mHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            mPopup.showWait(true);
-                            mDoorDataProvider.getDoor(TAG, (String) deliverParam, mDoorListener, mDoorErrorListener, deliverParam);
-                        }
-                    });
-                }
-            }, mContext.getString(R.string.ok), mContext.getString(R.string.cancel));
-        }
-    };
     private OnItemClickListener mOnItemClickListener = new OnItemClickListener() {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
@@ -105,22 +90,10 @@ public class DoorListFragment extends BaseFragment {
             }
             mPopup.showWait(true);
             mSelectedDoorPosition = position;
-            mDoorDataProvider.getDoor(TAG, item.id, mDoorListener, mDoorErrorListener, item.id);
+            request(mDoorDataProvider.getDoor(item.id, mDoorListener));
         }
     };
-
-    private void setTotal(int total) {
-        if (mTotal != total) {
-            mSubToolbar.setTotal(total);
-            mTotal = total;
-            if (mSearchText == null) {
-                sendLocalBroadcast(Setting.BROADCAST_DOOR_COUNT, total);
-            }
-        }
-    }
-
-    private OnItemsListener mOnItemsListener = new OnItemsListener()
-    {
+    private OnItemsListener mOnItemsListener = new OnItemsListener() {
         @Override
         public void onSuccessNull(int total) {
             mIsDataReceived = true;
@@ -128,7 +101,7 @@ public class DoorListFragment extends BaseFragment {
         }
 
         @Override
-        public void onNoMoreData() {
+        public void onNoneData() {
             mIsDataReceived = true;
             mToastPopup.show(getString(R.string.none_data), null);
             setTotal(0);
@@ -147,9 +120,19 @@ public class DoorListFragment extends BaseFragment {
         TAG = getClass().getSimpleName() + String.valueOf(System.currentTimeMillis());
     }
 
+    private void setTotal(int total) {
+        if (mTotal != total) {
+            mSubToolbar.setTotal(total);
+            mTotal = total;
+            if (mSearchText == null) {
+                sendLocalBroadcast(Setting.BROADCAST_DOOR_COUNT, total);
+            }
+        }
+    }
+
     private void initValue() {
         if (mDoorAdapter == null) {
-            mDoorAdapter = new DoorAdapter(mContext, null, getListView(), mOnItemClickListener, mPopup, mOnItemsListener);
+            mDoorAdapter = new DoorAdapter(mActivity, null, getListView(), mOnItemClickListener, mPopup, mOnItemsListener);
             mDoorAdapter.setSwipyRefreshLayout(getSwipeyLayout(), getFab());
         }
         if (mSubToolbar == null) {
@@ -167,6 +150,7 @@ public class DoorListFragment extends BaseFragment {
             mSubToolbar.showMultipleSelectInfo(false, 0);
         }
     }
+
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {

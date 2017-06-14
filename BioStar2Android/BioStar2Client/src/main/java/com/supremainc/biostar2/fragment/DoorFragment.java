@@ -15,37 +15,24 @@
  */
 package com.supremainc.biostar2.fragment;
 
-import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
-import android.content.DialogInterface.OnCancelListener;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.content.pm.PackageManager;
-import android.os.Build;
 import android.os.Bundle;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.LocalBroadcastManager;
-import android.telephony.PhoneNumberUtils;
-import android.telephony.TelephonyManager;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-import com.supremainc.biostar2.BuildConfig;
 import com.supremainc.biostar2.R;
-import com.supremainc.biostar2.meta.Setting;
 import com.supremainc.biostar2.adapter.DetailAdapter;
 import com.supremainc.biostar2.datatype.DoorDetailData;
-import com.supremainc.biostar2.sdk.datatype.v2.Common.ResponseStatus;
-import com.supremainc.biostar2.sdk.datatype.v2.Door.Door;
-import com.supremainc.biostar2.sdk.datatype.v2.Permission.PermissionModule;
-import com.supremainc.biostar2.sdk.provider.TimeConvertProvider;
-import com.supremainc.biostar2.sdk.volley.Response;
-import com.supremainc.biostar2.sdk.volley.Response.Listener;
-import com.supremainc.biostar2.sdk.volley.VolleyError;
+import com.supremainc.biostar2.meta.Setting;
+import com.supremainc.biostar2.sdk.models.v2.common.ResponseStatus;
+import com.supremainc.biostar2.sdk.models.v2.door.Door;
+import com.supremainc.biostar2.sdk.models.v2.permission.PermissionModule;
+import com.supremainc.biostar2.sdk.provider.DateTimeDataProvider;
 import com.supremainc.biostar2.view.SummaryDoorView;
 import com.supremainc.biostar2.widget.ScreenControl.ScreenType;
 import com.supremainc.biostar2.widget.popup.Popup;
@@ -58,173 +45,71 @@ import com.supremainc.biostar2.widget.popup.ToastPopup;
 import java.util.ArrayList;
 import java.util.Calendar;
 
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 public class DoorFragment extends BaseFragment {
     private SummaryDoorView mSummaryDoorView;
     private ArrayList<DoorDetailData.DoorDetail> mListData;
     private DetailAdapter mDetailAdapter;
     private Door mDoor;
+    private String mControlTitle = "";
 
-    private OnCancelListener mCancelListener = new OnCancelListener() {
+    private Callback<ResponseStatus> mRequestDoorListener = new Callback<ResponseStatus>() {
         @Override
-        public void onCancel(DialogInterface dialog) {
-            mCommonDataProvider.cancelAll(TAG);
-            mToastPopup.show(getString(R.string.canceled), null);
-            mScreenControl.backScreen();
-        }
-    };
-    private Response.ErrorListener mRequestDoorErrorListener = new Response.ErrorListener() {
-        @Override
-        public void onErrorResponse(VolleyError error, Object deliverParam) {
-            if (isInValidCheck(error)) {
+        public void onFailure(Call<ResponseStatus> call, Throwable t) {
+            if (isIgnoreCallback(call, true)) {
                 return;
             }
-            mPopup.dismissWiat();
-            Log.e(TAG, "get mDoor:" + error.getMessage());
-            mToastPopup.show(ToastPopup.TYPE_ALARM, getString(R.string.request_open_fail), null);
-            // mToastPopup.show(ToastPopup.TYPE_DOOR,
-            // null,Setting.getErrorMessage(error, mContext));
+            String date = mDateTimeDataProvider.convertCalendarToFormatter(Calendar.getInstance(), DateTimeDataProvider.DATE_TYPE.FORMAT_DATE_HOUR_MIN_SEC);
+            mPopup.show(Popup.PopupType.DOOR, getString(R.string.fail)+". "+ getString(R.string.request_open), mDoor.name + " / " + mDoor.id + "\n" + date+ "\n"+t.getMessage(), null, null, null);
         }
-    };
-    private Listener<Door> mDoorListener = new Listener<Door>() {
-        @Override
-        public void onResponse(Door response, Object param) {
-            if (isInValidCheck(null)) {
-                return;
-            }
-            mPopup.dismissWiat();
-            if (response != null) {
-                mDoor = response;
-                setView();
-            }
-            try {
-                sendLocalBroadcast(Setting.BROADCAST_UPDATE_DOOR, mDoor.clone());
-            } catch (CloneNotSupportedException e) {
-                if (e != null) {
-                    e.printStackTrace();
-                }
-            }
-        }
-    };
-    private Response.ErrorListener mDoorErrorListener = new Response.ErrorListener() {
-        @Override
-        public void onErrorResponse(VolleyError error, final Object deliverParam) {
-            if (isInValidCheck(error)) {
-                return;
-            }
-            mPopup.dismissWiat();
-            mPopup.show(Popup.PopupType.ALERT, mContext.getString(R.string.fail_retry), Setting.getErrorMessage(error, mContext), new Popup.OnPopupClickListener() {
-                @Override
-                public void OnNegative() {
-                    sendLocalBroadcast(Setting.BROADCAST_UPDATE_DOOR, null);
-                }
 
-                @Override
-                public void OnPositive() {
-                    mHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            mPopup.showWait(true);
-                            mDoorDataProvider.getDoor(TAG, mDoor.id, mDoorListener, mDoorErrorListener, null);
-                        }
-                    });
-                }
-            }, mContext.getString(R.string.ok), mContext.getString(R.string.cancel));
+        @Override
+        public void onResponse(Call<ResponseStatus> call, Response<ResponseStatus> response) {
+            if (isIgnoreCallback(call, response, true)) {
+                return;
+            }
+            if (isInvalidResponse(response, false, false)) {
+                String date = mDateTimeDataProvider.convertCalendarToFormatter(Calendar.getInstance(), DateTimeDataProvider.DATE_TYPE.FORMAT_DATE_HOUR_MIN_SEC);
+                mPopup.show(Popup.PopupType.DOOR, getString(R.string.fail)+". "+ getString(R.string.request_open), mDoor.name + " / " + mDoor.id + "\n" + date+ "\n"+getResponseErrorMessage(response), null, null, null);
+                return;
+            }
+            String date = mDateTimeDataProvider.convertCalendarToFormatter(Calendar.getInstance(), DateTimeDataProvider.DATE_TYPE.FORMAT_DATE_HOUR_MIN_SEC);
+            mPopup.show(Popup.PopupType.DOOR, getString(R.string.request_open), mDoor.name + " / " + mDoor.id + "\n" + date, null, null, null);
         }
     };
 
-    private Listener<ResponseStatus> mControlListener = new Response.Listener<ResponseStatus>() {
+    private Callback<ResponseStatus> mControlListener = new Callback<ResponseStatus>() {
         @Override
-        public void onResponse(ResponseStatus response, Object deliverParam) {
-            if (isInValidCheck(null)) {
+        public void onFailure(Call<ResponseStatus> call, Throwable t) {
+            if (isIgnoreCallback(call, true)) {
                 return;
             }
-            int id = (Integer) deliverParam;
-            String message = "";
-            switch (id) {
-                case R.id.action_open:
-                    message = getString(R.string.door_is_open);
-                    break;
-                case R.id.action_lock:
-                    message = getString(R.string.manual_lock);
-                    break;
-                case R.id.action_unlock:
-                    message = getString(R.string.manual_unlock);
-                    break;
-                case R.id.action_release:
-                    message = getString(R.string.release);
-                    break;
-                case R.id.action_clear_apb:
-                    message = getString(R.string.clear_apb);
-                    break;
-                case R.id.action_clear_alarm:
-                    message = getString(R.string.clear_alarm);
-                    break;
-            }
-            String date = mTimeConvertProvider.convertCalendarToFormatter(Calendar.getInstance(), TimeConvertProvider.DATE_TYPE.FORMAT_DATE_HOUR_MIN_SEC);
-            mToastPopup.show(ToastPopup.TYPE_DOOR, message, date + " / " + mDoor.name);
-            if (mDoor == null) {
-                mPopup.dismissWiat();
+            String date = mDateTimeDataProvider.convertCalendarToFormatter(Calendar.getInstance(), DateTimeDataProvider.DATE_TYPE.FORMAT_DATE_HOUR_MIN_SEC);
+            String body = t.getMessage();
+            if (body != null && !body.isEmpty()) {
+                body = mDoor.name + " / " + mDoor.id + "\n" + date + "\n" + body;
             } else {
-                mDoorDataProvider.getDoor(TAG, mDoor.id, mDoorListener, mDoorErrorListener, null);
+                body = mDoor.name + " / " + mDoor.id + "\n" + date + "\n";
             }
+            mPopup.show(Popup.PopupType.DOOR, getString(R.string.fail) + ". " + mControlTitle, body, null, null, null);
         }
-    };
-    private Response.ErrorListener mControlErrorListener = new Response.ErrorListener() {
+
         @Override
-        public void onErrorResponse(VolleyError error, Object deliverParam) {
-            if (isInValidCheck(error)) {
+        public void onResponse(Call<ResponseStatus> call, Response<ResponseStatus> response) {
+            if (isIgnoreCallback(call, response, true)) {
                 return;
             }
-            mPopup.dismissWiat();
-            String errorDetail = error.getMessage();
-            if (BuildConfig.DEBUG) {
-                Log.e(TAG, "get mDoor:" + errorDetail);
-            }
-            int id = (Integer) deliverParam;
-            String message = "";
-            switch (id) {
-                case R.id.action_open:
-                    message = getString(R.string.door_open_fail);
-                    break;
-                case R.id.action_lock:
-                    message = getString(R.string.manual_lock) + " " + getString(R.string.fail);
-                    break;
-                case R.id.action_unlock:
-                    message = getString(R.string.manual_unlock) + " " + getString(R.string.fail);
-                    break;
-                case R.id.action_release:
-                    message = getString(R.string.release) + " " + getString(R.string.fail);
-                    break;
-                case R.id.action_clear_apb:
-                    message = getString(R.string.clear_apb) + " " + getString(R.string.fail);
-                    break;
-                case R.id.action_clear_alarm:
-                    message = getString(R.string.clear_alarm) + " " + getString(R.string.fail);
-                    break;
-            }
-            String date = mTimeConvertProvider.convertCalendarToFormatter(Calendar.getInstance(), TimeConvertProvider.DATE_TYPE.FORMAT_DATE_HOUR_MIN_SEC);
-            if (errorDetail != null && !errorDetail.isEmpty()) {
-                mToastPopup.show(ToastPopup.TYPE_DOOR, message, date + " / " + mDoor.name + "\n" + errorDetail);
-            } else {
-                mToastPopup.show(ToastPopup.TYPE_DOOR, message, date + " / " + mDoor.name);
-            }
-//            if (mDoor == null) {
-//                mPopup.dismissWiat();
-//            } else {
-//                mDoorDataProvider.getDoor(TAG, mDoor.id, mDoorListener, mDoorErrorListener, null);
-//            }
-        }
-    };
-    private Listener<ResponseStatus> mRequestDoorListener = new Response.Listener<ResponseStatus>() {
-        @Override
-        public void onResponse(ResponseStatus response, Object deliverParam) {
-            if (isInValidCheck(null)) {
+            if (isInvalidResponse(response, true,false)) {
                 return;
             }
-            mPopup.dismissWiat();
-            mToastPopup.show(ToastPopup.TYPE_ALARM, getString(R.string.request_open_sent), mDoor.name);
+            String date = mDateTimeDataProvider.convertCalendarToFormatter(Calendar.getInstance(), DateTimeDataProvider.DATE_TYPE.FORMAT_DATE_HOUR_MIN_SEC);
+            mPopup.show(Popup.PopupType.DOOR, mControlTitle, mDoor.name + " / " + mDoor.id + "\n" + date, null, null, null);
         }
     };
+
     private SummaryDoorView.SummaryDoorViewListener mSummaryDoorViewListener = new SummaryDoorView.SummaryDoorViewListener() {
         @Override
         public void onDoorAction() {
@@ -233,20 +118,6 @@ public class DoorFragment extends BaseFragment {
             } else {
                 sendOpenRequest();
             }
-        }
-
-        @Override
-        public void onGoLog() {
-            Door bundleItem = null;
-            try {
-                bundleItem = (Door) mDoor.clone();
-            } catch (CloneNotSupportedException e) {
-                e.printStackTrace();
-                return;
-            }
-            Bundle bundle = new Bundle();
-            bundle.putSerializable(Door.TAG, bundleItem);
-            mScreenControl.addScreen(ScreenType.MONITOR, bundle);
         }
 
         @Override
@@ -266,19 +137,7 @@ public class DoorFragment extends BaseFragment {
             }
         }
     };
-    private Runnable mRunAllow = new Runnable() {
-        @Override
-        public void run() {
-            sendOpenRequest();
-        }
-    };
-    private Runnable mRunDeny = new Runnable() {
-        @Override
-        public void run() {
-            mPopup.showWait(true);
-            mDoorDataProvider.openRequestDoor(TAG, mDoor.id, mDoorDataProvider.getLoginUserInfo().phone_number, mRequestDoorListener, mRequestDoorErrorListener, null);
-        }
-    };
+
 
     public DoorFragment() {
         super();
@@ -289,28 +148,34 @@ public class DoorFragment extends BaseFragment {
     private void actionDoor(int id) {
         switch (id) {
             case R.id.action_open:
-                mPopup.showWait(mCancelListener);
-                mDoorDataProvider.openDoor(TAG, mDoor.id, mControlListener, mControlErrorListener, R.id.action_open);
+                mPopup.showWait(mCancelExitListener);
+                mControlTitle = getString(R.string.door_is_open);
+                request(mDoorDataProvider.openDoor(mDoor.id, mControlListener));
                 break;
             case R.id.action_lock:
-                mPopup.showWait(mCancelListener);
-                mDoorDataProvider.lockDoor(TAG, mDoor.id, mControlListener, mControlErrorListener, R.id.action_lock);
+                mPopup.showWait(mCancelExitListener);
+                mControlTitle = getString(R.string.manual_lock);
+                request(mDoorDataProvider.lockDoor(mDoor.id, mControlListener));
                 break;
             case R.id.action_unlock:
-                mPopup.showWait(mCancelListener);
-                mDoorDataProvider.unlockDoor(TAG, mDoor.id, mControlListener, mControlErrorListener, R.id.action_unlock);
+                mPopup.showWait(mCancelExitListener);
+                mControlTitle = getString(R.string.manual_unlock);
+                request(mDoorDataProvider.unlockDoor(mDoor.id, mControlListener));
                 break;
             case R.id.action_release:
-                mPopup.showWait(mCancelListener);
-                mDoorDataProvider.releaseDoor(TAG, mDoor.id, mControlListener, mControlErrorListener, R.id.action_release);
+                mPopup.showWait(mCancelExitListener);
+                mControlTitle = getString(R.string.release);
+                request(mDoorDataProvider.releaseDoor(mDoor.id, mControlListener));
                 break;
             case R.id.action_clear_apb:
-                mPopup.showWait(mCancelListener);
-                mDoorDataProvider.clearAntiPassback(TAG, mDoor.id, mControlListener, mControlErrorListener, R.id.action_clear_apb);
+                mPopup.showWait(mCancelExitListener);
+                mControlTitle = getString(R.string.clear_apb);
+                request(mDoorDataProvider.clearAntiPassback(mDoor.id, mControlListener));
                 break;
             case R.id.action_clear_alarm:
-                mPopup.showWait(mCancelListener);
-                mDoorDataProvider.clearAlarm(TAG, mDoor.id, mControlListener, mControlErrorListener, R.id.action_clear_alarm);
+                mPopup.showWait(mCancelExitListener);
+                mControlTitle = getString(R.string.clear_alarm);
+                request(mDoorDataProvider.clearAlarm(mDoor.id, mControlListener));
                 break;
             default:
                 break;
@@ -325,12 +190,6 @@ public class DoorFragment extends BaseFragment {
                 mSummaryDoorView.setActionButtonName(getString(R.string.door_control));
             } else {
                 mSummaryDoorView.setActionButtonName(getString(R.string.request_open));
-            }
-
-            if (mPermissionDataProvider.getPermission(PermissionModule.MONITORING, false)) {
-                mSummaryDoorView.showGoLogBtn(true);
-            } else {
-                mSummaryDoorView.showGoLogBtn(false);
             }
         }
     }
@@ -348,9 +207,12 @@ public class DoorFragment extends BaseFragment {
             mListData = new ArrayList<DoorDetailData.DoorDetail>();
         } else {
             mListData.clear();
+            if (mDetailAdapter != null) {
+                mDetailAdapter.notifyDataSetChanged();
+            }
         }
         if (mDetailAdapter == null) {
-            mDetailAdapter = new DetailAdapter(mContext, null, getListView(), null, mPopup, null);
+            mDetailAdapter = new DetailAdapter(mActivity, null, getListView(), null, mPopup, null);
         }
         applyPermission();
         setView();
@@ -399,6 +261,7 @@ public class DoorFragment extends BaseFragment {
         }
     }
 
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         setResID(R.layout.fragment_door);
@@ -421,7 +284,7 @@ public class DoorFragment extends BaseFragment {
     }
 
     public void openMenu() {
-        SelectPopup<SelectCustomData> selectPopup = new SelectPopup<SelectCustomData>(mContext, mPopup);
+        SelectPopup<SelectCustomData> selectPopup = new SelectPopup<SelectCustomData>(mActivity, mPopup);
         ArrayList<SelectCustomData> linkType = new ArrayList<SelectCustomData>();
         linkType.add(new SelectCustomData(getString(R.string.open), R.id.action_open, false));
         linkType.add(new SelectCustomData(getString(R.string.manual_lock), R.id.action_lock, false));
@@ -434,8 +297,8 @@ public class DoorFragment extends BaseFragment {
         }
         selectPopup.show(SelectType.CUSTOM, new OnSelectResultListener<SelectCustomData>() {
             @Override
-            public void OnResult(ArrayList<SelectCustomData> selectedItem,boolean isPositive) {
-                if (isInValidCheck(null)) {
+            public void OnResult(ArrayList<SelectCustomData> selectedItem, boolean isPositive) {
+                if (isInValidCheck()) {
                     return;
                 }
                 if (selectedItem == null) {
@@ -453,53 +316,10 @@ public class DoorFragment extends BaseFragment {
         }, linkType, getString(R.string.door_control), false, true);
     }
 
-    @Override
-    public void onAllow(int requestCode) {
-        if (mHandler == null || requestCode != Setting.REQUEST_READ_PHONE_STATE) {
-            return;
-        }
-        mHandler.removeCallbacks(mRunAllow);
-        mHandler.postDelayed(mRunAllow, 1000);
-    }
-
-    @Override
-    public void onDeny(int requestCode) {
-        if (mHandler == null || requestCode != Setting.REQUEST_READ_PHONE_STATE) {
-            return;
-        }
-        mHandler.removeCallbacks(mRunDeny);
-        mHandler.postDelayed(mRunDeny, 1000);
-    }
-
     private void sendOpenRequest() {
-        String PhoneNumber = null;
-        try {
-            if (Build.VERSION.SDK_INT >= 23) {
-                if (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.READ_PHONE_STATE) != PackageManager.PERMISSION_GRANTED) {
-                    ActivityCompat.requestPermissions(mContext, new String[]{Manifest.permission.READ_PHONE_STATE},
-                            Setting.REQUEST_READ_PHONE_STATE);
-                    return;
-                }
-            }
-            TelephonyManager telephony = (TelephonyManager) mContext.getSystemService(Context.TELEPHONY_SERVICE);
-            if (telephony != null) {
-                PhoneNumber = telephony.getLine1Number();
-            }
-            if (PhoneNumber != null) {
-                PhoneNumber = PhoneNumberUtils.formatNumber(PhoneNumber);
-            }
-        } catch (Exception e) {
-            PhoneNumber = null;
-            if (BuildConfig.DEBUG) {
-                Log.e(TAG, " " + e.getMessage());
-            }
-        }
-
-        if (PhoneNumber == null) {
-            PhoneNumber = mDoorDataProvider.getLoginUserInfo().phone_number;
-        }
+        String PhoneNumber = mDoorDataProvider.getLoginUserInfo().phone_number;
         mPopup.showWait(true);
-        mDoorDataProvider.openRequestDoor(TAG, mDoor.id, PhoneNumber, mRequestDoorListener, mRequestDoorErrorListener, null);
+        request(mDoorDataProvider.openRequestDoor(mDoor.id, PhoneNumber, mRequestDoorListener));
     }
 
     private void setDoorIcon() {
@@ -574,6 +394,9 @@ public class DoorFragment extends BaseFragment {
 
         data = mDoor.getOpenDuration(getString(R.string.minute), getString(R.string.sec));
         mListData.add(new DoorDetailData.DoorDetail(getString(R.string.open_time), data, false, DoorDetailData.DoorDetailType.OPEN_TIME));
+        if (mDetailAdapter != null) {
+            mDetailAdapter.notifyDataSetChanged();
+        }
     }
 
 }

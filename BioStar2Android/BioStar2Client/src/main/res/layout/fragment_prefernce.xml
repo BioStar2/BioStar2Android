@@ -1,16 +1,16 @@
 <!-- <~SCREEN NAME)> {Setting} </~SCREEN NAME> -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:androidfont="http://schemas.android.com/apk/res-auto"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:gravity="center|top"
-    android:orientation="vertical">
+              xmlns:androidfont="http://schemas.android.com/apk/res-auto"
+              android:layout_width="fill_parent"
+              android:layout_height="fill_parent"
+              android:gravity="center|top"
+              android:orientation="vertical">
 
     <android.support.v7.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:minHeight="?attr/actionBarSize" />
+        android:minHeight="?attr/actionBarSize"/>
 
     <ScrollView
         android:layout_width="fill_parent"
@@ -34,7 +34,7 @@
                 android:text="@string/version_mobile"
                 android:textColor="@color/user_total"
                 android:textSize="14.67dp"
-                androidfont:typeface="roboto_medium.ttf" />
+                androidfont:typeface="roboto_medium.ttf"/>
 
             <LinearLayout
                 android:id="@+id/go_version_mobile"
@@ -59,7 +59,7 @@
                     android:singleLine="true"
                     android:textColor="@color/select_text"
                     android:textSize="18dp"
-                    androidfont:typeface="roboto_medium.ttf" />
+                    androidfont:typeface="roboto_medium.ttf"/>
 
                 <com.supremainc.biostar2.view.StyledTextView
                     android:id="@+id/version_mobile_new"
@@ -73,7 +73,7 @@
                     android:textColor="@color/white"
                     android:textSize="11dp"
                     android:visibility="gone"
-                    androidfont:typeface="roboto_bold.ttf" />
+                    androidfont:typeface="roboto_bold.ttf"/>
 
                 <ImageView
                     android:layout_width="wrap_content"
@@ -83,7 +83,7 @@
                     android:contentDescription="@string/image"
                     android:gravity="center"
                     android:scaleType="fitXY"
-                    android:src="@drawable/arrow_01" />
+                    android:src="@drawable/arrow_01"/>
             </LinearLayout>
 
             <com.supremainc.biostar2.view.StyledTextView
@@ -95,7 +95,7 @@
                 android:text="@string/timezone"
                 android:textColor="@color/user_total"
                 android:textSize="14.67dp"
-                androidfont:typeface="roboto_medium.ttf" />
+                androidfont:typeface="roboto_medium.ttf"/>
 
             <LinearLayout
                 android:id="@+id/go_timezone"
@@ -120,7 +120,7 @@
                     android:singleLine="true"
                     android:textColor="@color/select_text"
                     android:textSize="18dp"
-                    androidfont:typeface="roboto_medium.ttf" />
+                    androidfont:typeface="roboto_medium.ttf"/>
             </LinearLayout>
 
             <com.supremainc.biostar2.view.StyledTextView
@@ -132,7 +132,7 @@
                 android:paddingLeft="18dp"
                 android:textColor="@color/user_total"
                 android:textSize="14.67dp"
-                androidfont:typeface="roboto_medium.ttf" />
+                androidfont:typeface="roboto_medium.ttf"/>
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -164,7 +164,7 @@
                         android:text="@string/date"
                         android:textColor="@color/select_text"
                         android:textSize="18dp"
-                        androidfont:typeface="roboto_medium.ttf" />
+                        androidfont:typeface="roboto_medium.ttf"/>
 
                     <com.supremainc.biostar2.view.StyledTextView
                         android:id="@+id/dateformat"
@@ -176,7 +176,7 @@
                         android:singleLine="true"
                         android:textColor="@color/actionbar_bg"
                         android:textSize="18dp"
-                        androidfont:typeface="roboto_medium.ttf" />
+                        androidfont:typeface="roboto_medium.ttf"/>
 
                     <ImageView
                         android:layout_width="wrap_content"
@@ -186,13 +186,13 @@
                         android:contentDescription="@string/image"
                         android:gravity="center"
                         android:scaleType="fitXY"
-                        android:src="@drawable/arrow_01" />
+                        android:src="@drawable/arrow_01"/>
                 </LinearLayout>
 
                 <FrameLayout
                     android:layout_width="match_parent"
                     android:layout_height="0.8dp"
-                    android:background="@color/list_devider" />
+                    android:background="@color/list_devider"/>
 
                 <LinearLayout
                     android:id="@+id/go_time"
@@ -217,7 +217,7 @@
                         android:text="@string/time"
                         android:textColor="@color/select_text"
                         android:textSize="18dp"
-                        androidfont:typeface="roboto_medium.ttf" />
+                        androidfont:typeface="roboto_medium.ttf"/>
 
                     <com.supremainc.biostar2.view.StyledTextView
                         android:id="@+id/timeformat"
@@ -229,7 +229,7 @@
                         android:singleLine="true"
                         android:textColor="@color/actionbar_bg"
                         android:textSize="18dp"
-                        androidfont:typeface="roboto_medium.ttf" />
+                        androidfont:typeface="roboto_medium.ttf"/>
 
                     <ImageView
                         android:layout_width="wrap_content"
@@ -239,7 +239,75 @@
                         android:contentDescription="@string/image"
                         android:gravity="center"
                         android:scaleType="fitXY"
-                        android:src="@drawable/arrow_01" />
+                        android:src="@drawable/arrow_01"/>
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/ble_card"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="vertical">
+
+                    <com.supremainc.biostar2.view.StyledTextView
+                        android:layout_width="match_parent"
+                        android:layout_height="33.33dp"
+                        android:background="@color/door_summary"
+                        android:gravity="left|center_vertical"
+                        android:paddingLeft="18dp"
+                        android:text="@string/mobile_card"
+                        android:textColor="@color/user_total"
+                        android:textSize="14.67dp"
+                        androidfont:typeface="roboto_medium.ttf"/>
+
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="37dp"
+                        android:layout_gravity="center_vertical|left"
+                        android:layout_marginRight="18dp"
+                        android:layout_marginTop="10dp"
+                        android:gravity="center_vertical|left"
+                        android:orientation="horizontal"
+                        android:paddingLeft="18dp">
+
+                        <com.supremainc.biostar2.view.StyledTextView
+                            android:id="@+id/ble"
+                            android:layout_width="0dp"
+                            android:layout_height="match_parent"
+                            android:layout_weight="1"
+                            android:ellipsize="end"
+                            android:gravity="left|center_vertical"
+                            android:paddingLeft="6.66dp"
+                            android:singleLine="true"
+                            android:text="@string/ble"
+                            android:textColor="@color/select_text"
+                            android:textSize="18dp"
+                            androidfont:typeface="roboto_medium.ttf"/>
+
+                        <com.supremainc.biostar2.view.SwitchView
+                            android:id="@+id/ble_switch"
+                            android:layout_width="wrap_content"
+                            android:layout_height="match_parent"
+                            android:gravity="left|center_vertical"/>
+                    </LinearLayout>
+
+                    <com.appyvet.rangebar.RangeBar
+                        android:id="@+id/rangebar"
+                        android:layout_width="match_parent"
+                        android:layout_height="88dp"
+                        android:layout_gravity="center_vertical|bottom"
+                        android:layout_marginLeft="16dp"
+                        android:layout_marginRight="16dp"
+                        android:gravity="center_vertical|bottom"
+                        androidfont:pinColor="#3F51B5"
+                        androidfont:pinRadius="24dp"
+                        androidfont:rangeBar="false"
+                        androidfont:rangeBarColor="#CCCCCC"
+                        androidfont:selectorColor="#3F51B5"
+                        androidfont:tickColor="#000000"
+                        androidfont:tickEnd="500"
+                        androidfont:tickInterval="200"
+                        androidfont:tickStart="100"/>
                 </LinearLayout>
 
                 <LinearLayout
@@ -257,13 +325,13 @@
                         android:text="@string/notification"
                         android:textColor="@color/user_total"
                         android:textSize="14.67dp"
-                        androidfont:typeface="roboto_medium.ttf" />
+                        androidfont:typeface="roboto_medium.ttf"/>
                 </LinearLayout>
 
                 <FrameLayout
                     android:layout_width="match_parent"
                     android:layout_height="0.8dp"
-                    android:background="@color/list_devider" />
+                    android:background="@color/list_devider"/>
             </LinearLayout>
         </LinearLayout>
     </ScrollView>

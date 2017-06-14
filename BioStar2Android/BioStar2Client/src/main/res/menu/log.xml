@@ -1,0 +1,10 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+      xmlns:app="http://schemas.android.com/apk/res-auto"
+    >
+    <item
+        android:id="@+id/action_log"
+        android:icon="@drawable/selector_btn_option_log"
+        android:orderInCategory="100"
+        android:title="@string/monitoring"
+        app:showAsAction="always"/>
+</menu>

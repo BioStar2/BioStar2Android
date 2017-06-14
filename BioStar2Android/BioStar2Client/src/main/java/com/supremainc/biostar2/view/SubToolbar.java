@@ -75,8 +75,8 @@ public class SubToolbar extends BaseView {
         mSearchViewEx = (SearchViewEx) findViewById(R.id.searchbar);
     }
 
-    public void init( Activity activity) {
-        init(null,activity);
+    public void init(Activity activity) {
+        init(null, activity);
     }
 
     public void init(SubToolBarListener listener, Activity activity) {
@@ -206,6 +206,15 @@ public class SubToolbar extends BaseView {
         }
         setSelectedCount(selectedCount);
     }
+
+    public boolean getSelectAll() {
+        if (mSelectAllView.getTag() == null) {
+            return false;
+        } else {
+            return true;
+        }
+    }
+
 
     public boolean showReverseSelectAll() {
         Object isSelect = mSelectAllView.getTag();

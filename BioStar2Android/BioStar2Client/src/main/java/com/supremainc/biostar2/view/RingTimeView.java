@@ -55,8 +55,8 @@ public class RingTimeView extends BaseView {
         mMarker = (StyledTextView) findViewById(R.id.display_marker);
         mDay = (StyledTextView) findViewById(R.id.display_day);
         mTime = (StyledTextView) findViewById(R.id.display_time);
-        mLogo =   findViewById(R.id.display_logo);
-        mContainer =   findViewById(R.id.display_container);
+        mLogo = findViewById(R.id.display_logo);
+        mContainer = findViewById(R.id.display_container);
     }
 
     public void setDateTime(String meridiem, String date, String time) {
@@ -73,15 +73,15 @@ public class RingTimeView extends BaseView {
 
     public void setAdjustHeight(float parentDp) {
         if (BuildConfig.DEBUG) {
-            Log.i(TAG," dp h:"+parentDp);
+            Log.i(TAG, " dp h:" + parentDp);
         }
 
         mLogo.setVisibility(View.VISIBLE);
         if (parentDp > 220) {
-            return ;
+            return;
         } else if (parentDp > 200) {
-            setModify(Utils.convertDpToPixel(190,mContext),mLogo);
-            setModify(Utils.convertDpToPixel(190,mContext),mContainer);
+            setModify(Utils.convertDpToPixel(180, mContext), mLogo);
+            setModify(Utils.convertDpToPixel(180, mContext), mContainer);
         } else if (parentDp > 100) {
             mLogo.setVisibility(View.GONE);
         } else {
@@ -89,7 +89,7 @@ public class RingTimeView extends BaseView {
         }
     }
 
-    public void setModify(int height,View view) {
+    public void setModify(int height, View view) {
         ViewGroup.LayoutParams params = view.getLayoutParams();
         if (params.width > -1) {
             params.width = height;

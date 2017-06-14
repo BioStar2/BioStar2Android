@@ -21,22 +21,20 @@ import android.widget.AbsListView.OnScrollListener;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 
+import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutDirection;
 import com.supremainc.biostar2.R;
 import com.supremainc.biostar2.meta.Setting;
-import com.supremainc.biostar2.sdk.datatype.v1.Permission.CloudRole;
-import com.supremainc.biostar2.sdk.datatype.v1.Permission.CloudRoles;
-import com.supremainc.biostar2.sdk.datatype.v2.Permission.PermissionItem;
-import com.supremainc.biostar2.sdk.datatype.v2.Permission.UserPermission;
-import com.supremainc.biostar2.sdk.datatype.v2.Permission.UserPermissions;
+import com.supremainc.biostar2.sdk.models.v2.permission.UserPermission;
+import com.supremainc.biostar2.sdk.models.v2.permission.UserPermissions;
 import com.supremainc.biostar2.sdk.provider.PermissionDataProvider;
-import com.supremainc.biostar2.sdk.volley.Response;
-import com.supremainc.biostar2.sdk.volley.Response.Listener;
-import com.supremainc.biostar2.sdk.volley.VolleyError;
 import com.supremainc.biostar2.widget.popup.Popup;
 import com.supremainc.biostar2.widget.popup.Popup.OnPopupClickListener;
-import com.supremainc.biostar2.widget.popup.Popup.PopupType;
 
 import java.util.ArrayList;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public abstract class BasePermissionV2Adapter extends BaseListAdapter<UserPermission> {
     protected static final int FIRST_LIMIT = 50;
@@ -44,20 +42,44 @@ public abstract class BasePermissionV2Adapter extends BaseListAdapter<UserPermis
     protected int mLimit = FIRST_LIMIT;
     protected int mOffset = 0;
     protected PermissionDataProvider mPermissionDataProvider;
-    Listener<UserPermissions> mItemListener = new Listener<UserPermissions>() {
+
+    private Callback<UserPermissions> mItemListener = new Callback<UserPermissions>() {
         @Override
-        public void onResponse(UserPermissions response, Object deliverParam) {
-            if (mPopup != null) {
-                mPopup.dismiss();
-            }
-            if (isDestroy()) {
+        public void onFailure(Call<UserPermissions> call, Throwable t) {
+            if (isIgnoreCallback(call, true)) {
                 return;
             }
-            if (response == null || response.records == null || response.records.size() < 1) {
+
+            showRetryPopup(t.getMessage(), new OnPopupClickListener() {
+                @Override
+                public void OnNegative() {
+
+                }
+
+                @Override
+                public void OnPositive() {
+                    showWait(null);
+                    mHandler.removeCallbacks(mRunGetItems);
+                    mHandler.post(mRunGetItems);
+                }
+            });
+        }
+
+        @Override
+        public void onResponse(Call<UserPermissions> call, Response<UserPermissions> response) {
+            if (isIgnoreCallback(call, response, true)) {
+                return;
+            }
+            if (isInvalidResponse(response, false, false)) {
+                mItemListener.onFailure(call, new Throwable(getResponseErrorMessage(response)));
+                return;
+            }
+            UserPermissions userPermissions = response.body();
+            if (userPermissions.records == null || userPermissions.records.size() < 1) {
                 if (mOnItemsListener != null) {
                     if (mItems == null || mItems.size() < 1) {
-                        mTotal =0;
-                        mOnItemsListener.onNoMoreData();
+                        mTotal = 0;
+                        mOnItemsListener.onNoneData();
                     } else {
                         mTotal = mItems.size();
                         mOnItemsListener.onSuccessNull(mItems.size());
@@ -75,65 +97,47 @@ public abstract class BasePermissionV2Adapter extends BaseListAdapter<UserPermis
             none.name = mActivity.getString(R.string.none);
             mItems.add(none);
 
+
+            if (mPermissionDataProvider.isEnableModifyUser(null)) {
+                for (UserPermission item : userPermissions.records) {
+                    mItems.add(item);
+                }
+            } else {
+                for (UserPermission item : userPermissions.records) {
+                    if (item.id.equals("255")) {
+                        mItems.add(item);
+                    }
+                }
+            }
             if (mOnItemsListener != null) {
-                mOnItemsListener.onTotalReceive(response.total);
+                mOnItemsListener.onTotalReceive(mItems.size());
             }
 
-            for (UserPermission item : response.records) {
-                mItems.add(item);
-            }
             setData(mItems);
-            mOffset = mItems.size() ;
-            mTotal = response.total;
+            mOffset = mItems.size();
+            mTotal = userPermissions.total;
             if (mTotal < mItems.size()) {
                 mTotal = mItems.size();
             }
         }
     };
-    Response.ErrorListener mItemErrorListener = new Response.ErrorListener() {
-        @Override
-        public void onErrorResponse(VolleyError error, Object deliverParam) {
-            if (mPopup != null) {
-                mPopup.dismiss();
-            }
-            if (isDestroy(error)) {
-                return;
-            }
-            if (mPopup != null) {
-                mPopup.show(PopupType.ALERT, mActivity.getString(R.string.fail_retry), Setting.getErrorMessage(error, mActivity), new OnPopupClickListener() {
-                    @Override
-                    public void OnNegative() {
-                        mCancelExitListener.onCancel(null);
-                    }
 
-                    @Override
-                    public void OnPositive() {
-                        mHandler.removeCallbacks(mRunGetItems);
-                        mHandler.post(mRunGetItems);
-                    }
-                }, mActivity.getString(R.string.ok), mActivity.getString(R.string.cancel), false);
-            }
-        }
-    };
-    Runnable mRunGetItems = new Runnable() {
+
+    private Runnable mRunGetItems = new Runnable() {
         @Override
         public void run() {
-            if (isDestroy()) {
+            if (isInValidCheck()) {
                 return;
             }
             if (isMemoryPoor()) {
-                if (mPopup != null) {
-                    mPopup.dismiss();
-                }
-                if (mSwipyRefreshLayout != null) {
-                    mSwipyRefreshLayout.setRefreshing(false);
-                }
+                dismissWait();
                 mToastPopup.show(mActivity.getString(R.string.memory_poor), null);
                 return;
             }
-            mPermissionDataProvider.getPermissions(TAG, mItemListener, mItemErrorListener, null);
+            request(mPermissionDataProvider.getPermissions(mItemListener));
         }
     };
+
 
     public BasePermissionV2Adapter(Activity context, ArrayList<UserPermission> items, ListView listView, OnItemClickListener itemClickListener, Popup popup, OnItemsListener onItemsListener) {
         super(context, items, listView, itemClickListener, popup, onItemsListener);
@@ -142,15 +146,11 @@ public abstract class BasePermissionV2Adapter extends BaseListAdapter<UserPermis
             @Override
             public void onScrollStateChanged(AbsListView view, int scrollState) {
                 if (scrollState == OnScrollListener.SCROLL_STATE_IDLE && mIsLastItemVisible && mTotal - 1 > mOffset) {
-                    if (mPopup != null) {
-                        mPopup.showWait(true);
-                    }
+                    showWait(SwipyRefreshLayoutDirection.TOP);
                     mHandler.removeCallbacks(mRunGetItems);
                     mHandler.postDelayed(mRunGetItems, 100);
                 } else {
-                    if (mPopup != null) {
-                        mPopup.dismissWiat();
-                    }
+                    dismissWait();
                 }
             }
 
@@ -168,10 +168,8 @@ public abstract class BasePermissionV2Adapter extends BaseListAdapter<UserPermis
         mTotal = 0;
         mLimit = FIRST_LIMIT;
         mHandler.removeCallbacks(mRunGetItems);
-        mPermissionDataProvider.cancelAll(TAG);
-        if (mPopup != null) {
-            mPopup.showWait(mCancelExitListener);
-        }
+        clearRequest();
+        showWait(SwipyRefreshLayoutDirection.TOP);
         if (mItems != null) {
             mItems.clear();
             notifyDataSetChanged();

@@ -28,8 +28,8 @@ limitations under the License.
      the terminal must select *all* AIDs defined in the category simultaneously ("exact match").
 --><!-- BEGIN_INCLUDE(CardEmulationXML) -->
 <host-apdu-service xmlns:android="http://schemas.android.com/apk/res/android"
-    android:description="@string/app_name"
-    android:requireDeviceUnlock="false">
+                   android:description="@string/app_name"
+                   android:requireDeviceUnlock="false">
     <!--
     If category="payment" is used for any aid-groups, you must also add an android:apduServiceBanner
     attribute above, like so:
@@ -58,8 +58,8 @@ limitations under the License.
     <aid-group
         android:category="other"
         android:description="@string/app_name">
-        <aid-filter android:name="F053555052454D410000000000000001" />
-        <aid-filter android:name="F222222222" />
+        <aid-filter android:name="F053555052454D410000000000000001"/>
+        <!-- <aid-filter android:name="F222222222" />-->
     </aid-group>
     <!-- END_INCLUDE(CardEmulationXML) -->
 </host-apdu-service>

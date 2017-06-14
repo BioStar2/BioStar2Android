@@ -18,7 +18,6 @@ package com.supremainc.biostar2.view;
 import android.app.DatePickerDialog.OnDateSetListener;
 import android.app.TimePickerDialog.OnTimeSetListener;
 import android.content.Context;
-import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentActivity;
 import android.util.AttributeSet;
 import android.view.View;
@@ -27,13 +26,14 @@ import android.widget.TimePicker;
 
 import com.supremainc.biostar2.R;
 import com.supremainc.biostar2.impl.OnSingleClickListener;
-import com.supremainc.biostar2.sdk.datatype.v2.Common.VersionData;
-import com.supremainc.biostar2.sdk.datatype.v2.Device.BaseDevice;
-import com.supremainc.biostar2.sdk.datatype.v2.Device.ListDevice;
-import com.supremainc.biostar2.sdk.datatype.v2.EventLog.EventType;
-import com.supremainc.biostar2.sdk.datatype.v2.EventLog.Query;
-import com.supremainc.biostar2.sdk.datatype.v2.User.ListUser;
-import com.supremainc.biostar2.sdk.provider.TimeConvertProvider;
+import com.supremainc.biostar2.sdk.models.v2.common.VersionData;
+import com.supremainc.biostar2.sdk.models.v2.device.BaseDevice;
+import com.supremainc.biostar2.sdk.models.v2.device.ListDevice;
+import com.supremainc.biostar2.sdk.models.v2.door.ListDoor;
+import com.supremainc.biostar2.sdk.models.v2.eventlog.EventType;
+import com.supremainc.biostar2.sdk.models.v2.eventlog.Query;
+import com.supremainc.biostar2.sdk.models.v2.user.ListUser;
+import com.supremainc.biostar2.sdk.provider.DateTimeDataProvider;
 import com.supremainc.biostar2.widget.DateTimePicker;
 import com.supremainc.biostar2.widget.popup.Popup;
 import com.supremainc.biostar2.widget.popup.Popup.PopupType;
@@ -45,10 +45,11 @@ import com.supremainc.biostar2.widget.popup.SelectPopup.SelectType;
 import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
 
 public class FilterView extends BaseView {
     FragmentActivity mActivity;
-    TimeConvertProvider mTimeConvertProvider;
+    private DateTimeDataProvider mTimeConvertProvider;
     private Calendar mCalendar;
     private StyledTextView mDateEnd;
     private StyledTextView mDateStart;
@@ -59,9 +60,13 @@ public class FilterView extends BaseView {
     private StyledTextView mTimeStart;
     private StyledTextView mTimeEnd;
     private ArrayList<BaseDevice> mDevices;
+    private ArrayList<ListDoor> mDoors;
     private StyledTextView mUserMoreView;
     private StyledTextView mUserPlusView;
     private StyledTextView mUserView;
+    private StyledTextView mDoorMoreView;
+    private StyledTextView mDoorPlusView;
+    private StyledTextView mDoorView;
     private ArrayList<ListUser> mUsers;
     private int mEndDay;
     private int mEndHour;
@@ -74,6 +79,7 @@ public class FilterView extends BaseView {
     private StyledTextView mEventView;
     private DecimalFormat mFormat;
     private Popup mPopup;
+    private SelectPopup<ListDoor> mSelectDoorPopup;
     private SelectPopup<ListDevice> mSelectDevicePopup;
     private SelectPopup<EventType> mSelectEventPopup;
     private SelectPopup<ListUser> mSelectUserPopup;
@@ -179,6 +185,10 @@ public class FilterView extends BaseView {
                     selectDevice();
                     break;
                 }
+                case R.id.filter_door_edit: {
+                    selectDoor();
+                    break;
+                }
                 case R.id.filter_event_edit: {
                     selectEvent();
                     break;
@@ -207,11 +217,12 @@ public class FilterView extends BaseView {
         mActivity = activity;
         mPopup = popup;
         mDateTimePicker = new DateTimePicker(mActivity);
-        mTimeConvertProvider = TimeConvertProvider.getInstance(mActivity);
+        mTimeConvertProvider = DateTimeDataProvider.getInstance(mActivity);
         initDateTime();
         mSelectDevicePopup = new SelectPopup<ListDevice>(mActivity, mPopup);
         mSelectUserPopup = new SelectPopup<ListUser>(mActivity, mPopup);
         mSelectEventPopup = new SelectPopup<EventType>(mActivity, mPopup);
+        mSelectDoorPopup = new SelectPopup<ListDoor>(mActivity, mPopup);
     }
 
     private void initView(Context context) {
@@ -235,12 +246,15 @@ public class FilterView extends BaseView {
         mDeviceView = (StyledTextView) findViewById(R.id.filter_device);
         mDeviceMoreView = (StyledTextView) findViewById(R.id.filter_device_more);
         mDevicePlusView = (StyledTextView) findViewById(R.id.filter_device_plus);
+        mDoorView = (StyledTextView) findViewById(R.id.filter_door);
+        mDoorMoreView = (StyledTextView) findViewById(R.id.filter_door_more);
+        mDoorPlusView = (StyledTextView) findViewById(R.id.filter_door_plus);
         mEventView = (StyledTextView) findViewById(R.id.filter_event);
         mEventMoreView = (StyledTextView) findViewById(R.id.filter_event_more);
         mEventPlusView = (StyledTextView) findViewById(R.id.filter_event_plus);
 
 
-        int[] ids = {R.id.filter_date_edit, R.id.filter_time_edit, R.id.filter_user_edit, R.id.filter_device_edit, R.id.filter_event_edit};
+        int[] ids = {R.id.filter_date_edit, R.id.filter_time_edit, R.id.filter_user_edit, R.id.filter_door_edit, R.id.filter_device_edit, R.id.filter_event_edit};
         for (int i : ids) {
             findViewById(i).setOnClickListener(mButtonClickListener);
         }
@@ -263,10 +277,17 @@ public class FilterView extends BaseView {
         mDeviceView.setText(mContext.getString(R.string.all_devices));
         mDeviceMoreView.setVisibility(View.GONE);
         mDevicePlusView.setVisibility(View.GONE);
+        mDoorView.setText(mContext.getString(R.string.none));
+        mDoorMoreView.setVisibility(View.GONE);
+        mDoorPlusView.setVisibility(View.GONE);
         if (mDevices != null) {
             mDevices.clear();
         }
         mDevices = null;
+        if (mDoors != null) {
+            mDoors.clear();
+        }
+        mDoors = null;
         if (mEventTypes != null) {
             mEventTypes.clear();
         }
@@ -300,6 +321,13 @@ public class FilterView extends BaseView {
         return 0;
     }
 
+    public int getDoorCount() {
+        if (mDoors != null && mDoors.size() > 0) {
+            return mDoors.size();
+        }
+        return 0;
+    }
+
     public int getEventCount() {
         if (mEventTypes != null && mEventTypes.size() > 0) {
             return mEventTypes.size();
@@ -324,13 +352,31 @@ public class FilterView extends BaseView {
 
         query.setTimeCalendar(mTimeConvertProvider, Query.QueryTimeType.start_datetime, start);
         query.setTimeCalendar(mTimeConvertProvider, Query.QueryTimeType.end_datetime, end);
-
+        HashMap<String, String> mapDeviceID = new HashMap<String, String>();
         if (mDevices != null && mDevices.size() > 0) {
-            ArrayList<String> devicesId = new ArrayList<String>();
             for (BaseDevice device : mDevices) {
-                devicesId.add(device.id);
+                mapDeviceID.put(device.id, device.id);
             }
-            query.device_id = devicesId;
+        }
+        if (mDoors != null && mDoors.size() > 0) {
+            for (ListDoor door : mDoors) {
+                if (door.door_relay != null && door.door_relay.device != null && door.door_relay.device.id != null) {
+                    mapDeviceID.put(door.door_relay.device.id, door.door_relay.device.id);
+                }
+                if (door.entry_device != null && door.entry_device.id != null) {
+                    mapDeviceID.put(door.entry_device.id, door.entry_device.id);
+                }
+                if (door.exit_device != null && door.exit_device.id != null) {
+                    mapDeviceID.put(door.exit_device.id, door.exit_device.id);
+                }
+                if (door.door_sensor != null && door.door_sensor.device != null && door.door_sensor.device.id != null) {
+                    mapDeviceID.put(door.door_sensor.device.id, door.door_sensor.device.id);
+                }
+                if (door.exit_button != null && door.exit_button.device != null && door.exit_button.device.id != null) {
+                    mapDeviceID.put(door.exit_button.device.id, door.exit_button.device.id);
+                }
+            }
+
         }
         if (mUsers != null && mUsers.size() > 0) {
             ArrayList<String> usersId = new ArrayList<String>();
@@ -347,6 +393,15 @@ public class FilterView extends BaseView {
             query.event_type_code = eventId;
         }
         query.limit = 100;
+        if (mapDeviceID.size() > 0) {
+            if (query.device_id == null) {
+                query.device_id = new ArrayList<String>();
+            }
+            for (String key : mapDeviceID.keySet()) {
+                query.device_id.add(key);
+            }
+        }
+        mapDeviceID.clear();
         return query;
     }
 
@@ -375,6 +430,9 @@ public class FilterView extends BaseView {
         if (mSelectEventPopup != null && mSelectEventPopup.isExpand()) {
             return mSelectEventPopup.onSearch(query);
         }
+        if (mSelectDoorPopup != null && mSelectDoorPopup.isExpand()) {
+            return mSelectDoorPopup.onSearch(query);
+        }
         return false;
     }
 
@@ -386,7 +444,7 @@ public class FilterView extends BaseView {
         linkType.add(new SelectCustomData(mContext.getString(R.string.end_date), 2, false));
         selectPopup.show(SelectType.CUSTOM, new OnSelectResultListener<SelectCustomData>() {
             @Override
-            public void OnResult(ArrayList<SelectCustomData> selectedItem,boolean isPositive) {
+            public void OnResult(ArrayList<SelectCustomData> selectedItem, boolean isPositive) {
                 if (selectedItem == null) {
                     return;
                 }
@@ -409,19 +467,31 @@ public class FilterView extends BaseView {
     private void selectDevice() {
         mSelectDevicePopup.show(SelectType.DEVICE, new OnSelectResultListener<ListDevice>() {
             @Override
-            public void OnResult(ArrayList<ListDevice> selectedItem,boolean isPositive) {
+            public void OnResult(ArrayList<ListDevice> selectedItem, boolean isPositive) {
                 if (selectedItem == null) {
                     return;
                 }
-                setDeviceResult((ArrayList<BaseDevice>) selectedItem.clone());
+                setDeviceResult((ArrayList<BaseDevice>) selectedItem.clone(), false);
             }
         }, null, mContext.getString(R.string.select_device_orginal), true, true);
+    }
+
+    private void selectDoor() {
+        mSelectDoorPopup.show(SelectType.DOOR, new OnSelectResultListener<ListDoor>() {
+            @Override
+            public void OnResult(ArrayList<ListDoor> selectedItem, boolean isPositive) {
+                if (selectedItem == null) {
+                    return;
+                }
+                setDoorResult((ArrayList<ListDoor>) selectedItem.clone(), false);
+            }
+        }, null, mContext.getString(R.string.door), true, true);
     }
 
     private void selectEvent() {
         mSelectEventPopup.show(SelectType.EVENT_TYPE, new OnSelectResultListener<EventType>() {
             @Override
-            public void OnResult(ArrayList<EventType> selectedItem,boolean isPositive) {
+            public void OnResult(ArrayList<EventType> selectedItem, boolean isPositive) {
                 if (selectedItem == null) {
                     return;
                 }
@@ -437,7 +507,7 @@ public class FilterView extends BaseView {
         linkType.add(new SelectCustomData(mContext.getString(R.string.end_time), 2, false));
         selectPopup.show(SelectType.CUSTOM, new OnSelectResultListener<SelectCustomData>() {
             @Override
-            public void OnResult(ArrayList<SelectCustomData> selectedItem,boolean isPositive) {
+            public void OnResult(ArrayList<SelectCustomData> selectedItem, boolean isPositive) {
                 if (selectedItem == null) {
                     return;
                 }
@@ -460,7 +530,7 @@ public class FilterView extends BaseView {
     private void selectUser() {
         mSelectUserPopup.show(SelectType.USER, new OnSelectResultListener<ListUser>() {
             @Override
-            public void OnResult(ArrayList<ListUser> selectedItem,boolean isPositive) {
+            public void OnResult(ArrayList<ListUser> selectedItem, boolean isPositive) {
                 if (selectedItem == null) {
                     return;
                 }
@@ -469,11 +539,19 @@ public class FilterView extends BaseView {
         }, null, mContext.getString(R.string.select_user_original), true, true);
     }
 
-    public void setDeviceResult(ArrayList<BaseDevice> selectedItem) {
+    public void setDeviceResult(ArrayList<BaseDevice> selectedItem, boolean none) {
         mDevices = selectedItem;
+        if (none) {
+            mDevices = null;
+            mDeviceView.setText(mContext.getString(R.string.none));
+            mDeviceMoreView.setVisibility(View.GONE);
+            mDevicePlusView.setVisibility(View.GONE);
+            return;
+        }
         if (mDevices == null || mDevices.size() < 1) {
             return;
         }
+        setDoorResult(null, true);
         int size = mDevices.size();
         String name = mDevices.get(0).getName() + " / " + mDevices.get(0).id;
         if (mDevices.get(0).name != null && !mDevices.get(0).name.isEmpty()) {
@@ -487,6 +565,35 @@ public class FilterView extends BaseView {
         } else if (size > 0) {
             mDeviceMoreView.setVisibility(View.GONE);
             mDevicePlusView.setVisibility(View.GONE);
+        }
+    }
+
+    public void setDoorResult(ArrayList<ListDoor> selectedItem, boolean none) {
+        mDoors = selectedItem;
+        if (none) {
+            mDoors = null;
+            mDoorView.setText(mContext.getString(R.string.none));
+            mDoorMoreView.setVisibility(View.GONE);
+            mDoorPlusView.setVisibility(View.GONE);
+            return;
+        }
+        if (mDoors == null || mDoors.size() < 1) {
+            return;
+        }
+        setDeviceResult(null, true);
+        int size = mDoors.size();
+        String name = mDoors.get(0).getName() + " / " + mDoors.get(0).id;
+        if (mDoors.get(0).name != null && !mDoors.get(0).name.isEmpty()) {
+            name = mDoors.get(0).name;
+        }
+        mDoorView.setText(name);
+        if (size > 1) {
+            mDoorMoreView.setText(String.valueOf((size - 1)));
+            mDoorMoreView.setVisibility(View.VISIBLE);
+            mDoorPlusView.setVisibility(View.VISIBLE);
+        } else if (size > 0) {
+            mDoorMoreView.setVisibility(View.GONE);
+            mDoorPlusView.setVisibility(View.GONE);
         }
     }
 

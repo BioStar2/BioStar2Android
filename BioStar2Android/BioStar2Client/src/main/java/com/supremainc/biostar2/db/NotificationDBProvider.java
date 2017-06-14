@@ -25,10 +25,10 @@ import android.os.AsyncTask;
 import android.util.Log;
 
 import com.supremainc.biostar2.BuildConfig;
-import com.supremainc.biostar2.sdk.datatype.v2.Device.BaseDevice;
-import com.supremainc.biostar2.sdk.datatype.v2.Door.BaseDoor;
-import com.supremainc.biostar2.sdk.datatype.v2.Login.PushNotification;
-import com.supremainc.biostar2.sdk.datatype.v2.User.BaseUser;
+import com.supremainc.biostar2.sdk.models.v2.device.BaseDevice;
+import com.supremainc.biostar2.sdk.models.v2.door.BaseDoor;
+import com.supremainc.biostar2.sdk.models.v2.login.PushNotification;
+import com.supremainc.biostar2.sdk.models.v2.user.BaseUser;
 
 import java.util.ArrayList;
 
@@ -208,6 +208,7 @@ public class NotificationDBProvider {
     }
 
     public boolean insert(PushNotification noti) {
+        cleanOverItem();
         ContentValues vaules = createAlarmValues(noti);
         Uri uri = mResolver.insert(DBAdapter.CONTENT_ALARM_URI, vaules);
         if (uri != null) {
@@ -249,8 +250,24 @@ public class NotificationDBProvider {
         } else {
             mResolver.update(DBAdapter.CONTENT_ALARM_URI, vaules, selection, selectionArgs);
         }
-        cursor.close();
+        if (cursor != null) {
+            cursor.close();
+        }
+    }
 
+    public void cleanOverItem() {
+        Cursor cursor = mResolver.query(DBAdapter.CONTENT_ALARM_URI, null, null, null, DBAdapter.TABLE_ALARM_TIME + " ASC");
+        if (cursor == null) {
+            return ;
+        }
+        if (cursor.getCount() < 20000) {
+            cursor.close();
+            return;
+        }
+        cursor.moveToPosition(0);
+        int id = cursor.getInt(0);
+        mResolver.delete(DBAdapter.CONTENT_ALARM_URI, DBAdapter.DB_ID + "=" + id, null);
+        cursor.close();
     }
 
     public interface OnTaskFinish {

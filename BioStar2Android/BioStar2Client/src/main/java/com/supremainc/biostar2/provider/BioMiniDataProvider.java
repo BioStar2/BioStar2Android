@@ -16,64 +16,33 @@
 package com.supremainc.biostar2.provider;
 
 import android.app.Activity;
-import android.content.Context;
-import android.graphics.Bitmap;
 import android.util.Log;
-import android.widget.ImageView;
 
 import com.android.biomini.BioMiniAndroid;
 import com.android.biomini.IBioMiniCallback;
 import com.supremainc.biostar2.datatype.BioMiniTemplate;
 
-import java.nio.ByteBuffer;
-
 public class BioMiniDataProvider {
+    public static final int UFA_OK = 0;
+    public static final int UFA_ERROR = -1;
+    public static final int UFA_ERR_LICENSE_NOT_MATCH = -102;
+    public static final int UFA_ERR_NOT_SUPPORTED = -111;
+//    private IOnBioBitmap mIOnBioBitmap;
+//    private BioMiniTemplate mBioMiniTemplate;
+    public static final int UFA_ERR_INVALID_PARAMETERS = -112;
+    public static final int UFA_ERR_ALREADY_INITIALIZED = -201;
+    public static final int UFA_ERR_NOT_INITIALIZED = -202;
+    public static final int UFA_ERR_NO_DEVICE = -205;
+    public static final int UFA_ERR_PERMISSION_DENIED = -206;
+    public static final int UFA_ERR_CAPTURE_RUNNING = -211;
+    public static final int UFA_ERR_CAPTURE_FAILED = -212;
+    public static final int UFA_ERR_NOT_CAPTURED = -213;
+    public static final int UFA_ERR_EXTRACTION_FAILED = -302;
+    public static final int UFA_ERR_TEMPLATE_TYPE = -411;
     protected static Activity mActivity;
     private static BioMiniDataProvider mSelf = null;
     private static BioMiniAndroid mBioMiniHandle;
-
     private final String TAG = getClass().getSimpleName();
-//    private IOnBioBitmap mIOnBioBitmap;
-//    private BioMiniTemplate mBioMiniTemplate;
-
-    public static final int UFA_OK = 0;
-    public static final int UFA_ERROR =-1;
-    public static final int UFA_ERR_LICENSE_NOT_MATCH =-102;
-    public static final int UFA_ERR_NOT_SUPPORTED= -111;
-    public static final int UFA_ERR_INVALID_PARAMETERS =-112;
-    public static final int UFA_ERR_ALREADY_INITIALIZED= -201;
-    public static final int UFA_ERR_NOT_INITIALIZED =-202;
-    public static final int UFA_ERR_NO_DEVICE= -205;
-    public static final int UFA_ERR_PERMISSION_DENIED= -206;
-    public static final int UFA_ERR_CAPTURE_RUNNING= -211;
-    public static final int UFA_ERR_CAPTURE_FAILED= -212;
-    public static final int UFA_ERR_NOT_CAPTURED =-213;
-    public static final int UFA_ERR_EXTRACTION_FAILED= -302;
-    public static final int UFA_ERR_TEMPLATE_TYPE= -411;
-
-
-    public enum FingerTemplateType {UFA_TEMPLATE_TYPE_SUPREMA,UFA_TEMPLATE_TYPE_ISO19794_2,UFA_TEMPLATE_TYPE_ANSI378};
-    private BioMiniDataProvider(Activity a) {
-        mActivity = a;
-    }
-
-    public static BioMiniDataProvider getInstance(Activity a) {
-        if (mSelf == null) {
-            mSelf = new BioMiniDataProvider(a);
-            mBioMiniHandle = new BioMiniAndroid(a);
-        }
-        return mSelf;
-    }
-
-    public int findDevice() {
-        if (mBioMiniHandle == null) {
-            Log.e(">==< Main Activity >==<", String.valueOf("BioMini SDK Handler with NULL!"));
-            return UFA_ERR_NOT_INITIALIZED;
-        } else {
-            return mBioMiniHandle.UFA_FindDevice();
-        }
-    }
-
     private final IBioMiniCallback mBioMiniCallbackHandler = new IBioMiniCallback() {
 
         @Override
@@ -87,67 +56,18 @@ public class BioMiniDataProvider {
         }
     };
 
-    public int initDevice(FingerTemplateType type) {
-        int ufa_res = mBioMiniHandle.UFA_Init();
-        if (ufa_res == UFA_OK) {
-            int sensitivity = 7;
-            int timeout = 10;
-            int securitylevel = 4;
-            int fastmode = 1;
-            if (mBioMiniHandle.getProductId() == 0x409) {
-                int pnCropMode[] = new int[1];
-                ufa_res = mBioMiniHandle.UFA_GetParameter(mBioMiniHandle.UFA_PARAM_SCANNING_MODE , pnCropMode);
-                if( ufa_res != UFA_OK ){
-                    return ufa_res ;
-                }
-                ufa_res =mBioMiniHandle.UFA_SetParameter(mBioMiniHandle.UFA_PARAM_SCANNING_MODE ,  mBioMiniHandle.PLUS2_SCANNING_MODE_CROP);
-//                if(pnCropMode[0] == mBioMiniHandle.PLUS2_SCANNING_MODE_CROP){
-//                    cbox.setChecked(true);
-//                }else if( pnCropMode[0] == mBioMiniHandle.PLUS2_SCANNING_MODE_FULL ){
-//                    cbox.setChecked(false);
-//                }
-            }
+    ;
 
-            mBioMiniHandle.UFA_SetParameter(mBioMiniHandle.UFA_PARAM_SENSITIVITY, sensitivity);
-            mBioMiniHandle.UFA_SetParameter(mBioMiniHandle.UFA_PARAM_TIMEOUT, timeout * 1000);
-            mBioMiniHandle.UFA_SetParameter(mBioMiniHandle.UFA_PARAM_SECURITY_LEVEL, securitylevel);
-            mBioMiniHandle.UFA_SetParameter(mBioMiniHandle.UFA_PARAM_FAST_MODE, fastmode);
-            switch (type) {
-                case UFA_TEMPLATE_TYPE_ANSI378:
-                    ufa_res = mBioMiniHandle.UFA_SetTemplateType(mBioMiniHandle.UFA_TEMPLATE_TYPE_ANSI378);
-                    break;
-                case UFA_TEMPLATE_TYPE_SUPREMA:
-                    ufa_res = mBioMiniHandle.UFA_SetTemplateType(mBioMiniHandle.UFA_TEMPLATE_TYPE_SUPREMA);
-                    break;
-                case UFA_TEMPLATE_TYPE_ISO19794_2:
-                    ufa_res = mBioMiniHandle.UFA_SetTemplateType(mBioMiniHandle.UFA_TEMPLATE_TYPE_ISO19794_2);
-                    break;
-            }
-            mBioMiniHandle.UFA_SetCallback(mBioMiniCallbackHandler);
-        }
-        return ufa_res;
+    private BioMiniDataProvider(Activity a) {
+        mActivity = a;
     }
 
-    public int scanFingerPrint(BioMiniTemplate template) {
-        int ufa_res = mBioMiniHandle.UFA_CaptureSingle(template.getmImage());
-        if (ufa_res != UFA_OK) {
-            return ufa_res;
+    public static BioMiniDataProvider getInstance(Activity a) {
+        if (mSelf == null) {
+            mSelf = new BioMiniDataProvider(a);
+            mBioMiniHandle = new BioMiniAndroid(a);
         }
-//        ufa_res = mBioMiniHandle.UFA_ExtractTemplate(template.getTemplate(), template.getTemplateSize(), template.getQuality(), 1024);
-        ufa_res = mBioMiniHandle.UFA_ExtractTemplate(template.getTemplate(), template.getTemplateSize(), template.getQuality(), 384);
-        return ufa_res;
-    }
-
-    public int verify(BioMiniTemplate template1,BioMiniTemplate template2) {
-        int ufa_res = 0;
-        int[] nVerificationResult = new int[4];
-        nVerificationResult[0] = 0;
-        ufa_res = mBioMiniHandle.UFA_Verify(template1.getTemplate(), template1.getTemplateSize()[0], template2.getTemplate(), template2.getTemplateSize()[0], nVerificationResult);
-        if (nVerificationResult[0] == 1) {
-            // match
-            return UFA_OK;
-        }
-        return ufa_res;
+        return mSelf;
     }
 
     public static String getMessage(int code) {
@@ -184,6 +104,110 @@ public class BioMiniDataProvider {
 //            default :
 //                return "Unkonow Error";
 //        }
+    }
+
+    public int findDevice() {
+        if (mBioMiniHandle == null) {
+            Log.e(">==< Main Activity >==<", String.valueOf("BioMini SDK Handler with NULL!"));
+            return UFA_ERR_NOT_INITIALIZED;
+        } else {
+            return mBioMiniHandle.UFA_FindDevice();
+        }
+    }
+
+    public int unInitDevice() {
+        return mBioMiniHandle.UFA_Uninit();
+    }
+
+    public int initDevice(FingerTemplateType type) {
+        int ufa_res = mBioMiniHandle.UFA_Init();
+        if (ufa_res == UFA_OK) {
+            int sensitivity = 7;
+            int timeout = 10;
+            int securitylevel = 4;
+            int fastmode = 1;
+            if (mBioMiniHandle.getProductId() == 0x409) {
+                int pnCropMode[] = new int[1];
+                ufa_res = mBioMiniHandle.UFA_GetParameter(mBioMiniHandle.UFA_PARAM_SCANNING_MODE, pnCropMode);
+                if (ufa_res != UFA_OK) {
+                    return ufa_res;
+                }
+                ufa_res = mBioMiniHandle.UFA_SetParameter(mBioMiniHandle.UFA_PARAM_SCANNING_MODE, mBioMiniHandle.PLUS2_SCANNING_MODE_CROP);
+//                if(pnCropMode[0] == mBioMiniHandle.PLUS2_SCANNING_MODE_CROP){
+//                    cbox.setChecked(true);
+//                }else if( pnCropMode[0] == mBioMiniHandle.PLUS2_SCANNING_MODE_FULL ){
+//                    cbox.setChecked(false);
+//                }
+            }
+
+            mBioMiniHandle.UFA_SetParameter(mBioMiniHandle.UFA_PARAM_SENSITIVITY, sensitivity);
+            mBioMiniHandle.UFA_SetParameter(mBioMiniHandle.UFA_PARAM_TIMEOUT, timeout * 1000);
+            mBioMiniHandle.UFA_SetParameter(mBioMiniHandle.UFA_PARAM_SECURITY_LEVEL, securitylevel);
+            mBioMiniHandle.UFA_SetParameter(mBioMiniHandle.UFA_PARAM_FAST_MODE, fastmode);
+            switch (type) {
+                case UFA_TEMPLATE_TYPE_ANSI378:
+                    ufa_res = mBioMiniHandle.UFA_SetTemplateType(mBioMiniHandle.UFA_TEMPLATE_TYPE_ANSI378);
+                    break;
+                case UFA_TEMPLATE_TYPE_SUPREMA:
+                    ufa_res = mBioMiniHandle.UFA_SetTemplateType(mBioMiniHandle.UFA_TEMPLATE_TYPE_SUPREMA);
+                    break;
+                case UFA_TEMPLATE_TYPE_ISO19794_2:
+                    ufa_res = mBioMiniHandle.UFA_SetTemplateType(mBioMiniHandle.UFA_TEMPLATE_TYPE_ISO19794_2);
+                    break;
+            }
+            mBioMiniHandle.UFA_SetCallback(mBioMiniCallbackHandler);
+        }
+        return ufa_res;
+    }
+
+    public int scanFingerPrint(BioMiniTemplate template) {
+        int ufa_res = mBioMiniHandle.UFA_CaptureSingle(template.getmImage());
+        mBioMiniHandle.UFA_GetErrorString(ufa_res);
+
+        if (ufa_res != UFA_OK) {
+            return ufa_res;
+        }
+//        if (ufa_res == 0) {
+//            int width = mBioMiniHandle.getImageWidth();
+//            int height = mBioMiniHandle.getImageHeight();
+//            mBioMiniCallbackHandler.onCaptureCallback(pImage, width, height, 500, true);
+//
+//            int[] quality = new int[1];
+//            ufa_res = mBioMiniHandle.UFA_GetFPQuality(pImage, width, height, quality, 1);
+//            if (ufa_res == mBioMiniHandle.UFA_OK) {
+//                tv.append("\n" + "Fingerprint quality: " + quality[0]);
+//                l("Fingerprint quality: " + quality[0]);
+//            } else {
+//                l("UFA_GetFPQuality failed (" + ufa_res + ")");
+//            }
+//        }
+//        ufa_res = mBioMiniHandle.UFA_ExtractTemplate(template.getTemplate(), template.getTemplateSize(), template.getQuality(), 1024);
+        ufa_res = mBioMiniHandle.UFA_ExtractTemplate(template.getTemplate(), template.getTemplateSize(), template.getQuality(), 384);
+        int[] feature_number = new int[1];
+        mBioMiniHandle.UFA_GetFeatureNumber(template.getTemplate(), template.getTemplateSize()[0], feature_number);
+        return ufa_res;
+    }
+
+    public int verify(BioMiniTemplate template1, BioMiniTemplate template2) {
+        int ufa_res = 0;
+
+        int[] nVerificationResult = new int[4];
+        nVerificationResult[0] = 0;
+        ufa_res = mBioMiniHandle.UFA_Verify(template1.getTemplate(), template1.getTemplateSize()[0], template2.getTemplate(), template2.getTemplateSize()[0], nVerificationResult);
+        if (ufa_res != UFA_OK) {
+            return ufa_res;
+        }
+        if (nVerificationResult[0] == 1) {
+            // match
+            return UFA_OK;
+        } else {
+            return UFA_ERROR;
+        }
+    }
+
+    //    private byte[] pImage = new byte[320 * 480];
+    public enum FingerTemplateType {
+        UFA_TEMPLATE_TYPE_SUPREMA, UFA_TEMPLATE_TYPE_ISO19794_2, UFA_TEMPLATE_TYPE_ANSI378
     }
 
 }

@@ -23,11 +23,8 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 
 import com.supremainc.biostar2.R;
-import com.supremainc.biostar2.adapter.base.BaseSimpleDataAdapter;
 import com.supremainc.biostar2.adapter.base.BaseWiegandFormatAdapter;
-import com.supremainc.biostar2.sdk.datatype.v2.Card.WiegandFormat;
-import com.supremainc.biostar2.sdk.datatype.v2.Card.WiegandFormats;
-import com.supremainc.biostar2.sdk.datatype.v2.Common.SimpleData;
+import com.supremainc.biostar2.sdk.models.v2.card.WiegandFormat;
 import com.supremainc.biostar2.widget.popup.Popup;
 
 import java.util.ArrayList;

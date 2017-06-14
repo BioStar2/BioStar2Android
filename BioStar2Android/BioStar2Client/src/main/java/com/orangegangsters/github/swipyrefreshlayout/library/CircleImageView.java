@@ -17,7 +17,6 @@
 package com.orangegangsters.github.swipyrefreshlayout.library;
 
 import android.content.Context;
-import android.content.res.Resources;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -97,8 +96,9 @@ class CircleImageView extends ImageView {
      */
     public void setBackgroundColor(int colorRes) {
         if (getBackground() instanceof ShapeDrawable) {
-            final Resources res = getResources();
-            ((ShapeDrawable) getBackground()).getPaint().setColor(res.getColor(colorRes));
+  //          final Resources res = getResources();
+//            ((ShapeDrawable) getBackground()).getPaint().setColor(res.getColor(colorRes));
+            ((ShapeDrawable) getBackground()).getPaint().setColor(colorRes);
         }
     }
 

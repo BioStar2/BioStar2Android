@@ -19,36 +19,59 @@ import android.app.Activity;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 
-import com.supremainc.biostar2.R;
-import com.supremainc.biostar2.meta.Setting;
-import com.supremainc.biostar2.sdk.datatype.v2.User.UserGroup;
-import com.supremainc.biostar2.sdk.datatype.v2.User.UserGroups;
+import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutDirection;
+import com.supremainc.biostar2.sdk.models.v2.user.UserGroup;
+import com.supremainc.biostar2.sdk.models.v2.user.UserGroups;
 import com.supremainc.biostar2.sdk.provider.UserDataProvider;
-import com.supremainc.biostar2.sdk.volley.Response;
-import com.supremainc.biostar2.sdk.volley.Response.Listener;
-import com.supremainc.biostar2.sdk.volley.VolleyError;
 import com.supremainc.biostar2.widget.popup.Popup;
 import com.supremainc.biostar2.widget.popup.Popup.OnPopupClickListener;
-import com.supremainc.biostar2.widget.popup.Popup.PopupType;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public abstract class BaseUserGroupAdapter extends BaseListAdapter<UserGroup> {
     protected UserDataProvider mUserDataProvider;
-    Listener<UserGroups> mItemListener = new Listener<UserGroups>() {
+
+    private Callback<UserGroups> mItemListener = new Callback<UserGroups>() {
         @Override
-        public void onResponse(UserGroups response, Object deliverParam) {
-            if (mPopup != null) {
-                mPopup.dismiss();
-            }
-            if (isDestroy()) {
+        public void onFailure(Call<UserGroups> call, Throwable t) {
+            if (isIgnoreCallback(call, true)) {
                 return;
             }
-            if (response == null || response.records == null || response.records.size() < 1) {
+
+            showRetryPopup(t.getMessage(), new OnPopupClickListener() {
+                @Override
+                public void OnNegative() {
+
+                }
+
+                @Override
+                public void OnPositive() {
+                    getItems(mQuery);
+                }
+            });
+        }
+
+        @Override
+        public void onResponse(Call<UserGroups> call, Response<UserGroups> response) {
+            if (isIgnoreCallback(call, response, true)) {
+                return;
+            }
+            if (isInvalidResponse(response, false, false)) {
+                mItemListener.onFailure(call, new Throwable(getResponseErrorMessage(response)));
+                return;
+            }
+            UserGroups userGroups = response.body();
+            if (userGroups.records == null || userGroups.records.size() < 1) {
                 if (mOnItemsListener != null) {
                     if (mItems == null || mItems.size() < 1) {
-                        mTotal =0;
-                        mOnItemsListener.onNoMoreData();
+                        mTotal = 0;
+                        mOnItemsListener.onNoneData();
                     } else {
                         mTotal = mItems.size();
                         mOnItemsListener.onSuccessNull(mItems.size());
@@ -56,48 +79,42 @@ public abstract class BaseUserGroupAdapter extends BaseListAdapter<UserGroup> {
                 }
                 return;
             }
-            setData(response.records);
-            mTotal = response.total;
+            Collections.sort(userGroups.records, mComparator);
+            setData(userGroups.records);
+            mTotal = userGroups.total;
             if (mTotal < mItems.size()) {
                 mTotal = mItems.size();
             }
             if (mOnItemsListener != null) {
                 mOnItemsListener.onTotalReceive(mTotal);
             }
-
         }
     };
-    Response.ErrorListener mItemErrorListener = new Response.ErrorListener() {
-        @Override
-        public void onErrorResponse(VolleyError error, Object deliverParam) {
-            if (mPopup != null) {
-                mPopup.dismiss();
-            }
-            if (isDestroy(error)) {
-                return;
-            }
-            if (mPopup != null) {
-                mPopup.show(PopupType.ALERT, mActivity.getString(R.string.fail_retry), Setting.getErrorMessage(error, mActivity), new OnPopupClickListener() {
-                    @Override
-                    public void OnNegative() {
-                        mCancelExitListener.onCancel(null);
-                    }
 
-                    @Override
-                    public void OnPositive() {
-                        getItems(mQuery);
-                    }
-                }, mActivity.getString(R.string.ok), mActivity.getString(R.string.cancel), false);
-            }
-        }
-    };
     Runnable mRunGetItems = new Runnable() {
         @Override
         public void run() {
-            if (isDestroy()) {
+            if (isInValidCheck()) {
                 return;
             }
-            mUserDataProvider.getUserGroups(TAG, mItemListener, mItemErrorListener, 0, 5000, null, null);
+            request(mUserDataProvider.getUserGroups(0, 9999, null, mItemListener));
+        }
+    };
+
+
+    private Comparator<UserGroup> mComparator = new Comparator<UserGroup>() {
+        @Override
+        public int compare(UserGroup lhs, UserGroup rhs) {
+            if (lhs.name == null && rhs.name == null) {
+                return 0;
+            }
+            if (lhs.name == null) {
+                return -1;
+            }
+            if (rhs.name == null) {
+                return -1;
+            }
+            return lhs.name.compareToIgnoreCase(rhs.name);
         }
     };
 
@@ -110,14 +127,8 @@ public abstract class BaseUserGroupAdapter extends BaseListAdapter<UserGroup> {
     public void getItems(String query) {
         mQuery = query;
         mListView.removeCallbacks(mRunGetItems);
-        mUserDataProvider.cancelAll(TAG);
-        if (mPopup != null) {
-            mPopup.showWait(mCancelExitListener);
-        }
-        if (mItems != null) {
-            mItems.clear();
-            notifyDataSetChanged();
-        }
+        clearRequest();
+        showWait(SwipyRefreshLayoutDirection.TOP);
         mHandler.postDelayed(mRunGetItems, 100);
     }
 }

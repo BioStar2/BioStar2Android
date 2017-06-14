@@ -45,6 +45,37 @@ public class GlidePhotoData {
     String mUrl;
     int mMaxSize;
 
+    ResourceDecoder mResourceDecoder = new ResourceDecoder<ImageVideoWrapper, GifBitmapWrapper>() {
+        @Override
+        public Resource<GifBitmapWrapper> decode(ImageVideoWrapper imageVideoWrapper, int i, int i1) throws IOException {
+            InputStream inputStream = imageVideoWrapper.getStream();
+            StringBuffer sb = new StringBuffer();
+            byte[] b = new byte[4096];
+            boolean findData = false;
+            for (int n; (n = inputStream.read(b)) != -1; ) {
+                String data = new String(b, 0, n);
+                sb.append(data);
+                if (findData == false && sb.length() > "data:image/jpeg;base64,".length()) {
+                    findData = true;
+                    int index = sb.indexOf(",");
+                    sb = sb.delete(0, index + 1);
+                }
+            }
+            String result = sb.toString();
+            Bitmap bmp = convertBitmap(result);
+            if (bmp == null) {
+                return null;
+            }
+            setPhotoData(bmp);
+            return getGifBitmapWrapperResource();
+        }
+
+        @Override
+        public String getId() {
+            return mIdentify;
+        }
+    };
+
     public GlidePhotoData(Activity activity, ImageView view, int defaultResID, String lastModify, int maxsize, String subdomain, String url) {
         mImageView = view;
         mIdentify = subdomain + url;
@@ -54,36 +85,21 @@ public class GlidePhotoData {
                 .load(url)
                 .placeholder(defaultResID)
                 .signature(new StringSignature(lastModify))
-                .decoder(new ResourceDecoder<ImageVideoWrapper, GifBitmapWrapper>() {
-                    @Override
-                    public Resource<GifBitmapWrapper> decode(ImageVideoWrapper imageVideoWrapper, int i, int i1) throws IOException {
-                        InputStream inputStream = imageVideoWrapper.getStream();
-                        StringBuffer sb = new StringBuffer();
-                        byte[] b = new byte[4096];
-                        boolean findData = false;
-                        for (int n; (n = inputStream.read(b)) != -1; ) {
-                            String data = new String(b, 0, n);
-                            sb.append(data);
-                            if (findData == false && sb.length() > "data:image/jpeg;base64,".length()) {
-                                findData = true;
-                                int index = sb.indexOf(",");
-                                sb = sb.delete(0, index + 1);
-                            }
-                        }
-                        String result = sb.toString();
-                        Bitmap bmp = convertBitmap(result);
-                        if (bmp == null) {
-                            return null;
-                        }
-                        setPhotoData(bmp);
-                        return getGifBitmapWrapperResource();
-                    }
+                .decoder(mResourceDecoder)
+                .crossFade()
+                .fitCenter()
+                .into(mImageView);
+    }
 
-                    @Override
-                    public String getId() {
-                        return mIdentify;
-                    }
-                })
+    public GlidePhotoData(Activity activity, ImageView view, String lastModify, int maxsize, String subdomain, String url) {
+        mImageView = view;
+        mIdentify = subdomain + url;
+        mUrl = url;
+        mMaxSize = maxsize;
+        Glide.with(activity)
+                .load(url)
+                .signature(new StringSignature(lastModify))
+                .decoder(mResourceDecoder)
                 .crossFade()
                 .fitCenter()
                 .into(mImageView);

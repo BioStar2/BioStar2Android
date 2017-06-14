@@ -38,12 +38,12 @@ import java.util.Random;
 public class GooglePush {
     public static final String TAG = GooglePush.class.getSimpleName();
     public static final int REQUEST_GOOGLE_PLAY_SERVICES = 1972;
+    private static final String mPushID = "set your push id";
     private Activity mActivity = null;
     private PushDataProvider mPushDataProvider;
     private Random mRandom;
     private GoogleCloudMessaging mGcm;
     private String mRegID;
-    private static final String mPushID = "set your push id";
 
     public GooglePush(Activity activity) {
         mActivity = activity;
@@ -131,7 +131,7 @@ public class GooglePush {
             @Override
             protected Void doInBackground(Void... params) {
                 if (mPushID.equals("set your push id")) {
-                    Log.e(TAG,"mPushID set your push id");
+                    Log.e(TAG, "mPushID set your push id");
                     return null;
                 }
                 if (Setting.IS_GOOGPLAY_SERVICE) {
@@ -154,7 +154,7 @@ public class GooglePush {
                 } else {
                     Intent intent = new Intent("com.google.android.c2dm.intent.REGISTER");
                     intent.setPackage("com.google.android.gsf");
-                    intent.putExtra("sender",mPushID);
+                    intent.putExtra("sender", mPushID);
                     if (mRandom == null) {
                         mRandom = new Random();
                     }

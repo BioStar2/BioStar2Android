@@ -19,8 +19,8 @@ import android.app.Activity;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 
-import com.supremainc.biostar2.sdk.datatype.v2.EventLog.EventType;
-import com.supremainc.biostar2.sdk.provider.EventDataProvider;
+import com.supremainc.biostar2.sdk.models.v2.eventlog.EventType;
+import com.supremainc.biostar2.sdk.provider.MonitoringDataProvider;
 import com.supremainc.biostar2.widget.popup.Popup;
 
 import java.util.ArrayList;
@@ -30,7 +30,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public abstract class BaseEventTypeAdapter extends BaseListAdapter<EventType> {
-    protected EventDataProvider mEventDataProvider;
+    protected MonitoringDataProvider mMonitoringDataProvider;
     private Comparator<EventType> mComparator = new Comparator<EventType>() {
         @Override
         public int compare(EventType lhs, EventType rhs) {
@@ -40,7 +40,7 @@ public abstract class BaseEventTypeAdapter extends BaseListAdapter<EventType> {
 
     public BaseEventTypeAdapter(Activity context, ArrayList<EventType> items, ListView listView, OnItemClickListener listener, Popup popup, OnItemsListener onItemsListener) {
         super(context, items, listView, listener, popup, onItemsListener);
-        mEventDataProvider = EventDataProvider.getInstance(context);
+        mMonitoringDataProvider = MonitoringDataProvider.getInstance(context);
     }
 
     private boolean checkInclude(String target, Pattern query, EventType item, ArrayList<EventType> resultItems) {
@@ -69,18 +69,10 @@ public abstract class BaseEventTypeAdapter extends BaseListAdapter<EventType> {
 
     @Override
     public void getItems(String query) {
-        ArrayList<EventType> items = mEventDataProvider.getEventTypeList();
+        ArrayList<EventType> items = mMonitoringDataProvider.getEventTypeList();
         ArrayList<EventType> resultItems = null;
         if (query != null && !query.equals("")) {
             query = query.toUpperCase();
-//            query = query.replace("?","\\?");
-//            query = query.replace("(","\\(");
-//            query = query.replace(")","\\)");
-//            query = query.replace("[","\\[");
-//            query = query.replace("]","\\]");
-//            query = query.replace("\\","");
-//            query = query.replace("^","\\^");
-//            Pattern pattern = Pattern.compile("(?i)" + query);
             resultItems = new ArrayList<EventType>();
             for (EventType item : items) {
                 if (checkInclude(item.name, query, item, resultItems)) {
@@ -89,9 +81,6 @@ public abstract class BaseEventTypeAdapter extends BaseListAdapter<EventType> {
                 if (checkInclude(item.description, query, item, resultItems)) {
                     continue;
                 }
-//                if (checkInclude(item.alert_message, query, item, resultItems)) {
-//                    continue;
-//                }
                 if (checkInclude(String.valueOf(item.code), query, item, resultItems)) {
                     continue;
                 }

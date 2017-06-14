@@ -27,20 +27,19 @@ import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout;
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutDirection;
 import com.supremainc.biostar2.BuildConfig;
 import com.supremainc.biostar2.R;
-import com.supremainc.biostar2.meta.Setting;
-import com.supremainc.biostar2.sdk.datatype.v2.Door.Doors;
-import com.supremainc.biostar2.sdk.datatype.v2.Door.ListDoor;
+import com.supremainc.biostar2.sdk.models.v2.door.Doors;
+import com.supremainc.biostar2.sdk.models.v2.door.ListDoor;
 import com.supremainc.biostar2.sdk.provider.DoorDataProvider;
-import com.supremainc.biostar2.sdk.volley.Response;
-import com.supremainc.biostar2.sdk.volley.Response.Listener;
-import com.supremainc.biostar2.sdk.volley.VolleyError;
 import com.supremainc.biostar2.view.StyledTextView;
 import com.supremainc.biostar2.widget.popup.Popup;
 import com.supremainc.biostar2.widget.popup.Popup.OnPopupClickListener;
-import com.supremainc.biostar2.widget.popup.Popup.PopupType;
 import com.tekinarslan.material.sample.FloatingActionButton;
 
 import java.util.ArrayList;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public abstract class BaseDoorAdapter extends BaseListAdapter<ListDoor> {
     protected static final int FIRST_LIMIT = 50;
@@ -48,60 +47,42 @@ public abstract class BaseDoorAdapter extends BaseListAdapter<ListDoor> {
     protected boolean mIsLastItemVisible = false;
     protected int mLimit = FIRST_LIMIT;
     protected int mOffset = 0;
-    Response.ErrorListener mItemErrorListener = new Response.ErrorListener() {
-        @Override
-        public void onErrorResponse(VolleyError error, Object deliverParam) {
-            if (mPopup != null) {
-                mPopup.dismiss();
-            }
-            if (isDestroy(error)) {
-                return;
-            }
-
-            if (mSwipyRefreshLayout != null) {
-                mSwipyRefreshLayout.setRefreshing(false);
-            }
-            if (mPopup != null) {
-                mPopup.show(PopupType.ALERT, mActivity.getString(R.string.fail_retry), Setting.getErrorMessage(error, mActivity), new OnPopupClickListener() {
-                    @Override
-                    public void OnNegative() {
-                        mCancelExitListener.onCancel(null);
-                    }
-
-                    @Override
-                    public void OnPositive() {
-                        getItems(mQuery);
-                    }
-                }, mActivity.getString(R.string.ok), mActivity.getString(R.string.cancel), false);
-            }
-        }
-    };
-    Runnable mRunGetItems = new Runnable() {
-        @Override
-        public void run() {
-            if (isDestroy()) {
-                return;
-            }
-            mDoorDataProvider.getDoors(TAG, mItemListener, mItemErrorListener, mOffset, mLimit, mQuery, null);
-        }
-    };
     private int mSetFirstVisible = 0;
-    Listener<Doors> mItemListener = new Listener<Doors>() {
+
+    private Callback<Doors> mItemListener = new Callback<Doors>() {
         @Override
-        public void onResponse(Doors response, Object deliverParam) {
-            if (mPopup != null) {
-                mPopup.dismiss();
-            }
-            if (isDestroy()) {
+        public void onFailure(Call<Doors> call, Throwable t) {
+            if (isIgnoreCallback(call, true)) {
                 return;
             }
-            if (mSwipyRefreshLayout != null) {
-                mSwipyRefreshLayout.setRefreshing(false);
+
+            showRetryPopup(t.getMessage(), new OnPopupClickListener() {
+                @Override
+                public void OnNegative() {
+
+                }
+
+                @Override
+                public void OnPositive() {
+                    getItems(mQuery);
+                }
+            });
+        }
+
+        @Override
+        public void onResponse(Call<Doors> call, Response<Doors> response) {
+            if (isIgnoreCallback(call, response, true)) {
+                return;
             }
-            if (response == null || response.records == null || response.records.size() < 1) {
+            if (isInvalidResponse(response, false, false)) {
+                mItemListener.onFailure(call, new Throwable(getResponseErrorMessage(response)));
+                return;
+            }
+            Doors doors = response.body();
+            if (doors.records == null || doors.records.size() < 1) {
                 if (mItems == null || mItems.size() < 1) {
-                    mTotal =0;
-                    mOnItemsListener.onNoMoreData();
+                    mTotal = 0;
+                    mOnItemsListener.onNoneData();
                 } else {
                     mTotal = mItems.size();
                     mOnItemsListener.onSuccessNull(mItems.size());
@@ -112,13 +93,13 @@ public abstract class BaseDoorAdapter extends BaseListAdapter<ListDoor> {
                 return;
             }
             if (mOnItemsListener != null) {
-                mOnItemsListener.onTotalReceive(response.total);
+                mOnItemsListener.onTotalReceive(doors.total);
             }
 
             if (mItems == null) {
                 mItems = new ArrayList<ListDoor>();
             }
-            for (ListDoor door : response.records) {
+            for (ListDoor door : doors.records) {
                 mItems.add(door);
             }
             setData(mItems);
@@ -127,7 +108,7 @@ public abstract class BaseDoorAdapter extends BaseListAdapter<ListDoor> {
                 mSetFirstVisible = 0;
             }
             mOffset = mItems.size();
-            mTotal = response.total;
+            mTotal = doors.total;
             if (mTotal < mItems.size()) {
                 mTotal = mItems.size();
             }
@@ -139,6 +120,18 @@ public abstract class BaseDoorAdapter extends BaseListAdapter<ListDoor> {
             }
         }
     };
+
+
+    private Runnable mRunGetItems = new Runnable() {
+        @Override
+        public void run() {
+            if (isInValidCheck()) {
+                return;
+            }
+            request(mDoorDataProvider.getDoors(mOffset, mLimit, mQuery, mItemListener));
+        }
+    };
+
     private int mOldFirstVisible = 0;
     private BaseListViewScroll mOnScroll;
 
@@ -149,15 +142,11 @@ public abstract class BaseDoorAdapter extends BaseListAdapter<ListDoor> {
             @Override
             public void onScrollStateChanged(AbsListView view, int scrollState) {
                 if (scrollState == AbsListView.OnScrollListener.SCROLL_STATE_IDLE && mIsLastItemVisible && mTotal - 1 > mOffset) {
-                    if (mPopup != null) {
-                        mPopup.showWait(true);
-                    }
+                    showWait(SwipyRefreshLayoutDirection.BOTTOM);
                     mHandler.removeCallbacks(mRunGetItems);
                     mHandler.postDelayed(mRunGetItems, 100);
                 } else {
-                    if (mPopup != null) {
-                        mPopup.dismissWiat();
-                    }
+                    dismissWait();
                 }
             }
 
@@ -172,18 +161,10 @@ public abstract class BaseDoorAdapter extends BaseListAdapter<ListDoor> {
     public void getItems(String query) {
         mQuery = query;
         mHandler.removeCallbacks(mRunGetItems);
-        mDoorDataProvider.cancelAll(TAG);
+        clearRequest();
         mOffset = 0;
         mTotal = 0;
-        if (mSwipyRefreshLayout != null) {
-            mSwipyRefreshLayout.setRefreshing(false);
-            mSwipyRefreshLayout.setEnableBottom(true);
-            mSwipyRefreshLayout.onRefresh(SwipyRefreshLayoutDirection.TOP, false);
-        } else {
-            if (mPopup != null) {
-                mPopup.showWait(mCancelExitListener);
-            }
-        }
+        showWait(SwipyRefreshLayoutDirection.TOP);
 
         if (mItems != null) {
             mItems.clear();
@@ -215,10 +196,11 @@ public abstract class BaseDoorAdapter extends BaseListAdapter<ListDoor> {
                         break;
                     case BOTTOM:
                         if (mTotal - 1 > mOffset) {
+                            showWait(SwipyRefreshLayoutDirection.BOTTOM);
                             mHandler.removeCallbacks(mRunGetItems);
                             mHandler.postDelayed(mRunGetItems, 100);
                         } else {
-                            mSwipyRefreshLayout.setRefreshing(false);
+                            dismissWait();
                             mToastPopup.show(mActivity.getString(R.string.no_more_data), null);
                         }
                         break;

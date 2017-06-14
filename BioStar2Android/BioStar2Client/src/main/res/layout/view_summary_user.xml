@@ -1,7 +1,7 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:androidfont="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="220dp">
+             xmlns:androidfont="http://schemas.android.com/apk/res-auto"
+             android:layout_width="match_parent"
+             android:layout_height="220dp">
 
     <ImageView
         android:id="@+id/background_img"
@@ -10,7 +10,7 @@
         android:layout_gravity="center"
         android:contentDescription="@string/image"
         android:scaleType="centerCrop"
-        android:src="@drawable/background1" />
+        android:src="@drawable/background1"/>
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -38,7 +38,7 @@
                 android:singleLine="true"
                 android:textColor="@color/white"
                 android:textSize="18dp"
-                androidfont:typeface="roboto_bold.ttf" />
+                androidfont:typeface="roboto_bold.ttf"/>
 
             <com.supremainc.biostar2.view.StyledTextView
                 android:id="@+id/title_user_id"
@@ -51,7 +51,7 @@
                 android:maxLines="2"
                 android:textColor="@color/white"
                 android:textSize="14dp"
-                androidfont:typeface="roboto_regular.ttf" />
+                androidfont:typeface="roboto_regular.ttf"/>
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -67,7 +67,7 @@
                     android:text="@string/fingerprint"
                     android:textColor="@color/transparent50_white"
                     android:textSize="12dp"
-                    androidfont:typeface="roboto_regular.ttf" />
+                    androidfont:typeface="roboto_regular.ttf"/>
 
                 <com.supremainc.biostar2.view.StyledTextView
                     android:id="@+id/title_finger_count"
@@ -79,13 +79,13 @@
                     android:text="0"
                     android:textColor="@color/white"
                     android:textSize="12dp"
-                    androidfont:typeface="roboto_regular.ttf" />
+                    androidfont:typeface="roboto_regular.ttf"/>
 
                 <FrameLayout
                     android:layout_width="0.8dp"
                     android:layout_height="13.5dp"
                     android:layout_marginRight="9dp"
-                    android:background="@color/transparent50_white" />
+                    android:background="@color/transparent50_white"/>
 
                 <com.supremainc.biostar2.view.StyledTextView
                     android:layout_width="wrap_content"
@@ -96,7 +96,7 @@
                     android:text="@string/card"
                     android:textColor="@color/transparent50_white"
                     android:textSize="12dp"
-                    androidfont:typeface="roboto_regular.ttf" />
+                    androidfont:typeface="roboto_regular.ttf"/>
 
                 <com.supremainc.biostar2.view.StyledTextView
                     android:id="@+id/title_card_count"
@@ -108,14 +108,14 @@
                     android:text="0"
                     android:textColor="@color/white"
                     android:textSize="12dp"
-                    androidfont:typeface="roboto_regular.ttf" />
+                    androidfont:typeface="roboto_regular.ttf"/>
 
                 <FrameLayout
                     android:id="@+id/title_pin_exist_devider"
                     android:layout_width="0.8dp"
                     android:layout_height="13.5dp"
                     android:layout_marginRight="9dp"
-                    android:background="@color/transparent50_white" />
+                    android:background="@color/transparent50_white"/>
 
                 <com.supremainc.biostar2.view.StyledTextView
                     android:id="@+id/title_pin_exist"
@@ -127,43 +127,46 @@
                     android:text="@string/pin_upper"
                     android:textColor="@color/transparent50_white"
                     android:textSize="12dp"
-                    androidfont:typeface="roboto_regular.ttf" />
+                    androidfont:typeface="roboto_regular.ttf"/>
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="5dp"
+                android:orientation="horizontal">
+
+                <com.supremainc.biostar2.view.StyledTextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="4.5dp"
+                    android:ellipsize="end"
+                    android:gravity="left|center"
+                    android:text="@string/face"
+                    android:textColor="@color/transparent50_white"
+                    android:textSize="12dp"
+                    androidfont:typeface="roboto_regular.ttf"/>
+
+                <com.supremainc.biostar2.view.StyledTextView
+                    android:id="@+id/title_face_count"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginRight="9dp"
+                    android:ellipsize="end"
+                    android:gravity="left|center"
+                    android:text="0"
+                    android:textColor="@color/white"
+                    android:textSize="12dp"
+                    androidfont:typeface="roboto_regular.ttf"/>
             </LinearLayout>
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="0dp"
                 android:layout_weight="1"
-                android:orientation="horizontal" />
+                android:orientation="horizontal"/>
 
-            <LinearLayout
-                android:id="@+id/user_viewlog"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:orientation="horizontal">
 
-                <ImageView
-                    android:layout_width="29dp"
-                    android:layout_height="29dp"
-                    android:layout_gravity="left|center"
-                    android:layout_marginLeft="4dp"
-                    android:layout_marginRight="6dp"
-                    android:contentDescription="@string/image"
-                    android:gravity="left|center"
-                    android:scaleType="fitXY"
-                    android:src="@drawable/selector_btn_viewlog_transparent" />
-
-                <com.supremainc.biostar2.view.StyledTextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="left|center"
-                    android:ellipsize="end"
-                    android:gravity="left|center"
-                    android:text="@string/view_log"
-                    android:textColor="@color/white"
-                    android:textSize="14dp"
-                    androidfont:typeface="roboto_regular.ttf" />
-            </LinearLayout>
         </LinearLayout>
 
         <FrameLayout
@@ -179,7 +182,7 @@
                 android:contentDescription="@string/image"
                 android:gravity="center"
                 android:scaleType="centerCrop"
-                android:src="@drawable/user_photo_bg" />
+                android:src="@drawable/user_photo_bg"/>
         </FrameLayout>
     </LinearLayout>
 </FrameLayout>

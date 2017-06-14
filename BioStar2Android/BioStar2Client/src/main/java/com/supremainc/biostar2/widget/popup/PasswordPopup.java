@@ -17,8 +17,6 @@ package com.supremainc.biostar2.widget.popup;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.DialogInterface;
-import android.content.DialogInterface.OnCancelListener;
 import android.os.Handler;
 import android.os.Looper;
 import android.text.InputType;
@@ -35,9 +33,8 @@ import android.widget.Toast;
 
 import com.supremainc.biostar2.R;
 import com.supremainc.biostar2.impl.OnSingleClickListener;
-import com.supremainc.biostar2.sdk.provider.UserDataProvider;
-import com.supremainc.biostar2.util.TextWatcherFilter;
-import com.supremainc.biostar2.util.TextWatcherFilter.EDIT_TYPE;
+import com.supremainc.biostar2.sdk.provider.CommonDataProvider;
+import com.supremainc.biostar2.util.TextInputFilter;
 import com.supremainc.biostar2.view.StyledEditTextView;
 import com.supremainc.biostar2.view.StyledTextView;
 import com.supremainc.biostar2.widget.CustomDialog;
@@ -54,26 +51,26 @@ public class PasswordPopup {
     private Handler mHandler;
     private boolean mIsPin;
     private boolean mIsStrong;
-    private TextWatcherFilter mPasswordTextWatcherFilterNumber;
-    private TextWatcherFilter mPasswordConfirmTextWatcherFilterNumber;
-    private TextWatcherFilter mPasswordTextWatcherFilter;
-    private TextWatcherFilter mPasswordConfirmTextWatcherFilter;
-    private OnCancelListener cancelListener = new OnCancelListener() {
-        @Override
-        public void onCancel(DialogInterface mDialog) {
-        }
-    };
-
+    private TextInputFilter mTextInputFilter;
 
     public PasswordPopup(Activity activity) {
         this.mContext = activity;
     }
 
     public void dismiss() {
+        if (mTextInputFilter != null) {
+            if (mPassword != null) {
+                mTextInputFilter.setFilter(mPassword, TextInputFilter.EDIT_TYPE.NONE);
+            }
+            if (mPasswordConfirm != null) {
+                mTextInputFilter.setFilter(mPasswordConfirm, TextInputFilter.EDIT_TYPE.NONE);
+            }
+        }
         if (mDialog != null && mDialog.isShowing()) {
             mDialog.dismiss();
         }
     }
+
     private void showGuide() {
         if (mIsStrong) {
             mToastPopup.show(mContext.getString(R.string.password_guide_strong), null);
@@ -81,6 +78,7 @@ public class PasswordPopup {
             mToastPopup.show(mContext.getString(R.string.password_guide), null);
         }
     }
+
     protected void onClickPositive() {
         if (TextUtils.isEmpty(mPassword.toString2()) || TextUtils.isEmpty(mPasswordConfirm.toString2())) {
             mToastPopup.show(mContext.getString(R.string.password_empty), null);
@@ -101,7 +99,7 @@ public class PasswordPopup {
                 return;
             }
         } else {
-            if (pass.length() < 8 ||  !pass.matches("[a-zA-Z0-9\\!\\@\\#\\$\\%\\^\\&\\*\\(\\)\\-\\_\\=\\+\\{\\}\\[\\]\\:\\;\\,\\.\\<\\>\\?\\/\\~\\`\\|\\\\]+")) {
+            if (pass.length() < 8 || !pass.matches("[a-zA-Z0-9\\!\\@\\#\\$\\%\\^\\&\\*\\(\\)\\-\\_\\=\\+\\{\\}\\[\\]\\:\\;\\,\\.\\<\\>\\?\\/\\~\\`\\|\\\\]+")) {
                 showGuide();
                 return;
             }
@@ -154,9 +152,13 @@ public class PasswordPopup {
         mDialog.setCancelable(false);
         mToastPopup = new ToastPopup(mContext);
         mToastPopup.setDuration(Toast.LENGTH_SHORT);
+        if (mTextInputFilter == null) {
+            mTextInputFilter = new TextInputFilter(null, mToastPopup);
+        }
+
         LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         ViewGroup layout = (ViewGroup) inflater.inflate(R.layout.popup_password, null);
-        mIsStrong = UserDataProvider.getInstance(mContext).isStrongPassword();
+        mIsStrong = CommonDataProvider.getInstance(mContext).isStrongPassword();
         StyledTextView guide = (StyledTextView) layout.findViewById(R.id.guide_text);
         if (isPin) {
             guide.setVisibility(View.GONE);
@@ -183,44 +185,6 @@ public class PasswordPopup {
                 return false;
             }
         });
-//        mPasswordConfirm.addTextChangedListener(new TextWatcher() {
-//            @Override
-//            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
-//            }
-//
-//            @Override
-//            public void onTextChanged(CharSequence s, int start, int before, int count) {
-//            }
-//
-//            @Override
-//            public void afterTextChanged(Editable s) {
-//                String original = mPassword.toString2();
-//                String confirm = mPasswordConfirm.toString2();
-//                if (mIsPin && mPassword.toString2().length() < 4) {
-//                    mToastPopup.show(mContext.getString(R.string.pincount), null);
-//                    return;
-//                } else if (!mIsPin) {
-//                    String pass = mPassword.toString2();
-//                    if (pass.length() < 8 || !pass.matches("[a-zA-Z0-9\\!\\@\\#\\$\\%\\^\\&\\*\\(\\)\\-\\_\\=\\+\\{\\}\\[\\]\\:\\;\\,\\.\\<\\>\\?\\/\\~\\`\\|]+")) {
-//                        mToastPopup.show(mContext.getString(R.string.password_guide), null);
-//                        return;
-//                    }
-//                }
-//                if (confirm.length() < 1) {
-//                    return;
-//                }
-//                int end = 0;
-//                if (confirm.length() > original.length()) {
-//                    end = original.length();
-//                } else {
-//                    end = confirm.length();
-//                }
-//                String originalModify = original.substring(0, end);
-//                if (!originalModify.equals(confirm)) {
-//                    mToastPopup.show(mContext.getString(R.string.password_invalid), null);
-//                }
-//            }
-//        });
 
         OnSingleClickListener mOnClickListener = new OnSingleClickListener() {
             @Override
@@ -248,40 +212,16 @@ public class PasswordPopup {
         if (title != null) {
             titleView.setText(title);
         }
-        if (mPasswordTextWatcherFilterNumber == null) {
-            mPasswordTextWatcherFilterNumber = new TextWatcherFilter(mPassword, EDIT_TYPE.PIN, mContext, 16);
-        }
-        if (mPasswordConfirmTextWatcherFilterNumber == null) {
-            mPasswordConfirmTextWatcherFilterNumber = new TextWatcherFilter(mPasswordConfirm, EDIT_TYPE.PIN, mContext, 16);
-        }
-        if (mPasswordTextWatcherFilter == null) {
-            mPasswordTextWatcherFilter = new TextWatcherFilter(mPassword, EDIT_TYPE.PASSWORD, mContext, 32);
-        }
-        if (mPasswordConfirmTextWatcherFilter == null) {
-            mPasswordConfirmTextWatcherFilter = new TextWatcherFilter(mPasswordConfirm, EDIT_TYPE.PASSWORD, mContext, 32);
-        }
         if (isPin) {
             mPassword.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_VARIATION_PASSWORD);
-            mPassword.removeTextChangedListener(mPasswordTextWatcherFilter);
-            mPassword.removeTextChangedListener(mPasswordTextWatcherFilterNumber);
-            mPassword.addTextChangedListener(mPasswordTextWatcherFilterNumber);
+            mTextInputFilter.setFilter(mPassword, TextInputFilter.EDIT_TYPE.PIN);
             mPasswordConfirm.setInputType(InputType.TYPE_CLASS_NUMBER | InputType.TYPE_NUMBER_VARIATION_PASSWORD);
-            mPasswordConfirm.removeTextChangedListener(mPasswordConfirmTextWatcherFilter);
-            mPasswordConfirm.removeTextChangedListener(mPasswordConfirmTextWatcherFilterNumber);
-            mPasswordConfirm.addTextChangedListener(mPasswordConfirmTextWatcherFilterNumber);
-//			mPassword.setFilters(new InputFilter[]{UtilProvider.getInstance().mFiltePin, new InputFilter.LengthFilter(16)});
-//			mPasswordConfirm.setFilters(new InputFilter[]{UtilProvider.getInstance().mFiltePin, new InputFilter.LengthFilter(16)});
+            mTextInputFilter.setFilter(mPasswordConfirm, TextInputFilter.EDIT_TYPE.PIN);
         } else {
             mPassword.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-            mPassword.removeTextChangedListener(mPasswordTextWatcherFilter);
-            mPassword.removeTextChangedListener(mPasswordTextWatcherFilterNumber);
-            mPassword.addTextChangedListener(mPasswordTextWatcherFilter);
+            mTextInputFilter.setFilter(mPassword, TextInputFilter.EDIT_TYPE.PASSWORD);
             mPasswordConfirm.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_PASSWORD);
-            mPasswordConfirm.removeTextChangedListener(mPasswordConfirmTextWatcherFilter);
-            mPasswordConfirm.removeTextChangedListener(mPasswordConfirmTextWatcherFilterNumber);
-            mPasswordConfirm.addTextChangedListener(mPasswordConfirmTextWatcherFilter);
-//			mPassword.setFilters(new InputFilter[]{UtilProvider.getInstance().mFilterPassword, new InputFilter.LengthFilter(32)});
-//			mPasswordConfirm.setFilters(new InputFilter[]{UtilProvider.getInstance().mFilterPassword, new InputFilter.LengthFilter(32)});
+            mTextInputFilter.setFilter(mPasswordConfirm, TextInputFilter.EDIT_TYPE.PASSWORD);
         }
         mDialog.setLayout(layout);
         if (mContext.isFinishing()) {

@@ -29,21 +29,29 @@ import android.view.WindowManager;
 import com.supremainc.biostar2.BuildConfig;
 import com.supremainc.biostar2.R;
 import com.supremainc.biostar2.meta.Setting;
+
 /**
- * @startuml
- * ABC --> Activity
+ * @startuml ABC --> Activity
  * de --> Activity
  * @enduml
  */
 public class DummyActivity extends Activity {
     private final String TAG = getClass().getSimpleName();
     private Activity mActivity;
-    private boolean mIsRestart;
     Runnable mRunnable = new Runnable() {
         @Override
         public void run() {
-            if (mIsRestart) {
+            if (BuildConfig.DEBUG) {
+                Log.e(TAG, "HomeActivity isRunning2:" + HomeActivity.isRunning() + "LoginActivity:" + LoginActivity.isRunning());
+            }
+            if (HomeActivity.isRunning() || LoginActivity.isRunning()) {
+                LocalBroadcastManager.getInstance(mActivity).sendBroadcast(new Intent(Setting.BROADCAST_GOTO_ALARMLIST));
+                if (BuildConfig.DEBUG) {
+                    Log.e(TAG, "BROADCAST_GOTO_ALARMLIST ");
+                }
+            } else {
                 Intent intent = new Intent(mActivity, LoginActivity.class);
+//                intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
                 intent.setAction(Setting.ACTION_NOTIFICATION_START + String.valueOf(System.currentTimeMillis()));
                 startActivity(intent);
                 if (BuildConfig.DEBUG) {
@@ -67,16 +75,9 @@ public class DummyActivity extends Activity {
         }
         Handler handler = new Handler();
         mActivity = this;
-        if (Setting.IS_NOTIFICATION_NONE_RESTART) {
-            if (HomeActivity.isRunning()) {
-                mIsRestart = false;
-                LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent(Setting.BROADCAST_GOTO_ALARMLIST));
-            } else {
-                mIsRestart = true;
-            }
-        } else {
-            LocalBroadcastManager.getInstance(this).sendBroadcast(new Intent(Setting.BROADCAST_ALL_CLEAR));
-            mIsRestart = true;
+
+        if (BuildConfig.DEBUG) {
+            Log.e(TAG, "HomeActivity isRunning2:" + HomeActivity.isRunning() + "LoginActivity:" + LoginActivity.isRunning());
         }
         handler.postDelayed(mRunnable, 1000);
     }

@@ -38,11 +38,11 @@ import android.util.Log;
 import com.google.gson.Gson;
 import com.supremainc.biostar2.BuildConfig;
 import com.supremainc.biostar2.R;
-import com.supremainc.biostar2.meta.Setting;
 import com.supremainc.biostar2.activity.DummyActivity;
 import com.supremainc.biostar2.db.NotificationDBProvider;
-import com.supremainc.biostar2.sdk.datatype.v2.Login.NotificationType;
-import com.supremainc.biostar2.sdk.datatype.v2.Login.PushNotification;
+import com.supremainc.biostar2.meta.Setting;
+import com.supremainc.biostar2.sdk.models.v2.login.NotificationType;
+import com.supremainc.biostar2.sdk.models.v2.login.PushNotification;
 import com.supremainc.biostar2.sdk.provider.PushDataProvider;
 import com.supremainc.biostar2.sdk.utils.PreferenceUtil;
 import com.supremainc.biostar2.widget.popup.ToastPopup;
@@ -118,34 +118,46 @@ public class GcmBroadcastReceiver extends WakefulBroadcastReceiver {
         return null;
     }
 
+    private ArrayList<String> reArrayArgs(ArrayList<String> arg, Context c) {
+        ArrayList<String> result = new ArrayList<String>();
+        String language = c.getString(R.string.language);
+        if ("ko".equals(language) || "ja".equals(language)) {
+            result.add(arg.get(1));
+            result.add(arg.get(0));
+            return result;
+        } else {
+            return arg;
+        }
+    }
+
     private String getMessage(String message, ArrayList<String> arg, Context context) {
         String base = null;
         if (message.equals("notificationType.message.deviceReboot")) {
             base = context.getString(R.string.message_deviceReboot);
         }
         if (message.equals("notificationType.message.deviceRs485Disconnect")) {
-            base =  context.getString(R.string.message_deviceRs485Disconnect);
+            base = context.getString(R.string.message_deviceRs485Disconnect);
         }
         if (message.equals("notificationType.message.deviceTampering")) {
-            base =  context.getString(R.string.message_deviceTampering);
+            base = context.getString(R.string.message_deviceTampering);
         }
         if (message.equals("notificationType.message.doorApb")) {
-            base =  context.getString(R.string.message_doorApb);
+            base = context.getString(R.string.message_doorApb);
         }
         if (message.equals("notificationType.message.doorForcedOpen")) {
-            base =  context.getString(R.string.message_doorForcedOpen);
+            base = context.getString(R.string.message_doorForcedOpen);
         }
         if (message.equals("notificationType.message.doorHeldOpen")) {
-            base =  context.getString(R.string.message_doorHeldOpen);
+            base = context.getString(R.string.message_doorHeldOpen);
         }
         if (message.equals("notificationType.message.doorOpenRequest")) {
-            base =  context.getString(R.string.message_doorOpenRequest);
+            base = context.getString(R.string.message_doorOpenRequest);
         }
         if (message.equals("notificationType.message.zoneApb")) {
-            base =  context.getString(R.string.message_zoneApb);
+            base = context.getString(R.string.message_zoneApb);
         }
         if (message.equals("notificationType.message.zoneFire")) {
-            base =  context.getString(R.string.message_zoneFire);
+            base = context.getString(R.string.message_zoneFire);
         }
         if (arg == null || base == null) {
             return base;
@@ -153,10 +165,9 @@ public class GcmBroadcastReceiver extends WakefulBroadcastReceiver {
         try {
             if (arg.size() == 1) {
                 return String.format(base, arg.get(0));
-            } else if (arg.size() == 2) {
-                return String.format(base, arg.get(0), arg.get(1));
-            } else if (arg.size() == 3) {
-                return String.format(base, arg.get(0), arg.get(1), arg.get(2));
+            } else if (arg.size() >= 2) {
+                ArrayList<String> reArg = reArrayArgs(arg, context);
+                return String.format(base, reArg.get(0), reArg.get(1));
             } else {
                 return base;
             }
@@ -197,7 +208,7 @@ public class GcmBroadcastReceiver extends WakefulBroadcastReceiver {
                 }
             }
             ToastPopup toastPopup = new ToastPopup(context);
-            toastPopup.show(ToastPopup.TYPE_ALARM, noti.title, null);
+            toastPopup.show(ToastPopup.TYPE_ALARM, noti.title, noti.message);
             if (!dbProvider.insert(noti)) {
                 noti = null;
                 Log.e(TAG, "insert fail");
@@ -227,9 +238,6 @@ public class GcmBroadcastReceiver extends WakefulBroadcastReceiver {
         Intent notificationIntent = null;
         notificationIntent = new Intent(context, cls);
         notificationIntent.setAction(Setting.ACTION_NOTIFICATION_START + String.valueOf(System.currentTimeMillis()));
-        if (!Setting.IS_NOTIFICATION_NONE_RESTART) {
-            notificationIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        }
         PendingIntent pendingIntent = PendingIntent.getActivity(context, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
         return pendingIntent;
     }
@@ -277,7 +285,7 @@ public class GcmBroadcastReceiver extends WakefulBroadcastReceiver {
                 value = String.valueOf(bundle.get(key));
             } catch (Exception e) {
                 if (BuildConfig.DEBUG) {
-                    Log.e(TAG, " value:" +bundle.get(key)+" message:"+ e.getMessage());
+                    Log.e(TAG, " value:" + bundle.get(key) + " message:" + e.getMessage());
                 }
                 continue;
             }

@@ -29,10 +29,10 @@ import android.widget.ListView;
 
 import com.supremainc.biostar2.BuildConfig;
 import com.supremainc.biostar2.R;
-import com.supremainc.biostar2.meta.Setting;
 import com.supremainc.biostar2.adapter.UserCloudRoleAdapter;
-import com.supremainc.biostar2.sdk.datatype.v1.Permission.CloudRole;
-import com.supremainc.biostar2.sdk.datatype.v2.User.User;
+import com.supremainc.biostar2.meta.Setting;
+import com.supremainc.biostar2.sdk.models.v1.permission.CloudRole;
+import com.supremainc.biostar2.sdk.models.v2.user.User;
 import com.supremainc.biostar2.view.SubToolbar;
 import com.supremainc.biostar2.widget.ScreenControl.ScreenType;
 import com.supremainc.biostar2.widget.popup.Popup.OnPopupClickListener;
@@ -123,7 +123,7 @@ public class PermisionFragment extends BaseFragment {
             mUserInfo.roles = new ArrayList<CloudRole>();
         }
         if (mItemAdapter == null) {
-            mItemAdapter = new UserCloudRoleAdapter(mContext, mUserInfo.roles, getListView(), new OnItemClickListener() {
+            mItemAdapter = new UserCloudRoleAdapter(mActivity, mUserInfo.roles, getListView(), new OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                     if (mSubToolbar == null) {
@@ -131,8 +131,13 @@ public class PermisionFragment extends BaseFragment {
                     }
                     if (mSubMode == MODE_DELETE) {
                         mSubToolbar.setSelectAllViewOff();
-                        mSubToolbar.setSelectedCount(mItemAdapter.getCheckedItemCount());
-                        ;
+                        int count = mItemAdapter.getCheckedItemCount();
+                        mSubToolbar.setSelectedCount(count);
+                        if (count == mItemAdapter.getCount()) {
+                            if (!mSubToolbar.getSelectAll()) {
+                                mSubToolbar.showReverseSelectAll();
+                            }
+                        }
                     } else {
                         mReplacePosition = position;
                         showSelectItem();
@@ -211,7 +216,7 @@ public class PermisionFragment extends BaseFragment {
                 mSubToolbar.showMultipleSelectInfo(true, mItemAdapter.getCheckedItemCount());
                 break;
         }
-        mContext.invalidateOptionsMenu();
+        mActivity.invalidateOptionsMenu();
     }
 
     @Override
@@ -260,7 +265,7 @@ public class PermisionFragment extends BaseFragment {
         if (mIsDisableModify) {
             return;
         }
-        MenuInflater inflater = mContext.getMenuInflater();
+        MenuInflater inflater = mActivity.getMenuInflater();
         switch (mSubMode) {
             default:
             case MODE_NORMAL:
@@ -281,7 +286,7 @@ public class PermisionFragment extends BaseFragment {
             mUserInfo.roles = new ArrayList<CloudRole>();
         }
         if (mSelectCloudRolePopup == null) {
-            mSelectCloudRolePopup = new SelectPopup<CloudRole>(mContext, mPopup);
+            mSelectCloudRolePopup = new SelectPopup<CloudRole>(mActivity, mPopup);
         }
         if (mItemAdapter != null) {
             mItemAdapter.clearChoices();
@@ -318,8 +323,8 @@ public class PermisionFragment extends BaseFragment {
     private void showSelectItem() {
         mSelectCloudRolePopup.show(SelectType.CLOUD_ROLE, new OnSelectResultListener<CloudRole>() {
             @Override
-            public void OnResult(ArrayList<CloudRole> selectedItem,boolean isPositive) {
-                if (isInValidCheck(null)) {
+            public void OnResult(ArrayList<CloudRole> selectedItem, boolean isPositive) {
+                if (isInValidCheck()) {
                     return;
                 }
                 if (selectedItem == null || selectedItem.size() < 1) {

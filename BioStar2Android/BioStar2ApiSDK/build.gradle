@@ -2,16 +2,16 @@ apply plugin: 'com.android.library'
 apply plugin: 'com.novoda.bintray-release'
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion '23.0.2'
+    compileSdkVersion 25
+    buildToolsVersion "25.0.1"
     compileOptions.encoding = 'UTF-8'
     lintOptions {
         lintConfig file("lint.xml")
     }
     defaultConfig {
-        minSdkVersion 10
-        targetSdkVersion 23
-        versionCode 8
+        minSdkVersion 14
+        targetSdkVersion 25
+        versionCode 10
         versionName "2.4.0"
     }
 
@@ -27,15 +27,22 @@ publish {
     userOrg = 'biostar2'
     groupId = 'com.supremainc.biostar2'
     artifactId = 'biostar2sdk'
-    publishVersion = '2.4.0'
+    publishVersion = '2.5.0'
     desc = 'BioStar2 Android SDK'
-    website = 'https://github.com/BioStar2/BioStar2Android'
+    website = 'https://github.com/BioStar2/BioStar2Android/tree/2.5.0/BioStar2Android/BioStar2ApiSDK'
     issueTracker = "${website}/issues"
     repository = "${website}.git"
 }
 
 dependencies {
-    compile 'com.google.code.gson:gson:1.7.1'
-    compile 'com.squareup.okhttp:okhttp-android-support:2.4.0'
-    compile files('libs/org.apache.http.legacy.jar')
+    compile 'com.squareup.retrofit2:adapter-rxjava2:2.2.0'
+    compile 'com.squareup.retrofit2:retrofit-converters:2.2.0'
+    compile 'com.squareup.retrofit2:retrofit:2.2.0'
+    compile 'com.squareup.retrofit2:converter-gson:2.2.0'
+    compile 'com.squareup.retrofit2:retrofit-mock:2.2.0'
+    compile 'com.squareup.okhttp3:okhttp-android-support:3.6.0'
+//    compile 'com.facebook.stetho:stetho:1.4.2'
+//    compile 'com.facebook.stetho:stetho-okhttp3:1.4.2'
+//    compile 'io.reactivex.rxjava2:rxandroid:2.0.1'
+//    compile 'io.reactivex.rxjava2:rxjava:2.0.8'
 }

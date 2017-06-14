@@ -24,7 +24,7 @@ import android.widget.ListView;
 
 import com.supremainc.biostar2.R;
 import com.supremainc.biostar2.adapter.base.BaseListAdapter;
-import com.supremainc.biostar2.sdk.datatype.v2.AccessControl.ListAccessGroup;
+import com.supremainc.biostar2.sdk.models.v2.accesscontrol.ListAccessGroup;
 import com.supremainc.biostar2.widget.popup.Popup;
 
 import java.util.ArrayList;
@@ -82,6 +82,24 @@ public class UserAccessGroupAdapter extends BaseListAdapter<ListAccessGroup> {
         // mListView.invalidate();
     }
 
+    public int getAvailableTotal() {
+        if (mListView == null) {
+            return -1;
+        }
+        if (mListView.getChoiceMode() == ListView.CHOICE_MODE_NONE) {
+            return -1;
+        }
+        int total = getCount();
+        for (int i = 0; i < getCount(); i++) {
+            if (mItems != null) {
+                ListAccessGroup item = mItems.get(i);
+                if (item.isIncludedByUserGroup()) {
+                    total--;
+                }
+            }
+        }
+        return total;
+    }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
@@ -108,7 +126,7 @@ public class UserAccessGroupAdapter extends BaseListAdapter<ListAccessGroup> {
         } else {
             setSelector(vh.mRoot, vh.mLink, position, !item.isIncludedByUserGroup());
         }
-        if (mListView.getChoiceMode() !=  ListView.CHOICE_MODE_NONE && item.isIncludedByUserGroup()) {
+        if (mListView.getChoiceMode() != ListView.CHOICE_MODE_NONE && item.isIncludedByUserGroup()) {
             vh.mRoot.setBackgroundResource(R.drawable.selector_list_gray);
         }
         return vh.mRoot;

@@ -39,9 +39,6 @@ public class SummaryUserView extends BaseView {
                 return;
             }
             switch (v.getId()) {
-                case R.id.user_viewlog:
-                    mListener.goLog();
-                    break;
                 case R.id.profile_image:
                     mListener.editPhoto();
                     break;
@@ -70,7 +67,7 @@ public class SummaryUserView extends BaseView {
         mTitleName = (StyledTextView) findViewById(R.id.title_user_name);
         mPhoto = (ImageView) findViewById(R.id.profile_image);
         mBlurBackgroundView = (ImageView) findViewById(R.id.background_img);
-        int[] ids = {R.id.user_viewlog,R.id.profile_image};
+        int[] ids = {R.id.profile_image};
         for (int i : ids) {
             findViewById(i).setOnClickListener(mClickListener);
         }
@@ -88,6 +85,10 @@ public class SummaryUserView extends BaseView {
         setTextView(R.id.title_finger_count, content);
     }
 
+    public void setFaceCount(String content) {
+        setTextView(R.id.title_face_count, content);
+    }
+
     public void showPin(boolean isVisible) {
         int visible;
         if (isVisible) {
@@ -99,19 +100,11 @@ public class SummaryUserView extends BaseView {
         findViewById(R.id.title_pin_exist_devider).setVisibility(visible);
     }
 
-    public void showUserViewLog(boolean isShow) {
-        View view = findViewById(R.id.user_viewlog);
-        if (isShow) {
-            view.setVisibility(View.VISIBLE);
-            view.setOnClickListener(mClickListener);
-        } else {
-            view.setVisibility(View.INVISIBLE);
-            view.setOnClickListener(null);
-        }
-    }
 
     public void setBlurBackGroud(Bitmap blur) {
-        mBlurBackgroundView.setImageBitmap(blur);
+        if (blur != null) {
+            mBlurBackgroundView.setImageBitmap(blur);
+        }
     }
 
     public void setBlurBackGroudDefault() {
@@ -119,7 +112,9 @@ public class SummaryUserView extends BaseView {
     }
 
     public void setUserPhoto(Bitmap bmp) {
-        mPhoto.setImageBitmap(bmp);
+        if (bmp != null) {
+            mPhoto.setImageBitmap(bmp);
+        }
     }
 
     public void setUserPhotoDefault() {
@@ -127,16 +122,18 @@ public class SummaryUserView extends BaseView {
     }
 
     public void setUserID(String content) {
-        mTitleUserId.setText(content);
+        if (content != null) {
+            mTitleUserId.setText(content);
+        }
     }
 
     public void setUserName(String content) {
-        mTitleName.setText(content);
+        if (content != null) {
+            mTitleName.setText(content);
+        }
     }
 
     public interface SummaryUserViewListener {
-        public void goLog();
-
         public void editPhoto();
     }
 

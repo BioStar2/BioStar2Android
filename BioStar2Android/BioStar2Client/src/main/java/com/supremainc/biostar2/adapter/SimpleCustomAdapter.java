@@ -55,12 +55,22 @@ public class SimpleCustomAdapter extends BaseListAdapter<SelectCustomData> {
             viewHolder.mName.setText(item.mTitle);
         }
         setSelector(viewHolder.mRoot, viewHolder.mLink, position);
+        if (item.mIsDisable) {
+            viewHolder.mRoot.setBackgroundResource(R.drawable.selector_list_gray);
+        }
         return viewHolder.mRoot;
     }
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         SimpleItemViewHolder viewHolder = (SimpleItemViewHolder) view.getTag();
+        if (mItems != null) {
+            SelectCustomData data = mItems.get(position);
+            if (data.mIsDisable) {
+                mListView.setItemChecked(position, false);
+                return;
+            }
+        }
         setSelector(view, viewHolder.mLink, position);
         super.onItemClick(parent, view, position, id);
     }

@@ -18,55 +18,63 @@ package com.supremainc.biostar2.sdk.provider;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
-import android.os.SystemClock;
-import android.util.Log;
 
 import com.google.gson.Gson;
-import com.supremainc.biostar2.sdk.datatype.v1.Permission.CloudPermission;
-import com.supremainc.biostar2.sdk.datatype.v2.Common.ResponseStatus;
-import com.supremainc.biostar2.sdk.datatype.v2.Common.VersionData;
-import com.supremainc.biostar2.sdk.datatype.v2.Permission.PermissionItem;
-import com.supremainc.biostar2.sdk.datatype.v2.User.User;
+import com.supremainc.biostar2.sdk.models.enumtype.LocalStorage;
+import com.supremainc.biostar2.sdk.models.v2.common.VersionData;
+import com.supremainc.biostar2.sdk.models.v2.user.User;
 import com.supremainc.biostar2.sdk.utils.FileUtil;
 import com.supremainc.biostar2.sdk.utils.PreferenceUtil;
-import com.supremainc.biostar2.sdk.volley.Network;
-import com.supremainc.biostar2.sdk.volley.Request.Method;
-import com.supremainc.biostar2.sdk.volley.RequestQueue;
-import com.supremainc.biostar2.sdk.volley.Response;
-import com.supremainc.biostar2.sdk.volley.Response.ErrorListener;
-import com.supremainc.biostar2.sdk.volley.Response.Listener;
-import com.supremainc.biostar2.sdk.volley.VolleyError;
 
+import java.io.IOException;
+import java.net.CookieManager;
+import java.net.CookiePolicy;
+import java.util.Calendar;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import okhttp3.Interceptor;
+import okhttp3.JavaNetCookieJar;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import retrofit2.Callback;
+import retrofit2.Retrofit;
+import retrofit2.adapter.rxjava2.RxJava2CallAdapterFactory;
+import retrofit2.converter.gson.GsonConverterFactory;
+
+import static com.supremainc.biostar2.sdk.provider.ConfigDataProvider.LOGIN_EXPIRE;
 
 public class BaseDataProvider {
+    public static final int MAX_LIMIT = 100000;
+    private static final int CONNECT_TIMEOUT = 15;
+    private static final int WRITE_TIMEOUT = 60;
+    private static final int READ_TIMEOUT = 60;
     protected static Handler mHandler;
     protected static Context mContext;
-    protected static NetWork mNetwork;
-    protected static Gson mGson;
+    protected static ApiInterface mApiInterface;
     protected static FileUtil mFileUtil;
     protected static Map<String, Boolean> mPermissionMap;
     protected static User mUserInfo;
-    protected static long mSimpleLoginTick=0L;
-    protected static com.supremainc.biostar2.sdk.datatype.v2.User.User mUserInfoV2;
-    protected static String mPasswordLevel;
-    protected static boolean mAlphaNumericUserID;
+    protected static long mSimpleLoginTick = 0L;
+    protected static Gson mGson = new Gson();
+    private static String SERVER_URL = null;// "https://apitest.biostar2.com/";
+    private static OkHttpClient mClient;
+    private static String mCauseErrorString = "function param invalid";
+    private static Locale mLocale;
+    private static PersistentCookieStore mCookie;
+    private static SetStetho mStetho;
     protected final String TAG = getClass().getSimpleName();
 
-
     protected BaseDataProvider(Context context) {
-        mHandler = new Handler(Looper.getMainLooper());
-        if (mGson == null) {
-            mGson = new Gson();
-        }
-        if (mPermissionMap == null) {
-            mPermissionMap = new HashMap<String, Boolean>();
-        }
-        mNetwork = NetWork.getInstance(context);
-        mContext = context;
-        mFileUtil = FileUtil.getInstance();
+        init(context);
     }
+
+    public static void setStehto(SetStetho stetho) {
+        mStetho = stetho;
+    }
+
 
     public static Context getContext() {
         return mContext;
@@ -74,294 +82,154 @@ public class BaseDataProvider {
 
     public void init(Context context) {
         mContext = context;
-    }
-//TODO V1 , V2 분리
-    private void initPermission() {
-        if (mPermissionMap != null) {
-            mPermissionMap.clear();
+        mHandler = new Handler(Looper.getMainLooper());
+        if (mPermissionMap == null) {
+            mPermissionMap = new HashMap<String, Boolean>();
         }
-        if (mUserInfo == null) {
-            return;
-        }
-
-        if (mUserInfo.permission != null && mUserInfo.permission.permissions != null) {
-            for (PermissionItem item : mUserInfo.permission.permissions) {
-                String key = item.module + PermissionItem.ROLE_WRITE;
-                if (item.write) {
-                        if (item.read == false) {
-                            item.read = true;
-                            Log.e(TAG, "not valid permission ");
-                        }
-                    mPermissionMap.put(key, true);
-                }
-                if (item.module != null) {
-                    key = item.module + PermissionItem.ROLE_READ;
-                    if (item.read) {
-                        if (ConfigDataProvider.DEBUG) {
-                            Log.i(TAG, key);
-                        }
-                        mPermissionMap.put(key, true);
-                    }
-
-                }
-            }
-            return;
-        }
-
-
-        if (mUserInfo.permissions == null || mUserInfo.permissions.size() < 1) {
-            return;
-        }
-
-        for (CloudPermission permission : mUserInfo.permissions) {
-            if (permission.module != null) {
-                String key = permission.module + PermissionItem.ROLE_WRITE;
-                if (permission.write) {
-                        if (permission.read == false) {
-                            permission.read = true;
-                            Log.e(TAG, "not valid permission ");
-                        }
-                    mPermissionMap.put(key, true);
-                }
-                key = permission.module + PermissionItem.ROLE_READ;
-                if (permission.read) {
-                    if (ConfigDataProvider.DEBUG) {
-                        Log.i(TAG, key);
-                    }
-                    mPermissionMap.put(key, true);
-                }
-            }
-        }
-    }
-
-    public void getServerVersion(final Listener<VersionData> listener, final ErrorListener errorListener, final Object deliverParam) {
-        String domain = ConfigDataProvider.getLatestDomain(mContext);
-        String url = ConfigDataProvider.getLatestURL(mContext);
-        if (domain == null || url == null) {
-            if (errorListener != null) {
-                errorListener.onErrorResponse(new VolleyError("param is null"),deliverParam);
-            }
-            return;
-        }
-        getServerVersion(domain,url,listener,errorListener,deliverParam);
-    }
-
-    public void getServerVersion(final String domain,final String url,final Listener<VersionData> listener, final ErrorListener errorListener, final Object deliverParam) {
-        final Response.Listener<VersionData> versionListener = new Response.Listener<VersionData>() {
-            @Override
-            public void onResponse(VersionData response, Object param) {
-                if (response == null) {
-                    removeCookie();
-                    if (errorListener != null) {
-                        VolleyError ve = new VolleyError();
-                        ve.setSessionExpire();
-                        errorListener.onErrorResponse(ve, deliverParam);
-                    }
-                    return;
-                }
-                if (!response.init(mContext)) {
-                    if (errorListener != null) {
-                        errorListener.onErrorResponse(new VolleyError("BioStar 2 AC Version invalid"),null);
-                    }
-                    return;
-                }
-                ConfigDataProvider.setLatestDomain(mContext,domain);
-                ConfigDataProvider.setLatestURL(mContext,url);
-                if (listener != null) {
-                    listener.onResponse(response, deliverParam);
-                }
-            }
-        };
-        //TODO
-//        if (ConfigDataProvider.TEST_DELETE) {
-//            VersionData v = new VersionData();
-//            v.cloud_version = 2;
-//            versionListener.onResponse(v,null);
-//            return;
-//        }
-        String reUrl = createUrl(url, "v2",NetWork.PARAM_REFERENCE,domain,NetWork.PARAM_BIOSTAR_VERSION);
-        try {
-            mNetwork.getVersion(domain,reUrl,versionListener,errorListener,deliverParam);
-        } catch (Exception e) {
-            onError(e, errorListener, deliverParam);
-        }
-    }
-
-    public void simpleLoginCheck() {
-        long base = 43200000;
-        if (SystemClock.elapsedRealtime() - mSimpleLoginTick > base){
-            simpleLogin(null,null,null);
-        }
-    }
-
-    public void simpleLogin(final Listener<User> listener, final ErrorListener errorListener, final Object deliverParam) {
-        final Response.Listener<User> loginListener = new Response.Listener<User>() {
-            @Override
-            public void onResponse(User response, Object param) {
-                if (response == null) {
-                    removeCookie();
-                    if (errorListener != null) {
-                        VolleyError ve = new VolleyError();
-                        ve.setSessionExpire();
-                        errorListener.onErrorResponse(ve, deliverParam);
-                    }
-                    return;
-                }
-                mSimpleLoginTick = SystemClock.elapsedRealtime();
-                mUserInfo = response;
-                if (VersionData.getCloudVersion(mContext) < 2) {
-                    if (mUserInfo.password_strength_level != null) {
-                        mPasswordLevel = mUserInfo.password_strength_level;
-                    }
-                }
-                initPermission();
-                if (listener != null) {
-                    listener.onResponse(response, deliverParam);
-                }
-            }
-        };
-        mNetwork.simpleLogin(loginListener, errorListener, deliverParam);
-    }
-
-
-
-    public boolean isStrongPassword() {
-        if (mPasswordLevel == null) {
-            return true;
-        }
-        if (mPasswordLevel.equals("STRONG")) {
-            return true;
-        }
-        return false;
-    }
-
-    public boolean isAlphaNumericUserID() {
-        if (VersionData.getCloudVersion(mContext) > 1) {
-            return mAlphaNumericUserID;
+        mContext = context;
+        mFileUtil = FileUtil.getInstance();
+        String url = (String) getLocalStorage(LocalStorage.DOMAIN);
+        if (url == null || url.isEmpty()) {
+            removeCookie();
+            createApiInterface("https://api.biostar2.com/");
         } else {
-            return false;
+            createApiInterface(url);
+        }
+    }
+
+    private void createClient() {
+        mLocale = mContext.getResources().getConfiguration().locale;
+        if (mClient == null) {
+            mCookie = new PersistentCookieStore(mContext);
+            CookieManager cookieManager = new CookieManager(mCookie, CookiePolicy.ACCEPT_ALL);
+            OkHttpClient.Builder builder = new OkHttpClient().newBuilder();
+            builder.connectTimeout(CONNECT_TIMEOUT, TimeUnit.SECONDS);
+            builder.writeTimeout(WRITE_TIMEOUT, TimeUnit.SECONDS);
+            builder.readTimeout(READ_TIMEOUT, TimeUnit.SECONDS);
+            builder.cookieJar(new JavaNetCookieJar(cookieManager));
+            builder.addInterceptor(new Interceptor() {
+                @Override
+                public okhttp3.Response intercept(Chain chain) throws IOException {
+                    Request original = chain.request();
+                    Request.Builder requestBuilder = original.newBuilder();
+                    if (mLocale != null) {
+                        requestBuilder.header("Content-Language", mLocale.getISO3Language());
+                    }
+                    if (ConfigDataProvider.DEBUG) {
+                        Calendar cal = Calendar.getInstance();
+                        requestBuilder.header("timestamp", cal.get(Calendar.HOUR_OF_DAY)+":"+cal.get(Calendar.MINUTE)+":"+cal.get(Calendar.SECOND)+" &"+cal.get(Calendar.MILLISECOND));
+                    }
+                    requestBuilder.method(original.method(), original.body());
+                    Request request = requestBuilder.build();
+                    return chain.proceed(request);
+                }
+            });
+            if (mStetho != null) {
+                mStetho.setStetho(builder);
+            }
+            mClient = builder.build();
+//                    .addNetworkInterceptor(new StethoInterceptor())
+
+        }
+    }
+
+    public void cancelAll() {
+        if (mClient != null) {
+            mClient.dispatcher().cancelAll();
+        }
+    }
+
+    protected String getServerUrl() {
+        return SERVER_URL;
+    }
+
+    protected void createApiInterface(String url) {
+        if (!url.endsWith("/")) {
+            url = url + "/";
+        }
+        createClient();
+        if (mApiInterface == null || !url.equals(SERVER_URL)) {
+            SERVER_URL = url;
+            mApiInterface = new Retrofit.Builder()
+                    .baseUrl(SERVER_URL)
+                    .client(mClient)
+                    .addCallAdapterFactory(RxJava2CallAdapterFactory.create())
+                    .addConverterFactory(GsonConverterFactory.create())
+                    .build().create(ApiInterface.class);
+        }
+    }
+
+    public void setLocalStorage(LocalStorage type, String content) {
+        switch (type.type) {
+            case STRING:
+                PreferenceUtil.putSharedPreference(mContext, type.name, content);
+                break;
+            default:
+                break;
+        }
+    }
+
+    public Object getLocalStorage(LocalStorage type) {
+        switch (type.type) {
+            case STRING:
+                return PreferenceUtil.getSharedPreference(mContext, type.name);
+            default:
+                break;
+        }
+        return null;
+    }
+
+    protected void onParamError(final Callback<?> callback) {
+        if (callback != null && mHandler != null) {
+            mHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    callback.onFailure(null, new Throwable(mCauseErrorString));
+                }
+            });
         }
     }
 
     public boolean isLogined() {
-        if (mNetwork == null) {
+        if (mContext == null || mApiInterface == null || mCookie == null) {
             return false;
         }
-        return mNetwork.isValid();
+        return mCookie.isValid();
     }
 
-
-    public void login(String domain, final String id, String password, String token, final Response.Listener<User> listener, final Response.ErrorListener errorListener, final Object deliverParam) {
-        removeCookie();
-        if (ConfigDataProvider.getFullURL(mContext) == null) {
-            if (errorListener != null) {
-                VolleyError ve = new VolleyError();
-                ve.setSessionExpire();
-                errorListener.onErrorResponse(ve, deliverParam);
-            }
-            return;
-        }
-        final Response.Listener<User> loginListener = new Response.Listener<User>() {
-            @Override
-            public void onResponse(User response, Object param) {
-                if (response == null ||  ConfigDataProvider.getFullURL(mContext) == null) {
-                    removeCookie();
-                    if (errorListener != null) {
-                        VolleyError ve = new VolleyError();
-                        ve.setSessionExpire();
-                        errorListener.onErrorResponse(ve, deliverParam);
-                    }
-                    return;
-                }
-
-                NetWork.SERVER_ADDRESS = ConfigDataProvider.getFullURL(mContext);
-                ConfigDataProvider.setLatestUserID(mContext,id);
-//                mUserInfo = response;
-//                mPasswordLevel = mUserInfo.password_strength_level;
-                initPermission();
-                simpleLogin(listener,errorListener,deliverParam);
-//                if (listener != null) {
-//                    listener.onResponse(response, deliverParam);
-//                }
-            }
-        };
-        mNetwork.login(domain, ConfigDataProvider.getFullURL(mContext), id, password, token, loginListener, errorListener, deliverParam);
-        password = "";
-    }
-
-
-    public void logout(final Response.Listener<ResponseStatus> listener, Response.ErrorListener errorListener) {
-        final Response.Listener<ResponseStatus> logoutListener = new Response.Listener<ResponseStatus>() {
-            @Override
-            public void onResponse(ResponseStatus response, Object param) {
-                if (mPermissionMap != null) {
-                    mPermissionMap.clear();
-                }
-                removeCookie();
-                if (listener != null) {
-                    listener.onResponse(response, null);
-                }
-            }
-        };
-        mNetwork.sendRequest(null, ResponseStatus.class, Method.GET, NetWork.PARAM_LOGOUT, null, null, null, logoutListener, errorListener, null);
-    }
-
-    public void removeCookie() {
-        mNetwork.removeCookie();
-    }
-
-    public void logOff() {
-        mNetwork.logOff();
-    }
-
-    public void cancelAll(String tag) {
-        if (ConfigDataProvider.DEBUG) {
-            Log.i(TAG, "cancel request:" + tag);
-        }
-        mNetwork.cancelAll(tag);
-    }
-
-    public RequestQueue getRequestQueue() {
-        return mNetwork.mRequestQueue;
-    }
-
-    public boolean isValidLogin() {
-        if (mNetwork == null || mUserInfo == null) {
+    public boolean isExistLoginedUser() {
+        if (mUserInfo == null) {
             return false;
         }
         return true;
     }
 
-    protected <T> void sendRequest(String tag, Class<T> clazz, int method, String path, Map<String, String> headers, Map<String, String> params, String body, Listener<T> listener,
-                                   ErrorListener errorListener, Object deliverParam) {
-        try {
-            mNetwork.sendRequest(tag, clazz, method, path, headers, params, body, listener, errorListener, deliverParam);
-        } catch (Exception e) {
-            onError(e, errorListener, deliverParam);
+    public void removeCookie() {
+        if (mCookie != null) {
+            mCookie.removeAll();
         }
+        mUserInfo = null;
     }
 
-    public <T> void sendOuterRequest(String url, String tag, Class<T> clazz, int method, String path, Map<String, String> headers, Map<String, String> params, String body, Listener<T> listener,
-                                     ErrorListener errorListener, Object deliverParam) {
-        try {
-            mNetwork.sendOuterRequest(url, tag, clazz, method, path, headers, params, body, listener, errorListener, deliverParam);
-        } catch (Exception e) {
-            onError(e, errorListener, deliverParam);
-        }
-    }
-
-    protected void onError(Exception e, Response.ErrorListener errorListener, Object deliverParam) {
-        String message = null;
-        if (e != null) {
-            if (ConfigDataProvider.DEBUG) {
-                e.printStackTrace();
-                message = e.getMessage();
-                Log.e(TAG, "onError:" + message);
+    protected boolean checkAPI(Callback<?> callback) {
+        if (mContext == null) {
+            if (callback != null) {
+                callback.onFailure(null, new Throwable(""));
             }
+            return false;
         }
-        if (errorListener != null) {
-            errorListener.onErrorResponse(new VolleyError(message), deliverParam);
+        String url = VersionData.getCloudVersionString(mContext);
+        if (url == null || url.isEmpty()) {
+            removeCookie();
+            if (callback != null) {
+                callback.onFailure(null, new Throwable(LOGIN_EXPIRE));
+            }
+            return false;
         }
+        if (mApiInterface == null) {
+            createApiInterface(url);
+        }
+        return true;
     }
 
     public User getLoginUserInfo() {
@@ -379,51 +247,40 @@ public class BaseDataProvider {
         mUserInfo = user;
     }
 
-    protected Map<String, String> createParams(int offset, int limit, String groupId, String query) {
-        Map<String, String> params = new HashMap<String, String>();
-        if (limit == -1) {
-            limit = 100000;
-        }
-        if (groupId != null) {
-            params.put("group_id", String.valueOf(groupId));
-        }
-        params.put("limit", String.valueOf(limit));
-        params.put("offset", String.valueOf(offset));
-        if (query != null && !query.equals("")) {
-            params.put("text", query);
-        }
-        return params;
-    }
-
-    protected String createUrl(String baseParam, String id, String... addParams) {
-        String url = baseParam;
-        if (id != null) {
-            if (url.endsWith("/")) {
-                url = url +  id;
-            } else {
-                url = url + "/" + id;
+    protected boolean checkObject(Object... args) {
+        for (Object obj : args) {
+            if (obj == null) {
+                return false;
             }
-        }
-        if (addParams.length < 1) {
-            return url;
-        }
-        for (String param : addParams) {
-            if (param != null && !param.isEmpty()) {
-                if (url.endsWith("/")) {
-                    url = url +  param;
-                } else {
-                    url = url + "/" + param;
+            String target = obj.toString();
+            if (target != null) {
+                if (target.isEmpty()) {
+                    return false;
                 }
             }
         }
-        return url;
+        return true;
     }
 
-    public void test(String url) {
-        mNetwork.testRequest(url);
+    protected boolean checkParamAndAPI(Callback<?> callback, Object... args) {
+        if (!checkObject(args)) {
+            onParamError(callback);
+            return false;
+        }
+        if (!checkAPI(callback)) {
+            return false;
+        }
+        return true;
     }
 
-    public String getServerAddress() {
-        return NetWork.SERVER_ADDRESS;
+    public interface SetStetho {
+        public void setStetho(OkHttpClient.Builder builder);
+    }
+
+    public OkHttpClient getOkHttpClient() {
+        if (mClient == null) {
+            createClient();
+        }
+        return mClient;
     }
 }

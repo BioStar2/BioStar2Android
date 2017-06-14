@@ -36,13 +36,15 @@ import android.widget.BaseAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 
+import com.google.gson.Gson;
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout;
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutDirection;
 import com.supremainc.biostar2.BuildConfig;
 import com.supremainc.biostar2.R;
 import com.supremainc.biostar2.meta.Setting;
+import com.supremainc.biostar2.sdk.models.v2.common.ResponseStatus;
+import com.supremainc.biostar2.sdk.models.v2.user.User;
 import com.supremainc.biostar2.sdk.provider.CommonDataProvider;
-import com.supremainc.biostar2.sdk.volley.VolleyError;
 import com.supremainc.biostar2.widget.ScreenControl;
 import com.supremainc.biostar2.widget.popup.Popup;
 import com.supremainc.biostar2.widget.popup.Popup.OnPopupClickListener;
@@ -50,12 +52,18 @@ import com.supremainc.biostar2.widget.popup.Popup.PopupType;
 import com.supremainc.biostar2.widget.popup.ToastPopup;
 
 import java.util.ArrayList;
+import java.util.Iterator;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public abstract class BaseListAdapter<T> extends BaseAdapter implements OnItemClickListener {
+    protected static Gson mGson = new Gson();
     protected final String TAG = getClass().getSimpleName() + String.valueOf(System.currentTimeMillis());
     protected Activity mActivity;
     protected LayoutInflater mInflater;
-    protected boolean mIsDestoy = false;
+    protected boolean mIsDestroy = false;
     protected ArrayList<T> mItems;
     protected ListView mListView;
     protected OnItemClickListener mOnItemClickListener;
@@ -66,19 +74,46 @@ public abstract class BaseListAdapter<T> extends BaseAdapter implements OnItemCl
     protected int mDefaultSelectColor = Color.WHITE;
     protected String mQuery;
     protected OnItemsListener mOnItemsListener;
-    protected OnCancelListener mCancelExitListener = new OnCancelListener() {
+    protected ArrayList<T> mDuplicateItems;
+    protected int mLimitSize;
+    protected Handler mHandler;
+    protected CommonDataProvider mCommonDataProvider;
+    protected OnPopupClickListener mOnBackPopupClickListener = new OnPopupClickListener() {
         @Override
-        public void onCancel(DialogInterface dialog) {
-            CommonDataProvider.getInstance(mActivity).cancelAll(TAG);
-//            ScreenControl.getInstance().backScreen();
+        public void OnPositive() {
+            ScreenControl.getInstance(mActivity).backScreen();
+        }
+
+        @Override
+        public void OnNegative() {
+            ScreenControl.getInstance(mActivity).backScreen();
         }
     };
     private ActivityManager mActivityManager;
     private int mLastClickItemPosition = -1;
     private Runtime mRuntime;
-    protected ArrayList<T> mDuplicateItems;
-    protected int mLimitSize;
-    protected Handler mHandler;
+    private ArrayList<Call<?>> mRequestList = new ArrayList<Call<?>>();
+    protected OnPopupClickListener mClearOnPopupClickListener = new OnPopupClickListener() {
+        @Override
+        public void OnPositive() {
+            clearRequest();
+            LocalBroadcastManager.getInstance(mActivity).sendBroadcast(new Intent(Setting.BROADCAST_CLEAR));
+        }
+
+        @Override
+        public void OnNegative() {
+            clearRequest();
+            LocalBroadcastManager.getInstance(mActivity).sendBroadcast(new Intent(Setting.BROADCAST_CLEAR));
+        }
+    };
+    protected OnCancelListener mCancelStayListener = new OnCancelListener() {
+        @Override
+        public void onCancel(DialogInterface dialog) {
+            if (mActivity != null && !mActivity.isFinishing()) {
+                clearRequest();
+            }
+        }
+    };
 
     public BaseListAdapter(Activity context, ArrayList<T> items, ListView listView, OnItemClickListener itemClickListener, Popup popup, OnItemsListener onItemsListener) {
         mHandler = new Handler(Looper.getMainLooper());
@@ -92,13 +127,110 @@ public abstract class BaseListAdapter<T> extends BaseAdapter implements OnItemCl
         listView.setAdapter(this);
         setOnItemClickListener(itemClickListener);
         mOnItemsListener = onItemsListener;
+        mCommonDataProvider = CommonDataProvider.getInstance(mActivity);
     }
 
-    public void cacelRequest() {
-        if (BuildConfig.DEBUG) {
-            Log.e(TAG, "cancel SelectPopup Request");
+    protected boolean isWaitPopup() {
+        if (mPopup == null) {
+            return false;
         }
-        CommonDataProvider.getInstance(mActivity).cancelAll(TAG);
+        if (mSwipyRefreshLayout == null) {
+            return true;
+        }
+        return false;
+    }
+
+    public void clearRequest() {
+        if (mRequestList != null) {
+            Iterator<Call<?>> iterator = mRequestList.iterator();
+            while (iterator.hasNext()) {
+                Call<?> call = iterator.next();
+                if (!(call.isCanceled() || call.isExecuted())) {
+                    call.cancel();
+                }
+                iterator.remove();
+            }
+            mRequestList.clear();
+        }
+    }
+
+    private void verifyRequest() {
+        if (mRequestList != null) {
+            Iterator<Call<?>> iterator = mRequestList.iterator();
+            while (iterator.hasNext()) {
+                Call<?> call = iterator.next();
+                if (call.isCanceled() || call.isExecuted()) {
+                    iterator.remove();
+                }
+            }
+        }
+    }
+
+    protected boolean isInValidCheck() {
+        if (mActivity == null) {
+            return true;
+        }
+        if (mIsDestroy || mActivity.isFinishing()) {
+            return true;
+        }
+        return false;
+    }
+
+    protected boolean isIgnoreCallback(Call<?> call, boolean dismissPopup) {
+        if (isInValidCheck()) {
+            return true;
+        }
+        if (dismissPopup) {
+            dismissWait();
+        }
+        if (call != null && call.isCanceled()) {
+            return true;
+        }
+        return false;
+    }
+
+    protected void showWait(SwipyRefreshLayoutDirection direction) {
+        if (mSwipyRefreshLayout != null) {
+//            mSwipyRefreshLayout.setRefreshing(false);
+            mSwipyRefreshLayout.setEnableBottom(true);
+            if (direction == null) {
+                mSwipyRefreshLayout.setRefreshing(true);
+            } else {
+                mSwipyRefreshLayout.onRefresh(direction, false);
+            }
+        } else if (mPopup != null) {
+            mPopup.showWait(mCancelStayListener);
+        }
+    }
+
+    protected void dismissWait() {
+        if (mSwipyRefreshLayout != null) {
+            mSwipyRefreshLayout.setRefreshing(false);
+        } else if (mPopup != null) {
+            mPopup.dismiss();
+        }
+    }
+
+    protected boolean isIgnoreCallback(Call<?> call, Response<?> response, boolean dismissPopup) {
+        if (isInValidCheck()) {
+            return true;
+        }
+        if (dismissPopup) {
+            dismissWait();
+        }
+        if (call != null && call.isCanceled()) {
+            return true;
+        }
+        if (response != null && !response.isSuccessful()) {
+            if (response.code() == 401) {
+                if (mCommonDataProvider != null) {
+                    mCommonDataProvider.removeCookie();
+                }
+                mPopup.show(PopupType.ALERT, mActivity.getString(R.string.info), mActivity.getString(R.string.login_expire), mClearOnPopupClickListener, mActivity.getString(R.string.ok), null, false);
+                return true;
+            }
+        }
+        return false;
     }
 
     public boolean clearChoices() {
@@ -118,7 +250,8 @@ public abstract class BaseListAdapter<T> extends BaseAdapter implements OnItemCl
         if (BuildConfig.DEBUG) {
             Log.i(TAG, "clearItems");
         }
-        mIsDestoy = true;
+        clearRequest();
+        mIsDestroy = true;
         if (mItems != null) {
             mItems.clear();
         }
@@ -130,6 +263,91 @@ public abstract class BaseListAdapter<T> extends BaseAdapter implements OnItemCl
 
     public int getCheckedItemPosition() {
         return mListView.getCheckedItemPosition();
+    }
+
+    protected boolean request(Call<?> call) {
+        if (call == null || mRequestList == null) {
+            return false;
+        }
+        verifyRequest();
+        mRequestList.add(call);
+        return true;
+    }
+
+    protected boolean isInvalidResponse(Response<?> response, boolean showError, boolean showErrorOnBack) {
+        if (response == null) {
+            if (showError) {
+                showErrorPopup(getResponseErrorMessage(response), showErrorOnBack);
+            }
+            return true;
+        }
+        if (response.isSuccessful() && response.body() != null) {
+            return false;
+        } else {
+            if (response.code() == 503) {
+                mCommonDataProvider.simpleLogin(new Callback<User>() {
+                    @Override
+                    public void onFailure(Call<User> call, Throwable t) {
+
+                    }
+
+                    @Override
+                    public void onResponse(Call<User> call, Response<User> response) {
+                        LocalBroadcastManager.getInstance(mActivity).sendBroadcast(new Intent(Setting.BROADCAST_REROGIN));
+                    }
+                });
+            }
+            if (showError) {
+                showErrorPopup(getResponseErrorMessage(response), showErrorOnBack);
+            }
+            return true;
+        }
+    }
+
+    protected String getResponseErrorMessage(Response<?> response) {
+        if (response == null || response.errorBody() == null) {
+            return mActivity.getString(R.string.fail) + "\nhcode:" + response.code();
+        }
+        String error = "";
+        try {
+            ResponseStatus responseClass = (ResponseStatus) mGson.fromJson(response.errorBody().string(), ResponseStatus.class);
+            error = responseClass.message + "\n" + "scode: " + responseClass.status_code;
+        } catch (Exception e) {
+
+        }
+        error = error + "\n" + "hcode: " + response.code();
+        return error;
+    }
+
+    protected void showRetryPopup(String msg, OnPopupClickListener listener) {
+        if (mPopup == null) {
+            return;
+        }
+        mPopup.dismiss();
+        mPopup.show(PopupType.ALERT, mActivity.getString(R.string.fail_retry), msg, listener, mActivity.getString(R.string.ok), mActivity.getString(R.string.cancel), false);
+    }
+
+    protected void showErrorPopup(String msg, boolean onBack) {
+        if (mPopup == null) {
+            return;
+        }
+        mPopup.dismiss();
+        if (msg == null || msg.isEmpty()) {
+            msg = mActivity.getString(R.string.fail);
+        }
+
+        if (msg.contains("scode: 10") || msg.contains("hcode: 401")) {
+            if (mCommonDataProvider != null) {
+                mCommonDataProvider.removeCookie();
+            }
+            mPopup.show(PopupType.ALERT, mActivity.getString(R.string.info), mActivity.getString(R.string.login_expire), mClearOnPopupClickListener, mActivity.getString(R.string.ok), null, false);
+        } else {
+            if (onBack) {
+                mPopup.show(PopupType.ALERT, mActivity.getString(R.string.info), msg, mOnBackPopupClickListener, mActivity.getString(R.string.ok), null, true);
+            } else {
+                mPopup.show(PopupType.ALERT, mActivity.getString(R.string.info), msg, null, mActivity.getString(R.string.ok), null, true);
+            }
+        }
     }
 
     public ArrayList<Integer> getCheckedItemPositions() {
@@ -250,38 +468,6 @@ public abstract class BaseListAdapter<T> extends BaseAdapter implements OnItemCl
         return mTotal;
     }
 
-    public boolean isDestroy() {
-        if (mActivity.isFinishing()) {
-            return true;
-        }
-        return mIsDestoy;
-    }
-
-    public boolean isDestroy(VolleyError error) {
-        if (isDestroy()) {
-            return true;
-        }
-        if (error.getSessionExpire()) {
-            if (mPopup == null) {
-                mPopup = new Popup(mActivity);
-            } else {
-                mPopup.dismiss();
-            }
-            mPopup.show(PopupType.ALERT, mActivity.getString(R.string.info), mActivity.getString(R.string.login_expire), new OnPopupClickListener() {
-                @Override
-                public void OnNegative() {
-
-                }
-
-                @Override
-                public void OnPositive() {
-                    LocalBroadcastManager.getInstance(mActivity).sendBroadcast(new Intent(Setting.BROADCAST_CLEAR));
-                }
-            }, mActivity.getString(R.string.ok), null, false);
-            return true;
-        }
-        return false;
-    }
 
     public boolean isItemChecked(int position) {
         return mListView.isItemChecked(position);
@@ -321,7 +507,7 @@ public abstract class BaseListAdapter<T> extends BaseAdapter implements OnItemCl
                 mListView.setItemChecked(position, false);
                 return;
             }
-            if (count == mLimitSize || count == mLimitSize-1) {
+            if (count == mLimitSize || count == mLimitSize - 1) {
                 isRefresh = true;
             }
         }
@@ -413,6 +599,7 @@ public abstract class BaseListAdapter<T> extends BaseAdapter implements OnItemCl
                 arrow.setImageResource(R.drawable.arrow_01);
                 break;
             default:
+                arrow.setVisibility(View.VISIBLE);
                 if (mListView.isItemChecked(position)) {
                     root.setBackgroundResource(R.drawable.selector_list_selected);
                     arrow.setImageResource(R.drawable.selector_list_check);
@@ -436,17 +623,19 @@ public abstract class BaseListAdapter<T> extends BaseAdapter implements OnItemCl
         // mListView.requestLayout();
     }
 
-    public interface OnItemsListener {
-        public void onSuccessNull(int total);
-        public void onNoMoreData();
-        public void onTotalReceive(int total);
-    }
-
     public void setDuplicateItems(ArrayList<T> items) {
         mDuplicateItems = items;
     }
 
     public void setLimit(int limit) {
         mLimitSize = limit;
+    }
+
+    public interface OnItemsListener {
+        public void onSuccessNull(int total);
+
+        public void onNoneData();
+
+        public void onTotalReceive(int total);
     }
 }

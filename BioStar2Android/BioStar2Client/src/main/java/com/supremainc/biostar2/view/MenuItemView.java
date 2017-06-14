@@ -17,7 +17,6 @@ package com.supremainc.biostar2.view;
 
 import android.content.Context;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
@@ -89,7 +88,7 @@ public class MenuItemView extends BaseView {
                 break;
             case MOBILE_CARD_ALERT:
                 imgResID = R.drawable.selector_btn_card;
-                textID = R.string.mobile_card;
+                textID = R.string.mobile_card_upper;
                 mBadgeAlert.setVisibility(View.VISIBLE);
                 break;
             default:
@@ -129,6 +128,6 @@ public class MenuItemView extends BaseView {
     }
 
     public enum MenuItemType {
-        USER, MONITORING, ALARM, MY_PROFILE, DOOR, MOBILE_CARD, MOBILE_CARD_ALERT,EMPTY
+        USER, MONITORING, ALARM, MY_PROFILE, DOOR, MOBILE_CARD, MOBILE_CARD_ALERT, EMPTY
     }
 }

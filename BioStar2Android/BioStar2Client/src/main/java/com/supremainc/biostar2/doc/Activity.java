@@ -16,25 +16,23 @@
 package com.supremainc.biostar2.doc;
 
 /**
- * @startuml
-class HomeActivity
-LoginActivity -> HomeActivity
-LoginActivity -> GuideActivity
-LoginActivity <- GuideActivity
-
-package "push service"  {
-}
-"push service" -> DummyActivity
-DummyActivity->HomeActivity : if running
-DummyActivity->LoginActivity : if not running
-HomeActivity-->AlarmListFragment : if user started at push notification
-note "Auto Destroy" as N3
-N3 .. DummyActivity
-note "User Launch Application"  as N1
-note "if the connection session is valid, the screen will be omitted"  as N2
-N1  .. LoginActivity
-N2 .. LoginActivity
-
+ * @startuml class HomeActivity
+ * LoginActivity -> HomeActivity
+ * LoginActivity -> GuideActivity
+ * LoginActivity <- GuideActivity
+ * <p>
+ * package "push service"  {
+ * }
+ * "push service" -> DummyActivity
+ * DummyActivity->HomeActivity : if running
+ * DummyActivity->LoginActivity : if not running
+ * HomeActivity-->AlarmListFragment : if user started at push notification
+ * note "Auto Destroy" as N3
+ * N3 .. DummyActivity
+ * note "User Launch Application"  as N1
+ * note "if the connection session is valid, the screen will be omitted"  as N2
+ * N1  .. LoginActivity
+ * N2 .. LoginActivity
  * @enduml
  */
 

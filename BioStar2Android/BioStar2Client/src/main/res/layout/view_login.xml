@@ -1,10 +1,10 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="wrap_content"
-    android:layout_height="wrap_content"
-    android:layout_gravity="center"
-    android:gravity="center"
-    android:orientation="vertical">
+              xmlns:app="http://schemas.android.com/apk/res-auto"
+              android:layout_width="wrap_content"
+              android:layout_height="wrap_content"
+              android:layout_gravity="center"
+              android:gravity="center"
+              android:orientation="vertical">
     <!-- display domain,subdomain -->
     <LinearLayout
         android:layout_width="262dp"
@@ -25,7 +25,7 @@
             android:singleLine="true"
             android:textColor="@color/login"
             android:textSize="14dp"
-            app:typeface="roboto_bold.ttf" />
+            app:typeface="roboto_bold.ttf"/>
 
         <ImageView
             android:id="@+id/dot"
@@ -36,7 +36,7 @@
             android:layout_marginLeft="4dp"
             android:layout_marginRight="3dp"
             android:gravity="bottom|center"
-            android:src="@drawable/login_domain_dot" />
+            android:src="@drawable/login_domain_dot"/>
 
         <com.supremainc.biostar2.view.StyledTextView
             android:id="@+id/address"
@@ -50,7 +50,7 @@
             android:singleLine="true"
             android:textColor="@color/gray_12"
             android:textSize="14dp"
-            app:typeface="roboto_bold.ttf" />
+            app:typeface="roboto_bold.ttf"/>
     </LinearLayout>
 
     <!-- input domain,subdomain -->
@@ -80,7 +80,7 @@
             android:textColor="@color/white"
             android:textColorHint="@color/login_id"
             android:textSize="14dp"
-            app:typeface="roboto_bold.ttf" />
+            app:typeface="roboto_bold.ttf"/>
 
         <FrameLayout
             android:id="@+id/default_url"
@@ -95,7 +95,7 @@
                 android:layout_gravity="center|left"
                 android:gravity="center|left"
                 android:scaleType="fitXY"
-                android:src="@drawable/selector_btn_login_more" />
+                android:src="@drawable/selector_btn_login_more"/>
         </FrameLayout>
     </LinearLayout>
 
@@ -120,7 +120,7 @@
             android:singleLine="true"
             android:textColor="@color/login_id"
             android:textSize="14dp"
-            app:typeface="roboto_bold.ttf" />
+            app:typeface="roboto_bold.ttf"/>
 
         <ImageView
             android:layout_width="16.23dp"
@@ -130,7 +130,7 @@
             android:layout_marginRight="10.4dp"
             android:gravity="left|center"
             android:scaleType="fitXY"
-            android:src="@drawable/login_id" />
+            android:src="@drawable/login_id"/>
 
         <FrameLayout
             android:layout_width="0.6dp"
@@ -139,7 +139,7 @@
             android:layout_marginLeft="37.03dp"
             android:background="@color/devider_login"
             android:gravity="left|center"
-            android:orientation="horizontal" />
+            android:orientation="horizontal"/>
     </FrameLayout>
     <!-- input password -->
     <FrameLayout
@@ -162,7 +162,7 @@
             android:singleLine="true"
             android:textColor="@color/login_id"
             android:textSize="14dp"
-            app:typeface="roboto_bold.ttf" />
+            app:typeface="roboto_bold.ttf"/>
 
         <ImageView
             android:layout_width="16.23dp"
@@ -172,7 +172,7 @@
             android:layout_marginRight="10.4dp"
             android:gravity="left|center"
             android:scaleType="fitXY"
-            android:src="@drawable/login_pw" />
+            android:src="@drawable/login_pw"/>
 
         <FrameLayout
             android:layout_width="0.6dp"
@@ -181,7 +181,7 @@
             android:layout_marginLeft="37.03dp"
             android:background="@color/devider_login"
             android:gravity="left|center"
-            android:orientation="horizontal" />
+            android:orientation="horizontal"/>
     </FrameLayout>
     <!-- login button -->
     <com.supremainc.biostar2.view.StyledTextView
@@ -198,5 +198,5 @@
         android:text="@string/login"
         android:textColor="@color/white"
         android:textSize="16dp"
-        app:typeface="roboto_bold.ttf" />
+        app:typeface="roboto_bold.ttf"/>
 </LinearLayout>

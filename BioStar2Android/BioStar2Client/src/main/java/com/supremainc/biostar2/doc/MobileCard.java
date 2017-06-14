@@ -16,38 +16,37 @@
 package com.supremainc.biostar2.doc;
 
 /**
- * @startuml
-box "phsycial area" #LightBlue
-participant device
-end box
-
-box "smart phone" #LightBlue
-participant "nfc/ble service"
-participant provider
-participant "so lib"
-participant "security storage"
-participant "application ui"
-end box
-
-device -> "nfc/ble service" : AID check
-"nfc/ble service" -> provider : check latest login
-provider -> "application ui" : if more than two weeks
-provider -> "nfc/ble service" : if In two weeks
-"nfc/ble service" -> device : AID check reponse
-device -> "nfc/ble service" : Auth request
-"nfc/ble service" -> provider : Auth request
-provider -> "so lib" : JNI
-"so lib"  <--> "security storage"
-"so lib"  -> provider : Auth reponse
-provider -> "nfc/ble service" : Auth reponse
-"nfc/ble service" -> device : Auth reponse
-device -> "nfc/ble service" : request command
-"nfc/ble service" -> "provider" : request command
-"provider" -> "so lib" : JNI
-"so lib"  <--> "security storage"
-"so lib" -> provider : command response
-"provider" -> "nfc/ble service" : command response
-"nfc/ble service" -> device : command response
+ * @startuml box "phsycial area" #LightBlue
+ * participant device
+ * end box
+ * <p>
+ * box "smart phone" #LightBlue
+ * participant "nfc/ble service"
+ * participant provider
+ * participant "so lib"
+ * participant "security storage"
+ * participant "application ui"
+ * end box
+ * <p>
+ * device -> "nfc/ble service" : AID check
+ * "nfc/ble service" -> provider : check latest login
+ * provider -> "application ui" : if more than two weeks
+ * provider -> "nfc/ble service" : if In two weeks
+ * "nfc/ble service" -> device : AID check reponse
+ * device -> "nfc/ble service" : Auth request
+ * "nfc/ble service" -> provider : Auth request
+ * provider -> "so lib" : JNI
+ * "so lib"  <--> "security storage"
+ * "so lib"  -> provider : Auth reponse
+ * provider -> "nfc/ble service" : Auth reponse
+ * "nfc/ble service" -> device : Auth reponse
+ * device -> "nfc/ble service" : request command
+ * "nfc/ble service" -> "provider" : request command
+ * "provider" -> "so lib" : JNI
+ * "so lib"  <--> "security storage"
+ * "so lib" -> provider : command response
+ * "provider" -> "nfc/ble service" : command response
+ * "nfc/ble service" -> device : command response
  * @enduml
  */
 

@@ -28,158 +28,90 @@ import android.widget.ListView;
 
 import com.supremainc.biostar2.R;
 import com.supremainc.biostar2.adapter.base.BaseCardAdapter;
-import com.supremainc.biostar2.impl.OnSingleClickListener;
-import com.supremainc.biostar2.meta.Setting;
-import com.supremainc.biostar2.sdk.datatype.v2.Card.Card;
-import com.supremainc.biostar2.sdk.datatype.v2.Card.ListCard;
-import com.supremainc.biostar2.sdk.datatype.v2.Common.ResponseStatus;
-import com.supremainc.biostar2.sdk.volley.Response;
-import com.supremainc.biostar2.sdk.volley.VolleyError;
+import com.supremainc.biostar2.sdk.models.v2.card.Card;
+import com.supremainc.biostar2.sdk.models.v2.card.ListCard;
+import com.supremainc.biostar2.sdk.models.v2.common.ResponseStatus;
 import com.supremainc.biostar2.view.StyledTextView;
+import com.supremainc.biostar2.view.SwitchView;
 import com.supremainc.biostar2.widget.popup.Popup;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
 public class NewCardAdapter extends BaseCardAdapter {
     private boolean mIsEditDisable;
     private String mUserID;
+    private int mRequestPosition = -1;
 
-
-    private Response.Listener<ResponseStatus> mUnBlockListener = new  Response.Listener<ResponseStatus>() {
+    private Callback<ResponseStatus> mUnBlockListener = new Callback<ResponseStatus>() {
         @Override
-        public void onResponse(ResponseStatus response, Object param) {
-            if (isDestroy()) {
+        public void onFailure(Call<ResponseStatus> call, Throwable t) {
+            if (isIgnoreCallback(call, false)) {
                 return;
             }
-            mPopup.dismiss();
-            Integer position = (Integer)param;
-            if (position == null) {
+            mPopup.dismissWiat();
+            showErrorPopup(t.getMessage(),false);
+        }
+
+        @Override
+        public void onResponse(Call<ResponseStatus> call, Response<ResponseStatus> response) {
+            if (isIgnoreCallback(call, response, false)) {
                 return;
             }
-            ListCard item = mItems.get(position);
+            mPopup.dismissWiat();
+            if (isInvalidResponse(response, true, false)) {
+                return;
+            }
+            if (mRequestPosition < 0) {
+                return;
+            }
+            ListCard item = mItems.get(mRequestPosition);
             item.is_blocked = false;
             notifyDataSetChanged();
         }
     };
 
-    private Response.Listener<ResponseStatus> mReIssueListener = new  Response.Listener<ResponseStatus>() {
+    private Callback<ResponseStatus> mBlockListener = new Callback<ResponseStatus>() {
         @Override
-        public void onResponse(ResponseStatus response, Object param) {
-            if (isDestroy()) {
+        public void onFailure(Call<ResponseStatus> call, Throwable t) {
+            if (isIgnoreCallback(call, false)) {
                 return;
             }
-            mPopup.dismiss();
-            Integer position = (Integer)param;
-            if (position == null) {
-                return;
-            }
-            ListCard item = mItems.get(position);
-            item.is_registered = false;
-//            item.issue_count++;
-            notifyDataSetChanged();
+            mPopup.dismissWiat();
+            showErrorPopup(t.getMessage(),false);
         }
-    };
-    private Response.Listener<ResponseStatus> mBlockListener = new  Response.Listener<ResponseStatus>() {
+
         @Override
-        public void onResponse(ResponseStatus response, Object param) {
-            if (isDestroy()) {
+        public void onResponse(Call<ResponseStatus> call, Response<ResponseStatus> response) {
+            if (isIgnoreCallback(call, response, false)) {
                 return;
             }
-            mPopup.dismiss();
-            Integer position = (Integer)param;
-            if (position == null) {
+            mPopup.dismissWiat();
+            if (isInvalidResponse(response, true, false)) {
                 return;
             }
-            ListCard item = mItems.get(position);
+            if (mRequestPosition < 0) {
+                return;
+            }
+            ListCard item = mItems.get(mRequestPosition);
             item.is_blocked = true;
             notifyDataSetChanged();
         }
     };
-    private Response.ErrorListener mErrorListener = new Response.ErrorListener() {
-        @Override
-        public void onErrorResponse(VolleyError error, Object deliverParam) {
-            if (isDestroy(error)) {
-                return;
-            }
-            mPopup.dismiss();
-            mPopup.show(Popup.PopupType.ALERT, mActivity.getString(R.string.fail), Setting.getErrorMessage(error, mActivity), new Popup.OnPopupClickListener() {
-                @Override
-                public void OnNegative() {
-                }
 
-                @Override
-                public void OnPositive() {
-                }
-            }, mActivity.getString(R.string.ok), null, false);
-        }
-    };
-    private OnSingleClickListener mClickListener = new OnSingleClickListener() {
-        @Override
-        public void onSingleClick(View v) {
-            final Integer position = (Integer)v.getTag();
-            if (position == null) {
-                return;
-            }
-            final ListCard item = mItems.get(position);
-            switch (v.getId()) {
-                //TODO 재발급.
-                case R.id.info_mobilecard:
-                   if (item.is_registered) {
-                       mPopup.show(Popup.PopupType.CARD,mActivity.getString(R.string.mobile_card),  mActivity.getString(R.string.question_reregister_card), new Popup.OnPopupClickListener() {
-                           @Override
-                           public void OnNegative() {
 
-                           }
 
-                           @Override
-                           public void OnPositive() {
-                               if (mUserID != null) {
-                                   mPopup.showWait(false);
-                                   mCardDataProvider.reissue(TAG, mReIssueListener, mErrorListener,mUserID, item.id, position);
-                               }
-                           }
-                       }, mActivity.getString(R.string.ok), mActivity.getString(R.string.cancel), false);
-                   }
-                    break;
-                case R.id.info_unblock:
-                    mPopup.show(Popup.PopupType.CARD,mActivity.getString(R.string.unblock),  mActivity.getString(R.string.question_unblock_card), new Popup.OnPopupClickListener() {
-                        @Override
-                        public void OnNegative() {
-
-                        }
-
-                        @Override
-                        public void OnPositive() {
-                            mPopup.showWait(false);
-                            mCardDataProvider.unblock(TAG,mUnBlockListener,mErrorListener,item.id,position);
-                        }
-                    }, mActivity.getString(R.string.ok), mActivity.getString(R.string.cancel), false);
-                    break;
-                case R.id.info_block:
-                    mPopup.show(Popup.PopupType.CARD,mActivity.getString(R.string.block),  mActivity.getString(R.string.question_block_card), new Popup.OnPopupClickListener() {
-                        @Override
-                        public void OnNegative() {
-
-                        }
-
-                        @Override
-                        public void OnPositive() {
-                            mPopup.showWait(false);
-                            mCardDataProvider.block(TAG,mBlockListener,mErrorListener,item.id,position);
-                        }
-                    }, mActivity.getString(R.string.ok), mActivity.getString(R.string.cancel), false);
-                    break;
-            }
-        }
-    };
-    public NewCardAdapter(Activity activity,String userID, ArrayList<ListCard> items, ListView listView, OnItemClickListener itemClickListener, Popup popup, OnItemsListener onItemsListener, boolean editDisable) {
+    public NewCardAdapter(Activity activity, String userID, ArrayList<ListCard> items, ListView listView, OnItemClickListener itemClickListener, Popup popup, OnItemsListener onItemsListener, boolean editDisable) {
         super(activity, items, listView, itemClickListener, popup, onItemsListener);
         mUserID = userID;
         mIsEditDisable = editDisable;
-        if (mIsEditDisable) {
-            mDefaultSelectColor = mActivity.getResources().getColor(R.color.gray_10);
-        }
+//        if (mIsEditDisable) {
+//            mDefaultSelectColor = mActivity.getResources().getColor(R.color.gray_10);
+//        }
     }
 
     @Override
@@ -187,18 +119,22 @@ public class NewCardAdapter extends BaseCardAdapter {
         if (mIsEditDisable) {
             return;
         }
-        ListCard card=null;
+        if (mListView.getChoiceMode() == ListView.CHOICE_MODE_NONE) {
+            return;
+        }
+        ListCard card = null;
         if (mItems != null) {
-            card =  mItems.get(position);
+            card = mItems.get(position);
         }
         if (card != null && Card.ACCESS_ON.equals(card.type) && !card.is_blocked) {
-            mListView.setItemChecked(position,false);
-            mToastPopup.show(-1,mActivity.getString(R.string.non_blocked));
+            mListView.setItemChecked(position, false);
+            mToastPopup.show(-1, mActivity.getString(R.string.non_blocked));
         }
         ItemViewHolder vh = (ItemViewHolder) view.getTag();
-        setSelector(vh,position);
+        setSelector(vh.mRoot, vh.mLink, position, false);
         super.onItemClick(parent, view, position, id);
     }
+
     private void sendLocalBroadcast(String key, Serializable value) {
         Intent intent = new Intent(key);
         if (value != null) {
@@ -208,98 +144,28 @@ public class NewCardAdapter extends BaseCardAdapter {
         }
         LocalBroadcastManager.getInstance(mActivity).sendBroadcast(intent);
     }
-    private View setSelector(ItemViewHolder vh,int position) {
-        ListCard item = mItems.get(position);
-        if (item == null) {
-            return vh.mRoot;
-        }
-        vh.mID.setText(item.card_id);
+
+    private String getCardTypeName(ListCard item) {
         if (Card.CSN.equals(item.type)) {
-            vh.mCardType.setText( mActivity.getString(R.string.csn));
+            return mActivity.getString(R.string.csn);
         } else if (Card.ACCESS_ON.equals(item.type)) {
             if (item.is_mobile_credential) {
-                vh.mCardType.setText(mActivity.getString(R.string.access_on_card)+" ("+mActivity.getString(R.string.mobile)+")");
+                return mActivity.getString(R.string.access_on_card) + " (" + mActivity.getString(R.string.mobile) + ")";
             } else {
-                vh.mCardType.setText(mActivity.getString(R.string.access_on_card));
-            }
-            if (item.issue_count > 0) {
-                vh.mID.setText(item.card_id+" ("+mActivity.getString(R.string.issue_card_count)+" "+item.issue_count+")");
+                return mActivity.getString(R.string.access_on_card);
             }
         } else if (Card.SECURE_CREDENTIAL.equals(item.type)) {
             if (item.is_mobile_credential) {
-                vh.mCardType.setText(mActivity.getString(R.string.secure_card)+" ("+mActivity.getString(R.string.mobile)+")");
+                return mActivity.getString(R.string.secure_card) + " (" + mActivity.getString(R.string.mobile) + ")";
             } else {
-                vh.mCardType.setText(mActivity.getString(R.string.secure_card));
-            }
-            if (item.issue_count > 0) {
-                vh.mID.setText(item.card_id+" ("+mActivity.getString(R.string.issue_card_count)+" "+item.issue_count+")");
+                return mActivity.getString(R.string.secure_card);
             }
         } else if (Card.WIEGAND.equals(item.type)) {
-            vh.mCardType.setText( mActivity.getString(R.string.wiegand));
+            return mActivity.getString(R.string.wiegand);
         } else if (Card.CSN_WIEGAND.equals(item.type)) {
-            vh.mCardType.setText( mActivity.getString(R.string.wiegand));
+            return mActivity.getString(R.string.wiegand);
         }
-
-
-
-        if (!mIsEditDisable) {
-            if (item.is_mobile_credential) {
-                vh.mMobileCard.setVisibility(View.VISIBLE);
-                if (item.is_registered) {
-                    vh.mMobileCard.setImageResource(R.drawable.ic_card_used);
-                } else {
-                    vh.mMobileCard.setImageResource(R.drawable.ic_card_request);
-                }
-            } else {
-                vh.mMobileCard.setVisibility(View.GONE);
-            }
-
-            if (item.is_blocked) {
-                vh.mRoot.setBackgroundResource(R.drawable.selector_list_gray);
-                vh.mBlock.setVisibility(View.GONE);
-                vh.mUnblock.setVisibility(View.VISIBLE);
-            } else {
-                vh.mRoot.setBackgroundResource(R.drawable.selector_list_select_mode);
-                vh.mBlock.setVisibility(View.VISIBLE);
-                vh.mUnblock.setVisibility(View.GONE);
-            }
-
-            int mode = mListView.getChoiceMode();
-            switch (mode) {
-                case ListView.CHOICE_MODE_NONE:
-                    vh.mLink.setVisibility(View.GONE);
-                    break;
-                default:
-                    vh.mBlock.setVisibility(View.GONE);
-                    vh.mUnblock.setVisibility(View.GONE);
-                    vh.mMobileCard.setVisibility(View.GONE);
-                    vh.mLink.setVisibility(View.VISIBLE);
-                    if (mListView.isItemChecked(position)) {
-                        vh.mRoot.setBackgroundResource(R.drawable.selector_list_selected);
-                        vh.mLink.setImageResource(R.drawable.selector_list_check);
-                    } else {
-                        if (item.is_blocked) {
-                            vh.mRoot.setBackgroundResource(R.drawable.selector_list_gray);
-                        } else {
-                            vh.mRoot.setBackgroundResource(R.drawable.selector_list_select_mode);
-                        }
-                        vh.mLink.setImageResource(R.drawable.selector_color_transparent);
-                    }
-                    break;
-            }
-
-        } else {
-            if (item.is_blocked) {
-                vh.mRoot.setBackgroundResource(R.drawable.selector_list_gray);
-            } else {
-                vh.mRoot.setBackgroundResource(R.drawable.selector_list_select_mode);
-            }
-            vh.mBlock.setVisibility(View.GONE);
-            vh.mUnblock.setVisibility(View.GONE);
-            vh.mMobileCard.setVisibility(View.GONE);
-            vh.mLink.setVisibility(View.GONE);
-        }
-        return vh.mRoot;
+        return "";
     }
 
     @Override
@@ -311,38 +177,121 @@ public class NewCardAdapter extends BaseCardAdapter {
             convertView = mInflater.inflate(R.layout.list_item_card, parent, false);
             ItemViewHolder viewHolder = new ItemViewHolder(convertView);
             convertView.setTag(viewHolder);
+
         }
         ItemViewHolder vh = (ItemViewHolder) convertView.getTag();
         if (vh == null) {
             vh = new ItemViewHolder(convertView);
             convertView.setTag(vh);
         }
-        vh.mBlock.setTag((Integer)position);
-        vh.mUnblock.setTag((Integer)position);
-        vh.mMobileCard.setTag((Integer)position);
-        return setSelector(vh,position);
+        vh.mStatusSwitch.setTag((Integer) position);
+        vh.mMobileCard.setTag((Integer) position);
+
+        ListCard item = mItems.get(position);
+        vh.mStatusSwitch.setSwitchNotNotiy(!item.is_blocked);
+        if (item == null) {
+            return vh.mRoot;
+        }
+        vh.mID.setText(item.card_id);
+        vh.mCardType.setText(getCardTypeName(item));
+        if (item.issue_count > 0 && (Card.SECURE_CREDENTIAL.equals(item.type)||Card.ACCESS_ON.equals(item.type)) ) {
+            vh.mID.setText(item.card_id + " (" + mActivity.getString(R.string.issue_card_count) + " " + item.issue_count + ")");
+        }
+        if (item.is_blocked) {
+            vh.mStatusSwitch.setSwitchNotNotiy(false);
+        } else {
+            vh.mStatusSwitch.setSwitchNotNotiy(true);
+        }
+        if (item.is_mobile_credential) {
+            vh.mMobileCard.setVisibility(View.VISIBLE);
+            if (item.is_registered) {
+                vh.mMobileCard.setImageResource(R.drawable.ic_card_used);
+            } else {
+                vh.mMobileCard.setImageResource(R.drawable.ic_card_request);
+            }
+        } else {
+            vh.mMobileCard.setVisibility(View.GONE);
+        }
+        setSelector(vh.mRoot, vh.mLink, position, false);
+        if (mListView.getChoiceMode() != ListView.CHOICE_MODE_NONE) {
+            vh.mStatusSwitch.setVisibility(View.GONE);
+            vh.mMobileCard.setVisibility(View.GONE);
+            if (Card.ACCESS_ON.equals(item.type) && !item.is_blocked) {
+                vh.mRoot.setBackgroundResource(R.drawable.selector_list_gray);
+            }
+        } else {
+            vh.mStatusSwitch.setVisibility(View.VISIBLE);
+        }
+        return vh.mRoot;
     }
+
+    private void showUnBlockPopup(final ListCard item, final int position) {
+        mPopup.show(Popup.PopupType.CARD, mActivity.getString(R.string.unblock), mActivity.getString(R.string.question_unblock_card), new Popup.OnPopupClickListener() {
+            @Override
+            public void OnNegative() {
+
+            }
+
+            @Override
+            public void OnPositive() {
+                mRequestPosition = position;
+                mPopup.showWait(mCancelStayListener);
+                request(mCardDataProvider.unblock(item.id, mUnBlockListener));
+            }
+        }, mActivity.getString(R.string.ok), mActivity.getString(R.string.cancel), false);
+    }
+
+    private void showBlockPopup(final ListCard item, final int position) {
+        mPopup.show(Popup.PopupType.CARD, mActivity.getString(R.string.block), mActivity.getString(R.string.question_block_card), new Popup.OnPopupClickListener() {
+            @Override
+            public void OnNegative() {
+
+            }
+
+            @Override
+            public void OnPositive() {
+                mRequestPosition = position;
+                mPopup.showWait(mCancelStayListener);
+                request(mCardDataProvider.block(item.id, mBlockListener));
+            }
+        }, mActivity.getString(R.string.ok), mActivity.getString(R.string.cancel), false);
+    }
+
 
     public class ItemViewHolder {
         public View mRoot;
         public StyledTextView mCardType;
         public StyledTextView mID;
-        public StyledTextView mBlock;
-        public StyledTextView mUnblock;
         public ImageView mMobileCard;
         public ImageView mLink;
+        public SwitchView mStatusSwitch;
 
         public ItemViewHolder(View root) {
             mRoot = root;
             mLink = (ImageView) root.findViewById(R.id.info);
             mMobileCard = (ImageView) root.findViewById(R.id.info_mobilecard);
-            mUnblock = (StyledTextView) root.findViewById(R.id.info_unblock);
-            mBlock = (StyledTextView) root.findViewById(R.id.info_block);
-            mMobileCard.setOnClickListener(mClickListener);
-            mUnblock.setOnClickListener(mClickListener);
-            mBlock.setOnClickListener(mClickListener);
             mID = (StyledTextView) root.findViewById(R.id.card_id);
             mCardType = (StyledTextView) root.findViewById(R.id.card_type);
+            mStatusSwitch = (SwitchView) root.findViewById(R.id.status_switch);
+            mStatusSwitch.init(mActivity, new SwitchView.OnChangeListener() {
+                @Override
+                public boolean onChange(boolean on) {
+                    if (mIsEditDisable) {
+                        return false;
+                    }
+                    final Integer position = (Integer) mStatusSwitch.getTag();
+                    if (position == null) {
+                        return false;
+                    }
+                    final ListCard item = mItems.get(position);
+                    if (on) {
+                        showUnBlockPopup(item, position);
+                    } else {
+                        showBlockPopup(item, position);
+                    }
+                    return false;
+                }
+            }, true);
         }
     }
 }

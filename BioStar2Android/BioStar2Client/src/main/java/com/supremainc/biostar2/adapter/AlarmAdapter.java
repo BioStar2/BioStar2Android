@@ -31,21 +31,21 @@ import com.supremainc.biostar2.R;
 import com.supremainc.biostar2.adapter.base.BaseListCursorAdapter;
 import com.supremainc.biostar2.adapter.base.BaseListViewScroll;
 import com.supremainc.biostar2.db.DBAdapter;
-import com.supremainc.biostar2.sdk.datatype.v2.Login.NotificationType;
-import com.supremainc.biostar2.sdk.datatype.v2.Login.PushNotification;
+import com.supremainc.biostar2.sdk.models.v2.login.NotificationType;
+import com.supremainc.biostar2.sdk.models.v2.login.PushNotification;
 import com.supremainc.biostar2.sdk.provider.CommonDataProvider;
-import com.supremainc.biostar2.sdk.provider.TimeConvertProvider;
+import com.supremainc.biostar2.sdk.provider.DateTimeDataProvider;
 import com.supremainc.biostar2.view.StyledTextView;
 import com.supremainc.biostar2.widget.popup.Popup;
 import com.tekinarslan.material.sample.FloatingActionButton;
 
 public class AlarmAdapter extends BaseListCursorAdapter<PushNotification> {
     protected CommonDataProvider mCommonDataProvider;
-    protected TimeConvertProvider mTimeConvertProvider;
+    protected DateTimeDataProvider mTimeConvertProvider;
 
     public AlarmAdapter(Activity context, ListView listView, OnItemClickListener itemClickListener, Popup popup, OnItemsListener onItemsListener) {
         super(context, listView, itemClickListener, popup, onItemsListener);
-        mTimeConvertProvider = TimeConvertProvider.getInstance(context);
+        mTimeConvertProvider = DateTimeDataProvider.getInstance(context);
         if (mOnItemsListener != null) {
             mOnItemsListener.onTotalReceive(getCount());
         }
@@ -127,7 +127,8 @@ public class AlarmAdapter extends BaseListCursorAdapter<PushNotification> {
         if (time == null) {
             vh.mContent.setVisibility(View.GONE);
         } else {
-            String convertTime = mTimeConvertProvider.convertCalendarToFormatter(mTimeConvertProvider.convertServerTimeToCalendar(time, true), mTimeConvertProvider.getClientTimeFormat(TimeConvertProvider.DATE_TYPE.FORMAT_DATE_HOUR_MIN_SEC));
+            String convertTime = mTimeConvertProvider.convertCalendarToFormatter(mTimeConvertProvider.convertServerTimeToCalendar(time, true), mTimeConvertProvider.getClientTimeFormat(DateTimeDataProvider.DATE_TYPE
+                    .FORMAT_DATE_HOUR_MIN_SEC));
             vh.mContent.setText(convertTime);
             vh.mContent.setVisibility(View.VISIBLE);
         }

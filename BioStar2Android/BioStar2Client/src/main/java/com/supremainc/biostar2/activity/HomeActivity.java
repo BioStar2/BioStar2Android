@@ -15,7 +15,6 @@
  */
 package com.supremainc.biostar2.activity;
 
-import android.Manifest;
 import android.app.Activity;
 import android.app.SearchManager;
 import android.content.BroadcastReceiver;
@@ -23,18 +22,12 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.ActivityInfo;
-import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.content.pm.PackageManager.NameNotFoundException;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.SystemClock;
 import android.provider.SearchRecentSuggestions;
-import android.provider.Settings;
 import android.support.annotation.NonNull;
-import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentTransaction;
 import android.support.v4.content.LocalBroadcastManager;
@@ -46,19 +39,18 @@ import android.view.View;
 
 import com.supremainc.biostar2.BuildConfig;
 import com.supremainc.biostar2.R;
-import com.supremainc.biostar2.meta.Setting;
-import com.supremainc.biostar2.fragment.BaseFragment;
 import com.supremainc.biostar2.db.NotificationDBProvider;
 import com.supremainc.biostar2.db.SearchSuggestionProvider;
 import com.supremainc.biostar2.fragment.AlarmFragment;
 import com.supremainc.biostar2.fragment.AlarmListFragment;
+import com.supremainc.biostar2.fragment.BaseFragment;
 import com.supremainc.biostar2.fragment.CardFragment;
 import com.supremainc.biostar2.fragment.DoorFragment;
 import com.supremainc.biostar2.fragment.DoorListFragment;
+import com.supremainc.biostar2.fragment.FaceFragment;
 import com.supremainc.biostar2.fragment.FingerprintFragment;
 import com.supremainc.biostar2.fragment.MainFragment;
 import com.supremainc.biostar2.fragment.MobileCardFragment;
-import com.supremainc.biostar2.fragment.MobileCardGuideFragment;
 import com.supremainc.biostar2.fragment.MonitorFragment;
 import com.supremainc.biostar2.fragment.MyProfileFragment;
 import com.supremainc.biostar2.fragment.PermisionFragment;
@@ -68,28 +60,27 @@ import com.supremainc.biostar2.fragment.UserAccessGroupFragment;
 import com.supremainc.biostar2.fragment.UserInquriyFragment;
 import com.supremainc.biostar2.fragment.UserListFragment;
 import com.supremainc.biostar2.fragment.UserModifyFragment;
-import com.supremainc.biostar2.sdk.datatype.v2.Common.VersionData;
-import com.supremainc.biostar2.sdk.datatype.v2.Door.Doors;
-import com.supremainc.biostar2.sdk.datatype.v2.EventLog.EventTypes;
-import com.supremainc.biostar2.sdk.datatype.v2.Permission.PermissionModule;
-import com.supremainc.biostar2.sdk.datatype.v2.Preferrence.Preference;
-import com.supremainc.biostar2.sdk.datatype.v2.User.User;
-import com.supremainc.biostar2.sdk.datatype.v2.User.Users;
-import com.supremainc.biostar2.service.push.GooglePush;
-import com.supremainc.biostar2.sdk.datatype.v2.Common.ResponseStatus;
-import com.supremainc.biostar2.sdk.datatype.v2.Common.UpdateData;
+import com.supremainc.biostar2.meta.Setting;
+import com.supremainc.biostar2.sdk.models.v2.common.ResponseStatus;
+import com.supremainc.biostar2.sdk.models.v2.common.SupportFeature;
+import com.supremainc.biostar2.sdk.models.v2.common.VersionData;
+import com.supremainc.biostar2.sdk.models.v2.door.Doors;
+import com.supremainc.biostar2.sdk.models.v2.eventlog.EventTypes;
+import com.supremainc.biostar2.sdk.models.v2.permission.PermissionModule;
+import com.supremainc.biostar2.sdk.models.v2.preferrence.Preference;
+import com.supremainc.biostar2.sdk.models.v2.user.User;
+import com.supremainc.biostar2.sdk.models.v2.user.Users;
 import com.supremainc.biostar2.sdk.provider.ConfigDataProvider;
-import com.supremainc.biostar2.sdk.utils.PreferenceUtil;
-import com.supremainc.biostar2.sdk.volley.Response;
-import com.supremainc.biostar2.sdk.volley.Response.Listener;
-import com.supremainc.biostar2.sdk.volley.VolleyError;
-import com.supremainc.biostar2.util.FileUtil;
+import com.supremainc.biostar2.service.push.GooglePush;
 import com.supremainc.biostar2.view.DrawLayerMenuView;
 import com.supremainc.biostar2.widget.ScreenControl;
 import com.supremainc.biostar2.widget.ScreenControl.ScreenType;
-import com.supremainc.biostar2.widget.popup.Popup;
 import com.supremainc.biostar2.widget.popup.Popup.OnPopupClickListener;
 import com.supremainc.biostar2.widget.popup.Popup.PopupType;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class HomeActivity extends BaseActivity {
     private static final int REQ_ACTIVITY_DOOR_MAP = 1;
@@ -99,53 +90,60 @@ public class HomeActivity extends BaseActivity {
     private HomeActivity mActivity;
     private Handler mHandler = new Handler();
     private DrawLayerMenuView mDrawLayerMenuView;
-    private long mTick=0;
-    Response.Listener<Users> mUserCountListener = new Response.Listener<Users>() {
-        @Override
-        public void onResponse(Users response, Object deliverParam) {
-            if (isFinishing()) {
-                return;
-            }
-            if (response != null && response.records != null) {
-                mAppDataProvider.setUserCount(response.total);
-                setUserCount(response.total);
-            }
-        }
-    };
-    Response.Listener<Doors> mDoorCountListener = new Response.Listener<Doors>() {
-        @Override
-        public void onResponse(Doors response, Object deliverParam) {
-            if (isFinishing()) {
-                return;
-            }
-            if (response != null && response.records != null) {
-                mAppDataProvider.setDoorCount(response.total);
-                setDoorCount(response.total);
-            }
-        }
-    };
     private DrawerLayout mDrawerLayout;
-    Runnable mCloseDrawer = new Runnable() {
+    private NotificationDBProvider mNotiProvider;
+    private SearchRecentSuggestions mSuggestions;
+    private boolean mIsGoAlarmList = false;
+    private ScreenType mScreen = ScreenType.INIT;
+
+    private Callback<Users> mUserCountCallback = new Callback<Users>() {
+        @Override
+        public void onFailure(Call<Users> call, Throwable t) {
+        }
+
+        @Override
+        public void onResponse(Call<Users> call, Response<Users> response) {
+            if (isIgnoreCallback(call,false)) {
+                return;
+            }
+            if (response.isSuccessful() && response.body() != null) {
+                setUserCount(response.body().total);
+            }
+        }
+    };
+
+    private Callback<Doors> mDoorCountCallback = new Callback<Doors>() {
+        @Override
+        public void onFailure(Call<Doors> call, Throwable t) {
+        }
+
+        @Override
+        public void onResponse(Call<Doors> call, Response<Doors> response) {
+            if (isIgnoreCallback(call,false)) {
+                return;
+            }
+            if (response.isSuccessful() && response.body() != null) {
+                setDoorCount(response.body().total);
+            }
+        }
+    };
+    private Runnable mCloseDrawer = new Runnable() {
         @Override
         public void run() {
             closeDrawer();
         }
     };
-    private NotificationDBProvider mNotiProvider;
     private DrawerLayout.DrawerListener mDrawerListener = new DrawerLayout.DrawerListener() {
         @Override
         public void onDrawerSlide(View drawerView, float slideOffset) {
-
         }
 
         @Override
         public void onDrawerOpened(View drawerView) {
-
         }
 
         @Override
         public void onDrawerClosed(View drawerView) {
-
         }
 
         @Override
@@ -157,119 +155,60 @@ public class HomeActivity extends BaseActivity {
             }
         }
     };
-    private SearchRecentSuggestions mSuggestions;
-    private UpdateData mUpdateData;
-    // private static final int REQ_ACTIVITY_PLAY_SERVICE = 3;
-    Runnable mUpdateRunnable = new Runnable() {
+    private Runnable mROnBack = new Runnable() {
         @Override
         public void run() {
-            if (isInValidCheck(null)) {
+            FragmentManager fm = getSupportFragmentManager();
+            if (fm.getBackStackEntryCount() > 0 && ScreenType.MAIN != mScreen) {
+                try {
+                    if (mCommonDataProvider != null) {
+                        mCommonDataProvider.cancelAll();
+                    }
+                    fm.popBackStackImmediate();
+                } catch (Exception e) {
+                    if (BuildConfig.DEBUG) {
+                        Log.e(TAG, "@@@@@@@@@@@@@@@1:" + e.getMessage());
+                    }
+                }
                 return;
             }
+            if (ScreenType.MAIN == mScreen) {
+                mPopup.show(PopupType.ALERT, getString(R.string.quit), getString(R.string.quit_question), new OnPopupClickListener() {
+                    @Override
+                    public void OnPositive() {
+                        moveTaskToBack(true);
+                        android.os.Process.killProcess(android.os.Process.myPid());
+                    }
 
-            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(mUpdateData.url));
-            startActivity(intent);
-            finish();
-
-//            SelectPopup<SelectCustomData> selectPopup = new SelectPopup<SelectCustomData>(mContext, mPopup);
-//            ArrayList<SelectCustomData> linkType = new ArrayList<SelectCustomData>();
-//            linkType.add(new SelectCustomData(mContext.getString(R.string.playstore), 1, false));
-//            linkType.add(new SelectCustomData(mContext.getString(R.string.direct_download), 2, false));
-//            selectPopup.show(SelectType.CUSTOM, new OnSelectResultListener<SelectCustomData>() {
-//                @Override
-//                public void OnResult(ArrayList<SelectCustomData> selectedItem,boolean isPositive) {
-//                    if (isInValidCheck(null)) {
-//                        return;
-//                    }
-//                    if (selectedItem == null) {
-//                        try {
-//                            PackageManager manager = getPackageManager();
-//                            PackageInfo packInfo = manager.getPackageInfo(getPackageName(), 0);
-//                            int clientVersion = packInfo.versionCode;
-//                            if (mUpdateData.forceVersion > clientVersion) {
-//                                mToastPopup.show(getString(R.string.forceUpdate), null);
-//                                mHandler.post(mUpdateRunnable);
-//                            }
-//                        } catch (Exception e) {
-//                            Log.e(TAG, " " + e.getMessage());
-//                        }
-//                        return;
-//                    }
-//                    switch (selectedItem.get(0).getIntId()) {
-//                        case 1: {
-//                            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(mUpdateData.url));
-//                            startActivity(intent);
-//                            finish();
-//                            break;
-//                        }
-//                        case 2: {
-//                            Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse(mUpdateData.url2));
-//                            startActivity(intent);
-//                            finish();
-//                            break;
-//                        }
-//                        default:
-//                            break;
-//                    }
-//                }
-//            }, linkType, mContext.getString(R.string.select_link), false, false);
-        }
-    };
-    Response.Listener<UpdateData> mUpdateListener = new Response.Listener<UpdateData>() {
-        @Override
-        public void onResponse(final UpdateData response, Object param) {
-            try {
-                if (isFinishing() || response == null) {
-                    return;
-                }
-                mUpdateData = response;
-                if (!BuildConfig.DEBUG) {
-                    FileUtil.saveFileObj(mContext.getFilesDir() + "/up.dat", response);
-                }
-                PackageManager manager = getPackageManager();
-                PackageInfo packInfo = manager.getPackageInfo(getPackageName(), 0);
-                final int clientVersion = packInfo.versionCode;
-                Integer cancelVeriosn = PreferenceUtil.getIntSharedPreference(mContext, Setting.UPDATE_CANCEL_VERSION);
-                if (cancelVeriosn != null && response.version <= cancelVeriosn) {
-                    return;
-                }
-                String cancel = null;
-                if (response.forceVersion > clientVersion) {
-                    cancel = null;
-                } else {
-                    cancel = getString(R.string.cancel);
-                }
-                String content = "";
-                if (response.message != null) {
-                    content = response.message;
-                }
-                if (response.version > clientVersion) {
-                    mPopup.show(PopupType.CONFIRM, getString(R.string.info), getString(R.string.new_version) + "\n" + content, new OnPopupClickListener() {
-                        @Override
-                        public void OnNegative() {
-                            PreferenceUtil.putSharedPreference(mContext, Setting.UPDATE_CANCEL_VERSION, clientVersion);
-                            mPopup.show(PopupType.CONFIRM, getString(R.string.info), getString(R.string.update_guide), null, null, null);
-                        }
-
-                        @Override
-                        public void OnPositive() {
-                            mHandler.post(mUpdateRunnable);
-                        }
-
-
-                    }, getString(R.string.ok), cancel);
-                }
-            } catch (Exception e) {
-
+                    @Override
+                    public void OnNegative() {
+                    }
+                }, getString(R.string.ok), getString(R.string.cancel));
+            } else {
+                gotoScreen(ScreenType.MAIN, null, false);
             }
         }
     };
-    private boolean mIsGoAlarmList = false;
-    private ScreenType mScreen = ScreenType.INIT;
     private DrawLayerMenuView.OnSelectionListener mDrawMenuSelectionListener = new DrawLayerMenuView.OnSelectionListener() {
         @Override
-        public void addScreen(ScreenType type, Bundle args) {
-            mActivity.addScreen(type, args);
+        public void addScreen(final ScreenType type, final Bundle args) {
+            mHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    mActivity.addScreen(type, args, true);
+                }
+            }, 10);
+
+        }
+
+        @Override
+        public void addScreenNoEffect(final ScreenType type, final Bundle args) {
+            mHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    mActivity.addScreen(type, args, false);
+                }
+            }, 10);
         }
 
         @Override
@@ -292,59 +231,35 @@ public class HomeActivity extends BaseActivity {
         }
 
         @Override
-        public void onSelected(ScreenType type, Bundle args) {
-            gotoScreen(type, args, false);
-        }
-    };
-    private Response.Listener<User> mLoginListener = new Response.Listener<User>() {
-        @Override
-        public void onResponse(User response, Object deliverParam) {
-            if (isFinishing()) {
-                return;
-            }
-            LocalBroadcastManager.getInstance(mContext).sendBroadcast(new Intent(Setting.BROADCAST_REROGIN));
-            setUser(mUserDataProvider.getLoginUserInfo());
-            getEventMessage();
-            if (mIsGoAlarmList && (mPermissionDataProvider.getPermission(PermissionModule.DOOR, true))) {
-                mIsGoAlarmList = false;
-                gotoScreen(ScreenType.ALARM_LIST, null, true);
-            } else {
-                mIsGoAlarmList = false;
-                gotoScreen(ScreenType.MAIN, null, true);
-            }
-        }
-    };
-    private Response.ErrorListener mSimpleLoginErrorListener = new Response.ErrorListener() {
-        @Override
-        public void onErrorResponse(VolleyError volleyError, Object deliverParam) {
-            if (isFinishing()) {
-                return;
-            }
-            mPopup.dismissWiat();
-            Popup popup = new Popup(mContext);
-            if (volleyError.getSessionExpire() || volleyError.getCode().equals("10")) {
-                popup.show(PopupType.ALERT, getString(R.string.info), getString(R.string.login_expire), null, getString(R.string.ok), null);
-                finish();
-            } else {
-                popup.show(PopupType.ALERT, getString(R.string.login_fail), Setting.getLoginErrorMessage(volleyError, mContext), new OnPopupClickListener() {
-                    @Override
-                    public void OnNegative() {
-                        finish();
-                    }
-
-                    @Override
-                    public void OnPositive() {
-                        mUserDataProvider.simpleLogin(mLoginListener, mSimpleLoginErrorListener, null);
-                    }
-
-
-                }, getString(R.string.retry), getString(R.string.cancel));
-            }
+        public void onSelected(final ScreenType type, final Bundle args) {
+            mHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    gotoScreen(type, args, false);
+                }
+            }, 10);
         }
     };
 
     public static boolean isRunning() {
         return mIsRunning;
+    }
+
+    protected void onBackLogin(boolean isSplash) {
+        if (!isFinishing()) {
+            Intent intent = new Intent(HomeActivity.this, LoginActivity.class);
+            if (mIsGoAlarmList) {
+                mIsGoAlarmList = false;
+                intent.setAction(Setting.ACTION_NOTIFICATION_START + String.valueOf(System.currentTimeMillis()));
+            }
+            if (!isSplash) {
+                intent.putExtra("NoneSplash", "NoneSplash");
+            }
+            intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            startActivity(intent);
+            finish();
+        }
     }
 
     private boolean activityScreen(ScreenType type, Bundle args) {
@@ -371,6 +286,7 @@ public class HomeActivity extends BaseActivity {
         switch (requestCode) {
             case Setting.REQUEST_EXTERNAL_STORAGE:
             case Setting.REQUEST_READ_PHONE_STATE:
+            case Setting.REQUEST_LOCATION:
                 for (int result : grantResults) {
                     if (result != PackageManager.PERMISSION_GRANTED) {
                         mFragment.onDeny(requestCode);
@@ -391,7 +307,7 @@ public class HomeActivity extends BaseActivity {
         }
     }
 
-    public void addScreen(ScreenType type, Bundle args) {
+    public void addScreen(ScreenType type, Bundle args, boolean isEffect) {
         if (type == null) {
             return;
         }
@@ -416,46 +332,40 @@ public class HomeActivity extends BaseActivity {
         if (BuildConfig.DEBUG) {
             Log.i(TAG, "addScreen:" + type);
         }
-
         FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-        transaction.setCustomAnimations(R.anim.enter_from_right, R.anim.exit_to_left, R.anim.enter_from_left, R.anim.exit_to_right);
+        if (isEffect) {
+            transaction.setCustomAnimations(R.anim.enter_from_right, R.anim.exit_to_left, R.anim.enter_from_left, R.anim.exit_to_right);
+        }
         transaction.replace(R.id.content_frame, mFragment);
         transaction.addToBackStack(null);
         transaction.commitAllowingStateLoss();
     }
 
-    private void applyPermission() {
-        if (mPermissionDataProvider.getPermission(PermissionModule.USER, false)) {
-            showUserMenu(true);
-        } else {
-            showUserMenu(false);
-        }
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        outState.putBoolean("bug:fix", true);
+        super.onSaveInstanceState(outState);
+    }
 
-        if (mPermissionDataProvider.getPermission(PermissionModule.DOOR, false) ) {
-            showDoorMenu(true);
-        } else {
-            showDoorMenu(false);
+    private void applyPermission() {
+        if (mDrawLayerMenuView == null) {
+            return;
         }
-        if ( mPermissionDataProvider.getPermission(PermissionModule.MONITORING, false)) {
-            showAlarmMenu(true);
-        } else {
-            showAlarmMenu(false);
+        mDrawLayerMenuView.showUserMenu(mPermissionDataProvider.getPermission(PermissionModule.USER, false));
+        mDrawLayerMenuView.showDoorMenu(mPermissionDataProvider.getPermission(PermissionModule.DOOR, false));
+        mDrawLayerMenuView.showAlarmMenu(mPermissionDataProvider.getPermission(PermissionModule.MONITORING, false));
+        mDrawLayerMenuView.showMonitorMenu(mPermissionDataProvider.getPermission(PermissionModule.MONITORING, false));
+        mDrawLayerMenuView.showMobileCard(false);
+        if (VersionData.getCloudVersion(mContext) > 1 && VersionData.isSupportFeature(mContext, SupportFeature.MOBILE_CARD) && Build.VERSION.SDK_INT >= 21) {
+            if (mContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE) || mContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_NFC_HOST_CARD_EMULATION)) {
+                mDrawLayerMenuView.showMobileCard(true);
+            }
         }
-        if (mPermissionDataProvider.getPermission(PermissionModule.MONITORING, false)) {
-            showMonitorMenu(true);
-        } else {
-            showMonitorMenu(false);
-        }
-        showMobileCard(false);
-//        if (VersionData.getCloudVersion(mContext) >= 2) {
-//            showMobileCard(false);
-//        }
     }
 
     private BaseFragment createFragement(ScreenType type, Bundle args) {
         BaseFragment fragemnt = null;
         switch (type) {
-            // 메인?�면
             case MAIN:
                 fragemnt = new MainFragment();
                 break;
@@ -514,6 +424,15 @@ public class HomeActivity extends BaseActivity {
             case FINGERPRINT_REGISTER:
                 fragemnt = new FingerprintFragment();
                 break;
+            case FACE:
+                if (!VersionData.isSupportFeature(mContext, SupportFeature.FACE)) {
+                    String info = getString(R.string.need_latest_server_version);
+                    info = info.replace("{0}", SupportFeature.FACE.version);
+                    mToastPopup.show(info, null);
+                    return null;
+                }
+                fragemnt = new FaceFragment();
+                break;
             case PREFERENCE:
                 fragemnt = new PreferenceFragment();
                 break;
@@ -527,10 +446,13 @@ public class HomeActivity extends BaseActivity {
                 fragemnt = new PermisionFragment();
                 break;
             case MOBILE_CARD_LIST:
+                if (!VersionData.isSupportFeature(mContext, SupportFeature.MOBILE_CARD)) {
+                    String info = getString(R.string.need_latest_server_version);
+                    info = info.replace("{0}", SupportFeature.MOBILE_CARD.version);
+                    mToastPopup.show(info, null);
+                    return null;
+                }
                 fragemnt = new MobileCardFragment();
-                break;
-            case MOBILE_CARD_GUIDE:
-                fragemnt = new MobileCardGuideFragment();
                 break;
             // case DOOR_ALARM:
             // fragemnt = new DoorAlarmFragment();
@@ -559,55 +481,53 @@ public class HomeActivity extends BaseActivity {
 
     private void getEventMessage() {
         mPopup.showWait(false);
-        mEventDataProvider.getEventMessage(new Response.Listener<EventTypes>() {
+        mMonitoringDataProvider.getEventMessage(new Callback<EventTypes>() {
             @Override
-            public void onResponse(EventTypes response, Object param) {
-                if (isFinishing()) {
+            public void onResponse(Call<EventTypes> call, Response<EventTypes> response) {
+                if (isIgnoreCallback(call,true)) {
                     return;
                 }
-                if (response == null || response.records == null) {
+                if (!response.isSuccessful() || response.body() == null) {
                     onErrorGetEventMessage();
                     return;
                 }
                 getPreference();
             }
-        }, new Response.ErrorListener() {
+
             @Override
-            public void onErrorResponse(VolleyError error, Object param) {
-                if (isInValidCheck(error)) {
+            public void onFailure(Call<EventTypes> call, Throwable t) {
+                if (isIgnoreCallback(call,true)) {
                     return;
                 }
                 onErrorGetEventMessage();
             }
-        }, null);
+        });
     }
 
     private void getPreference() {
-        mCommonDataProvider.getPreference(new Listener<Preference>() {
+        mCommonDataProvider.getPreference(new Callback<Preference>() {
             @Override
-            public void onResponse(Preference response, Object param) {
-                if (isFinishing()) {
+            public void onResponse(Call<Preference> call, Response<Preference> response) {
+                if (isIgnoreCallback(call,true)) {
+                    return;
+                }
+                if (!response.isSuccessful() || response.body() == null) {
+                    onErrorGetPreference();
                     return;
                 }
                 mPopup.dismissWiat();
             }
-        }, new Response.ErrorListener() {
+
             @Override
-            public void onErrorResponse(VolleyError error, Object param) {
-                if (isInValidCheck(error)) {
+            public void onFailure(Call<Preference> call, Throwable t) {
+                if (isIgnoreCallback(call,true)) {
                     return;
                 }
                 onErrorGetPreference();
             }
-        }, null);
+        });
     }
 
-    /**
-     * 1 depth menu�??�동. stack??모두 clear
-     *
-     * @param type
-     * @param args
-     */
     public void gotoScreen(ScreenType type, Bundle args, boolean skipAni) {
         if (type == null) {
             return;
@@ -641,10 +561,16 @@ public class HomeActivity extends BaseActivity {
         if (BuildConfig.DEBUG) {
             Log.i(TAG, "gotoScreen:" + type);
         }
-
         FragmentManager fm = getSupportFragmentManager();
-        for (int i = 0; i < fm.getBackStackEntryCount(); ++i) {
-            fm.popBackStack();
+        int count = fm.getBackStackEntryCount();
+        for (int i = 0; i < count; ++i) {
+            try {
+                fm.popBackStack();
+            } catch (Exception e) {
+                if (BuildConfig.DEBUG) {
+                    Log.e(TAG, "goto popBackStack:" + e.getMessage());
+                }
+            }
         }
 
         FragmentTransaction transaction = fm.beginTransaction();
@@ -680,69 +606,61 @@ public class HomeActivity extends BaseActivity {
         mDrawLayerMenuView.setAlarmCount(mNotiProvider.getUnReadMessageCount());
     }
 
+    private void onLogoutFail() {
+        mPopup.dismissWiat();
+        mPopup.show(PopupType.ALERT, getString(R.string.info), getString(R.string.fail), new OnPopupClickListener() {
+            @Override
+            public void OnNegative() {
 
-    private void isUpdate() {
-        String name = null;
-        try {
-            PackageInfo i = getPackageManager().getPackageInfo(getPackageName(), 0);
-            name = i.packageName;
-        } catch (NameNotFoundException e) {
-            e.printStackTrace();
-        }
-        mCommonDataProvider.getAppVersion(null, mUpdateListener, null, name, null);
+            }
+
+            @Override
+            public void OnPositive() {
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        mUserDataProvider.removeCookie();
+                        mAppDataProvider.setDoorCount(0);
+                        mAppDataProvider.setUserCount(0);
+                        onBackLogin(false);
+                    }
+                });
+            }
+
+
+        }, getString(R.string.ok), getString(R.string.cancel));
     }
 
     private void logOut() {
         mPopup.showWait(false);
-        mUserDataProvider.logout(new Response.Listener<ResponseStatus>() {
-
+        mCommonDataProvider.logout(new Callback<ResponseStatus>() {
             @Override
-            public void onResponse(ResponseStatus response, Object param) {
-                if (isFinishing()) {
+            public void onResponse(Call<ResponseStatus> call, Response<ResponseStatus> response) {
+                if (isIgnoreCallback(call,true)) {
                     return;
                 }
-                mPopup.dismissWiat();
-                finish();
 
+                if (response.isSuccessful()) {
+                    mUserDataProvider.removeCookie();
+                    mAppDataProvider.setDoorCount(0);
+                    mAppDataProvider.setUserCount(0);
+                    mPopup.dismissWiat();
+                    onBackLogin(false);
+                } else {
+                    onLogoutFail();
+                }
             }
-        }, new Response.ErrorListener() {
+
             @Override
-            public void onErrorResponse(VolleyError error, Object param) {
-                if (isFinishing()) {
+            public void onFailure(Call<ResponseStatus> call, Throwable t) {
+                if (isIgnoreCallback(call,true)) {
                     return;
                 }
-                mPopup.dismissWiat();
-                if (error != null && error.getSessionExpire()) {
-                    mHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            finish();
-                            // logOut();
-                        }
-                    });
-                    return;
-                }
-                mPopup.show(PopupType.ALERT, getString(R.string.info), getString(R.string.fail), new OnPopupClickListener() {
-                    @Override
-                    public void OnNegative() {
+                onLogoutFail();
 
-                    }
-
-                    @Override
-                    public void OnPositive() {
-                        mHandler.post(new Runnable() {
-                            @Override
-                            public void run() {
-                                finish();
-                                // logOut();
-                            }
-                        });
-                    }
-
-
-                }, getString(R.string.ok), getString(R.string.cancel));
             }
         });
+
     }
 
     @Override
@@ -758,7 +676,7 @@ public class HomeActivity extends BaseActivity {
                 if (bundle == null) {
                     return;
                 }
-                addScreen(ScreenType.DOOR, bundle);
+                addScreen(ScreenType.DOOR, bundle, true);
                 break;
         }
     }
@@ -784,6 +702,7 @@ public class HomeActivity extends BaseActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        registerClear();
         super.onCreate(savedInstanceState);
         mIsRunning = true;
         setContentView(R.layout.activity_home);
@@ -806,27 +725,50 @@ public class HomeActivity extends BaseActivity {
             }
         }
 
-        if (mCommonDataProvider.isValidLogin()) {
+        if (mCommonDataProvider.isExistLoginedUser()) {
             applyPermission();
             getEventMessage();
-            if (mIsGoAlarmList &&(mPermissionDataProvider.getPermission(PermissionModule.MONITORING, false) )) {
+            if (mIsGoAlarmList && (mPermissionDataProvider.getPermission(PermissionModule.MONITORING, false))) {
                 mIsGoAlarmList = false;
-                gotoScreen(ScreenType.ALARM_LIST, null, true);
+                mHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        gotoScreen(ScreenType.ALARM_LIST, null, true);
+                    }
+                }, 10);
+
             } else {
                 mIsGoAlarmList = false;
-                gotoScreen(ScreenType.MAIN, null, true);
+                mHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        gotoScreen(ScreenType.MAIN, null, true);
+                    }
+                }, 10);
             }
         } else {
-            mUserDataProvider.simpleLogin(mLoginListener, mSimpleLoginErrorListener, null);
+            FragmentManager fm = getSupportFragmentManager();
+            Log.e(TAG, "aa:" + fm.getBackStackEntryCount());
+            if (fm.getBackStackEntryCount() > 0) {
+                try {
+                    fm.popBackStackImmediate();
+                } catch (Exception e) {
+                    if (BuildConfig.DEBUG) {
+                        Log.e(TAG, "@@@@@@@@@@@@@@@1:" + e.getMessage());
+                    }
+                }
+            }
+            onBackLogin(true);
+            return;
         }
         if (mPermissionDataProvider.getPermission(PermissionModule.USER, false)) {
-            mUserDataProvider.getUsers(TAG, mUserCountListener, null, 0, 1, "1", null, null);
+            mUserDataProvider.getUsers(0, 10, null, null, mUserCountCallback);
         }
 
         if (mPermissionDataProvider.getPermission(PermissionModule.DOOR, false)) {
-            mDoorDataProvider.getDoors(TAG, mDoorCountListener, null, 0, 1, null, null);
+            mDoorDataProvider.getDoors(0, 10, null, mDoorCountCallback);
         }
-        isUpdate();
+//        isUpdate();
         //TODO 나중에 삭제.
 //        if (Build.VERSION.SDK_INT >= 23) {
 //            if ((ActivityCompat.checkSelfPermission(mContext, Manifest.permission.READ_EXTERNAL_STORAGE)
@@ -857,7 +799,7 @@ public class HomeActivity extends BaseActivity {
         if (Intent.ACTION_SEARCH.equals(intent.getAction())) {
             String query = intent.getStringExtra(SearchManager.QUERY);
             if (BuildConfig.DEBUG) {
-                Log.e("search", "query:" + query);
+                Log.i("search", "query:" + query);
             }
             if (query != null && query.length() > 0) {
                 if (mSuggestions == null) {
@@ -876,7 +818,13 @@ public class HomeActivity extends BaseActivity {
         if (intent != null) {
             String action = intent.getAction();
             if (action != null && action.startsWith(Setting.ACTION_NOTIFICATION_START) && mPermissionDataProvider != null && (mPermissionDataProvider.getPermission(PermissionModule.MONITORING, false))) {
-                gotoScreen(ScreenType.ALARM_LIST, null, true);
+                mHandler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        gotoScreen(ScreenType.ALARM_LIST, null, true);
+                    }
+                }, 10);
+
             }
         }
     }
@@ -897,21 +845,47 @@ public class HomeActivity extends BaseActivity {
             });
         }
         if (ConfigDataProvider.getFullURL(mContext) == null) {
-            finish();
+            onBackLogin(false);
+            return;
         }
-        mUserDataProvider.simpleLoginCheck();
+        mCommonDataProvider.simpleLoginCheck();
     }
 
-
+    private void registerClear() {
+        if (mClearReceiver == null) {
+            mClearReceiver = new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    if (isFinishing()) {
+                        return;
+                    }
+                    final String action = intent.getAction();
+                    if (BuildConfig.DEBUG) {
+                        Log.e(TAG, "receive:" + action);
+                    }
+                    if (action.equals(Setting.BROADCAST_CLEAR)) {
+                        onBackLogin(false);
+                    } else if (action.equals(Setting.BROADCAST_ALL_CLEAR)) {
+                        finish();
+                    }
+                }
+            };
+            IntentFilter intentFilter = new IntentFilter();
+            intentFilter.addAction(Setting.BROADCAST_CLEAR);
+            intentFilter.addAction(Setting.BROADCAST_ALL_CLEAR);
+            LocalBroadcastManager.getInstance(this).registerReceiver(mClearReceiver, intentFilter);
+        }
+    }
 
     @Override
     public void onStart() {
+        registerClear();
         super.onStart();
     }
 
     private void onErrorGetEventMessage() {
         mPopup.dismissWiat();
-        if (!mEventDataProvider.haveMessage()) {
+        if (!mMonitoringDataProvider.haveMessage()) {
             mPopup.show(PopupType.ALERT, getString(R.string.info), getString(R.string.retry_get_message), new OnPopupClickListener() {
                 @Override
                 public void OnPositive() {
@@ -929,7 +903,7 @@ public class HomeActivity extends BaseActivity {
 
     private void onErrorGetPreference() {
         mPopup.dismissWiat();
-        if (mCommonDataProvider.getSavedPrefrence()) {
+        if (mDateTimeDataProvider.getSavedPrefrence()) {
             return;
         }
         mPopup.show(PopupType.ALERT, getString(R.string.info), getString(R.string.retry_get_preference), new OnPopupClickListener() {
@@ -964,35 +938,10 @@ public class HomeActivity extends BaseActivity {
 
     @Override
     public void onBackPressed() {
-        FragmentManager fm = getSupportFragmentManager();
-
-        if (fm.getBackStackEntryCount() > 0) {
-            super.onBackPressed();
-            return;
-        }
-
-        if (ScreenType.MAIN == mScreen) {
-            mPopup.show(PopupType.ALERT, getString(R.string.quit), getString(R.string.quit_question), new OnPopupClickListener() {
-                @Override
-                public void OnPositive() {
-                    // finish();
-                    moveTaskToBack(true);
-                    android.os.Process.killProcess(android.os.Process.myPid());
-                }
-
-                @Override
-                public void OnNegative() {
-                }
-            }, getString(R.string.ok), getString(R.string.cancel));
-        } else {
-            if (fm.getBackStackEntryCount() > 0) {
-                super.onBackPressed();
-                // fm.popBackStack();
-            } else {
-                gotoScreen(ScreenType.MAIN, null, false);
-            }
-        }
+        mHandler.removeCallbacks(mROnBack);
+        mHandler.postDelayed(mROnBack, 10);
     }
+
 
     @Override
     public boolean dispatchKeyEvent(KeyEvent event) {
@@ -1025,7 +974,7 @@ public class HomeActivity extends BaseActivity {
                             mAppDataProvider.setUserCount(total);
                             setUserCount(total);
                         } else if (total == -1) {
-                            mUserDataProvider.getUsers(TAG, mUserCountListener, null, 0, 1, "1", null, null);
+                            mUserDataProvider.getUsers(0, 1, null, null, mUserCountCallback);
                         }
                     } else if (action.equals(Setting.BROADCAST_DOOR_COUNT)) {
                         int total = intent.getIntExtra(Setting.BROADCAST_DOOR_COUNT, -1);
@@ -1034,7 +983,7 @@ public class HomeActivity extends BaseActivity {
                             mAppDataProvider.setDoorCount(total);
                             setDoorCount(total);
                         } else if (total == -1) {
-                            mDoorDataProvider.getDoors(TAG, mDoorCountListener, null, 0, 1,  null, null);
+                            mDoorDataProvider.getDoors(0, 1, null, mDoorCountCallback);
                         }
                     } else if (action.equals(Setting.BROADCAST_REROGIN)) {
                         setUser(mUserDataProvider.getLoginUserInfo());
@@ -1047,7 +996,7 @@ public class HomeActivity extends BaseActivity {
                         if (mContext == null) {
                             return;
                         }
-                        if (mPermissionDataProvider.getPermission(PermissionModule.MONITORING, false) ) {
+                        if (mPermissionDataProvider.getPermission(PermissionModule.MONITORING, false)) {
                             mIsGoAlarmList = true;
                         }
                     }
@@ -1078,7 +1027,12 @@ public class HomeActivity extends BaseActivity {
     }
 
     public void setDoorCount(int total) {
-        mDrawLayerMenuView.setDoorCount(total);
+        if (mAppDataProvider != null) {
+            mAppDataProvider.setDoorCount(total);
+        }
+        if (mDrawLayerMenuView != null) {
+            mDrawLayerMenuView.setDoorCount(total);
+        }
     }
 
     public void setUser(User user) {
@@ -1086,56 +1040,13 @@ public class HomeActivity extends BaseActivity {
     }
 
     public void setUserCount(int total) {
-        mDrawLayerMenuView.setUserCount(total);
-    }
-
-    public void showAlarmMenu(boolean visible) {
-        if (visible) {
-            mActivity.findViewById(R.id.side_menu_alram).setVisibility(View.VISIBLE);
-            mActivity.findViewById(R.id.side_menu_alram_devider).setVisibility(View.VISIBLE);
-        } else {
-            mActivity.findViewById(R.id.side_menu_alram).setVisibility(View.GONE);
-            mActivity.findViewById(R.id.side_menu_alram_devider).setVisibility(View.GONE);
+        if (mAppDataProvider != null) {
+            mAppDataProvider.setUserCount(total);
+        }
+        if (mDrawLayerMenuView != null) {
+            mDrawLayerMenuView.setUserCount(total);
         }
     }
 
-    public void showDoorMenu(boolean visible) {
-        if (visible) {
-            mActivity.findViewById(R.id.side_menu_door).setVisibility(View.VISIBLE);
-            mActivity.findViewById(R.id.side_menu_door_devider).setVisibility(View.VISIBLE);
-        } else {
-            mActivity.findViewById(R.id.side_menu_door).setVisibility(View.GONE);
-            mActivity.findViewById(R.id.side_menu_door_devider).setVisibility(View.GONE);
-        }
-    }
 
-    public void showMonitorMenu(boolean visible) {
-        if (visible) {
-            mActivity.findViewById(R.id.side_menu_monitor).setVisibility(View.VISIBLE);
-            mActivity.findViewById(R.id.side_menu_monitor_devider).setVisibility(View.VISIBLE);
-        } else {
-            mActivity.findViewById(R.id.side_menu_monitor).setVisibility(View.GONE);
-            mActivity.findViewById(R.id.side_menu_monitor_devider).setVisibility(View.GONE);
-        }
-    }
-
-    public void showUserMenu(boolean visible) {
-        if (visible) {
-            mActivity.findViewById(R.id.side_menu_user).setVisibility(View.VISIBLE);
-            mActivity.findViewById(R.id.side_menu_user_devider).setVisibility(View.VISIBLE);
-        } else {
-            mActivity.findViewById(R.id.side_menu_user).setVisibility(View.GONE);
-            mActivity.findViewById(R.id.side_menu_user_devider).setVisibility(View.GONE);
-        }
-    }
-
-    public void showMobileCard(boolean visible) {
-        if (visible) {
-            mActivity.findViewById(R.id.side_menu_card).setVisibility(View.VISIBLE);
-            mActivity.findViewById(R.id.side_menu_card_devider).setVisibility(View.VISIBLE);
-        } else {
-            mActivity.findViewById(R.id.side_menu_card).setVisibility(View.GONE);
-            mActivity.findViewById(R.id.side_menu_card_devider).setVisibility(View.GONE);
-        }
-    }
 }

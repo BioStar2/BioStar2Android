@@ -28,13 +28,10 @@ import com.supremainc.biostar2.BuildConfig;
 import com.supremainc.biostar2.R;
 import com.supremainc.biostar2.adapter.base.BaseListAdapter;
 import com.supremainc.biostar2.adapter.base.BaseMonitorAdapter;
-import com.supremainc.biostar2.sdk.datatype.v2.Common.VersionData;
-import com.supremainc.biostar2.sdk.datatype.v2.Door.BaseDoor;
-import com.supremainc.biostar2.sdk.datatype.v2.EventLog.ListEventLog;
-import com.supremainc.biostar2.sdk.datatype.v2.EventLog.LogLevel;
-import com.supremainc.biostar2.sdk.datatype.v2.EventLog.LogType;
-import com.supremainc.biostar2.sdk.datatype.v2.Permission.PermissionModule;
-import com.supremainc.biostar2.sdk.provider.TimeConvertProvider;
+import com.supremainc.biostar2.sdk.models.v2.eventlog.ListEventLog;
+import com.supremainc.biostar2.sdk.models.v2.eventlog.LogLevel;
+import com.supremainc.biostar2.sdk.models.v2.eventlog.LogType;
+import com.supremainc.biostar2.sdk.provider.DateTimeDataProvider;
 import com.supremainc.biostar2.view.StyledTextView;
 import com.supremainc.biostar2.widget.popup.Popup;
 
@@ -53,60 +50,70 @@ public class MonitorAdapter extends BaseMonitorAdapter {
         if (!mIsClickEnable) {
             return;
         }
-        if (VersionData.getCloudVersion(mActivity) > 1) {
-            if (!mPermissionDataProvider.getPermission(PermissionModule.USER, false)) {
-                return;
-            }
-        }
         ItemViewHolder viewHolder = (ItemViewHolder) view.getTag();
         ListEventLog item = mItems.get(position);
-        if (item.user == null || item.user.name == null || item.user.name.isEmpty() || item.user.user_id == null || item.user.user_id.isEmpty()) {
-            return;
+        StringBuilder sb = new StringBuilder();
+        sb.append(item.getDescription());
+        sb.append("\n");
+        sb.append(getDate(item));
+        sb.append("\n");
+        if (getUserName(item) != null) {
+            sb.append(mActivity.getString(R.string.user));
+            sb.append("\n");
+            sb.append(getUserName(item));
+            sb.append("\n");
         }
-        setSelector(view, viewHolder.mLink, position);
-
+        if (getDeviceName(item) != null) {
+            sb.append(mActivity.getString(R.string.device));
+            sb.append("\n");
+            sb.append(getDeviceName(item));
+        }
+        mPopup.show(Popup.PopupType.NONE, mActivity.getString(R.string.view_log), sb.toString(), null, null, null);
         super.onItemClick(parent, view, position, id);
+
     }
 
-    private void displayDescription(ListEventLog item, ItemViewHolder vh) {
-        if (item.event_type == null) {
-            vh.mTitle.setText(" ");
-            return;
-        }
-        vh.mTitle.setText(item.event_type.description);
-    }
-
-    private void displayDevice(ListEventLog item, ItemViewHolder vh) {
+    private String getDeviceName(ListEventLog item) {
         if (item.device != null) {
             if (item.device.name == null) {
-                vh.mDevice.setText(item.device.id + " / " + item.device.id);
+                return item.device.id + " / " + item.device.id;
             } else {
-                vh.mDevice.setText(item.device.id + " / " + item.device.name);
+                return item.device.id + " / " + item.device.name;
             }
-            vh.mDevice.setVisibility(View.VISIBLE);
-            return;
         }
-        vh.mDevice.setVisibility(View.GONE);
+        return null;
     }
 
-    private boolean displayUser(ListEventLog item, ItemViewHolder vh) {
+    private String getUserName(ListEventLog item) {
         if (item.user != null) {
-            vh.mUser.setText(item.user.user_id + " / " + item.user.getName());
-            vh.mUser.setVisibility(View.VISIBLE);
-            if (item.user.name == null || item.user.name.isEmpty() || item.user.user_id == null || item.user.user_id.isEmpty()) {
-                return false;
-            }
-            if (VersionData.getCloudVersion(mActivity) > 1) {
-                if (!mPermissionDataProvider.getPermission(PermissionModule.USER, false)) {
-                    return false;
-                }
-            }
-            return true;
+            return item.user.user_id + " / " + item.user.getName();
         }
-        vh.mUser.setVisibility(View.GONE);
-        return false;
+        return null;
     }
 
+    private String getDate(ListEventLog item) {
+        String date = item.getTimeFormmat(mDateTimeDataProvider, ListEventLog.ListEventLogTimeType.datetime, DateTimeDataProvider.DATE_TYPE.FORMAT_DATE_HOUR_MIN_SEC);
+        if (date != null) {
+            String[] test = date.split(" ");
+            if (test.length > 2) {
+                String reFormat = test[0] + " ";
+                for (int i = 1; i < test.length; i++) {
+                    reFormat = reFormat + test[i];
+                }
+                date = reFormat;
+            }
+        }
+        return date;
+    }
+
+    private void setDisplay(StyledTextView view, String content) {
+        if (content == null) {
+            view.setVisibility(View.GONE);
+        } else {
+            view.setVisibility(View.VISIBLE);
+            view.setText(content);
+        }
+    }
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
@@ -128,22 +135,11 @@ public class MonitorAdapter extends BaseMonitorAdapter {
         }
         ListEventLog item = mItems.get(position);
         if (item != null) {
-            displayDescription(item, vh);
-            String date = item.getTimeFormmat(mTimeConvertProvider, ListEventLog.ListEventLogTimeType.datetime, TimeConvertProvider.DATE_TYPE.FORMAT_DATE_HOUR_MIN_SEC);
-            if (date != null) {
-                String[] test = date.split(" ");
-                if (test.length > 2) {
-                    String reFormat =test[0]+" ";
-                    for (int i=1; i < test.length; i++) {
-                        reFormat = reFormat + test[i];
-                    }
-                    date =reFormat;
-                }
-            }
-            vh.mDate.setText(date);
-            boolean isLink = displayUser(item, vh);
-            displayDevice(item, vh);
-            if (mIsClickEnable && isLink) {
+            vh.mTitle.setText(item.getDescription());
+            vh.mDate.setText(getDate(item));
+            setDisplay(vh.mUser, getUserName(item));
+            setDisplay(vh.mDevice, getDeviceName(item));
+            if (mIsClickEnable) {
                 setSelector(vh.mRoot, vh.mLink, position, true);
             } else {
                 setSelector(vh.mRoot, vh.mLink, position, false);
@@ -202,6 +198,8 @@ public class MonitorAdapter extends BaseMonitorAdapter {
             setYellow(type, view);
         } else if (LogLevel.RED.mName.equals(item.level)) {
             setRed(type, view);
+        } else {
+            setGreen(type, view);
         }
 
 //		int code = item.event_type.code;

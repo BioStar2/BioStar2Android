@@ -1,92 +1,95 @@
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
+             android:layout_width="fill_parent"
+             android:layout_height="fill_parent"
     >
-<LinearLayout
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:layout_gravity="center"
-    android:background="@color/main_bg"
-    android:gravity="center|top"
-    android:orientation="vertical">
 
     <LinearLayout
-        android:id="@+id/top_menu"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal">
-
-        <FrameLayout
-            android:id="@+id/side_menu"
-            android:layout_width="120dp"
-            android:layout_height="wrap_content"
-            android:layout_gravity="left|top">
-
-            <ImageView
-                android:layout_width="26.95dp"
-                android:layout_height="19.13dp"
-                android:layout_gravity="left|top"
-                android:layout_marginLeft="23.18dp"
-                android:layout_marginTop="18.84dp"
-                android:contentDescription="@string/image"
-                android:scaleType="fitCenter"
-                android:src="@drawable/list" />
-        </FrameLayout>
-
-        <FrameLayout
-            android:layout_width="0dp"
-            android:layout_height="10dp"
-            android:layout_weight="1" />
-
-        <FrameLayout
-            android:id="@+id/setting"
-            android:layout_width="120dp"
-            android:layout_height="wrap_content"
-            android:layout_gravity="right|top">
-
-            <ImageView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="right|top"
-                android:layout_marginRight="23.18dp"
-                android:layout_marginTop="18dp"
-                android:contentDescription="@string/image"
-                android:scaleType="fitCenter"
-                android:src="@drawable/selector_btn_setting" />
-        </FrameLayout>
-    </LinearLayout>
-
-    <ImageView
-        android:id="@+id/main_logo"
-        android:layout_width="153.33dp"
-        android:layout_height="22.31dp"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
         android:layout_gravity="center"
-        android:layout_marginBottom="46dp"
-        android:layout_marginTop="46.69dp"
-        android:contentDescription="@string/image"
-        android:gravity="center"
-        android:scaleType="fitCenter"
-        android:src="@drawable/logo" />
-    <FrameLayout
-        android:id="@+id/ring_time_container"
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:layout_marginBottom="18dp"
-        android:layout_weight="1">
-        <com.supremainc.biostar2.view.RingTimeView
-            android:id="@+id/ring_time"
+        android:background="@color/main_bg"
+        android:gravity="center|top"
+        android:orientation="vertical">
+
+        <LinearLayout
+            android:id="@+id/top_menu"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <FrameLayout
+                android:id="@+id/side_menu"
+                android:layout_width="120dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="left|top">
+
+                <ImageView
+                    android:layout_width="26.95dp"
+                    android:layout_height="19.13dp"
+                    android:layout_gravity="left|top"
+                    android:layout_marginLeft="23.18dp"
+                    android:layout_marginTop="18.84dp"
+                    android:contentDescription="@string/image"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/list"/>
+            </FrameLayout>
+
+            <FrameLayout
+                android:layout_width="0dp"
+                android:layout_height="10dp"
+                android:layout_weight="1"/>
+
+            <FrameLayout
+                android:id="@+id/setting"
+                android:layout_width="120dp"
+                android:layout_height="wrap_content"
+                android:layout_gravity="right|top">
+
+                <ImageView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="right|top"
+                    android:layout_marginRight="23.18dp"
+                    android:layout_marginTop="18dp"
+                    android:contentDescription="@string/image"
+                    android:scaleType="fitCenter"
+                    android:src="@drawable/selector_btn_setting"/>
+            </FrameLayout>
+        </LinearLayout>
+
+        <ImageView
+            android:id="@+id/main_logo"
+            android:layout_width="153.33dp"
+            android:layout_height="22.31dp"
+            android:layout_gravity="center"
+            android:layout_marginBottom="46dp"
+            android:layout_marginTop="46.69dp"
+            android:contentDescription="@string/image"
+            android:gravity="center"
+            android:scaleType="fitCenter"
+            android:src="@drawable/logo"/>
+
+        <FrameLayout
+            android:id="@+id/ring_time_container"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_marginBottom="18dp"
+            android:layout_weight="1">
+
+            <com.supremainc.biostar2.view.RingTimeView
+                android:id="@+id/ring_time"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center"/>
+        </FrameLayout>
+
+        <com.supremainc.biostar2.view.MainMenuView
+            android:id="@+id/main_menu"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_gravity="center"
-            android:gravity="center" />
-    </FrameLayout>
-
-    <com.supremainc.biostar2.view.MainMenuView
-        android:id="@+id/main_menu"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:layout_marginBottom="24dp"
-        android:gravity="center" />
-</LinearLayout>
+            android:layout_marginBottom="24dp"
+            android:gravity="center"/>
+    </LinearLayout>
 </FrameLayout>

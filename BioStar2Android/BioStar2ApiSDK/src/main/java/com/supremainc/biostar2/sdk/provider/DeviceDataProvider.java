@@ -18,23 +18,23 @@ package com.supremainc.biostar2.sdk.provider;
 import android.content.Context;
 
 import com.google.gson.JsonObject;
-import com.supremainc.biostar2.sdk.datatype.v2.Card.Card;
-import com.supremainc.biostar2.sdk.datatype.v2.Device.Device;
-import com.supremainc.biostar2.sdk.datatype.v2.Device.DeviceType;
-import com.supremainc.biostar2.sdk.datatype.v2.Device.DeviceTypes;
-import com.supremainc.biostar2.sdk.datatype.v2.Device.Devices;
-import com.supremainc.biostar2.sdk.datatype.v2.Device.FingerprintVerify;
-import com.supremainc.biostar2.sdk.datatype.v2.Device.ListDevice;
-import com.supremainc.biostar2.sdk.datatype.v2.FingerPrint.ListFingerprintTemplate;
-import com.supremainc.biostar2.sdk.datatype.v2.FingerPrint.ScanFingerprintTemplate;
-import com.supremainc.biostar2.sdk.datatype.v2.FingerPrint.VerifyFingerprintOption;
-import com.supremainc.biostar2.sdk.volley.Request.Method;
-import com.supremainc.biostar2.sdk.volley.Response.ErrorListener;
-import com.supremainc.biostar2.sdk.volley.Response.Listener;
+import com.supremainc.biostar2.sdk.models.v2.card.Card;
+import com.supremainc.biostar2.sdk.models.v2.device.Device;
+import com.supremainc.biostar2.sdk.models.v2.device.DeviceTypes;
+import com.supremainc.biostar2.sdk.models.v2.device.Devices;
+import com.supremainc.biostar2.sdk.models.v2.device.FingerprintVerify;
+import com.supremainc.biostar2.sdk.models.v2.face.Face;
+import com.supremainc.biostar2.sdk.models.v2.fingerprint.ListFingerprintTemplate;
+import com.supremainc.biostar2.sdk.models.v2.fingerprint.ScanFingerprintTemplate;
+import com.supremainc.biostar2.sdk.models.v2.fingerprint.VerifyFingerprintOption;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+
+import static com.supremainc.biostar2.sdk.models.v2.common.VersionData.getCloudVersionString;
 
 public class DeviceDataProvider extends BaseDataProvider {
     private static DeviceDataProvider mSelf = null;
@@ -62,84 +62,88 @@ public class DeviceDataProvider extends BaseDataProvider {
         }
         return null;
     }
-//    private static int test_count=0;
-    public void getDevices(String tag, Listener<Devices> listener, ErrorListener errorListener, int offset,int limit,String query, Object deliverParam) {
-        Map<String, String> params =new HashMap<String, String>();
+
+    public Call<Devices> getDevices(int offset, int limit, String query, Callback<Devices> callback) {
+        if (offset < -1 || limit < 1) {
+            onParamError(callback);
+            return null;
+        }
+        if (!checkAPI(callback)) {
+            return null;
+        }
+
+        Map<String, String> params = new HashMap<String, String>();
+        params.put("limit", String.valueOf(limit));
+        params.put("offset", String.valueOf(offset));
         if (query != null) {
             params.put("text", query);
         }
-        params.put("limit", String.valueOf(limit));
-        params.put("offset", String.valueOf(offset));
-        sendRequest(tag, Devices.class, Method.GET, NetWork.PARAM_DEVICES, null, params, null, listener, errorListener, deliverParam);
-
-//        Devices items = new Devices();
-//        ArrayList<ListDevice> list = new ArrayList<ListDevice>();
-//        if (test_count > 500) {
-//            listener.onResponse(null,deliverParam);
-//            return;
-//        }
-//        int count = test_count +limit;
-//        for (int i=test_count; i < count ; i++) {
-//            ListDevice item = new ListDevice();
-//            item.id = String.valueOf(test_count);
-//            DeviceType type = new DeviceType();
-//            type.id = "10";
-//            item.device_type = type;
-//            item.mode = "master";
-//            item.name = String.valueOf(test_count);
-//            item.device_type.scan_card = true;
-//            list.add(item);
-//            test_count++;
-//        }
-//        items.total = 500;
-//        items.records = list;
-//        listener.onResponse(items,deliverParam);
+        Call<Devices> call = mApiInterface.get_devices(getCloudVersionString(mContext), params);
+        call.enqueue(callback);
+        return call;
     }
 
-
-    public void getDevice(String tag, String id, Listener<Device> listener, ErrorListener errorListener, Object deliverParam) {
-        sendRequest(tag, Device.class, Method.GET, NetWork.PARAM_DEVICES + "/" + id, null, null, null, listener, errorListener, deliverParam);
+    public Call<Device> getDevice(String id, Callback<Device> callback) {
+        if (!checkParamAndAPI(callback,id)) {
+            return null;
+        }
+        Call<Device> call = mApiInterface.get_devices(getCloudVersionString(mContext), id);
+        call.enqueue(callback);
+        return call;
     }
 
-
-    public void getDeviceTypes(String tag, Listener<DeviceTypes> listener, ErrorListener errorListener, Object deliverParam) {
-        sendRequest(tag, DeviceTypes.class, Method.GET, NetWork.PARAM_DEVICE_TYPES, null, null, null, listener, errorListener, deliverParam);
+    public Call<DeviceTypes> getDeviceTypes(Callback<DeviceTypes> callback) {
+        if (!checkAPI(callback)) {
+            return null;
+        }
+        Call<DeviceTypes> call = mApiInterface.get_devices_type(getCloudVersionString(mContext));
+        call.enqueue(callback);
+        return call;
     }
 
-
-    public void scanFingerprint(String tag, String deviceid, int quality, boolean getImage, Listener<ScanFingerprintTemplate> listener, ErrorListener errorListener, Object deliverParam) {
-        Map<String, String> params = new HashMap<String, String>();
-        params.put("device_id", String.valueOf(deviceid));
+    public Call<ScanFingerprintTemplate> scanFingerprint(String deviceid, int quality, boolean getImage, Callback<ScanFingerprintTemplate> callback) {
+        if (!checkParamAndAPI(callback,deviceid)) {
+            return null;
+        }
         JsonObject object = new JsonObject();
         object.addProperty(Device.SCAN_FINGERPRINT_ENROLL_QUALITY, quality);
         object.addProperty(Device.SCAN_FINGERPRINT_GET_IMAGE, getImage);
-        String body = mGson.toJson(object);
-        String url = NetWork.PARAM_DEVICES + "/" + String.valueOf(deviceid) + "/" + NetWork.PARAM_DEVICE_SCAN_FINGERPRINT;
-        sendRequest(tag, ScanFingerprintTemplate.class, Method.POST, url, null, params, body, listener, errorListener, deliverParam);
+        Call<ScanFingerprintTemplate> call = mApiInterface.post_scan_fingerprint(getCloudVersionString(mContext), deviceid, object);
+        call.enqueue(callback);
+        return call;
     }
 
-    public void writeCard(String tag, String deviceid, Listener<Card> listener, ErrorListener errorListener, Object deliverParam) {
-        Map<String, String> params = new HashMap<String, String>();
-        params.put("device_id", String.valueOf(deviceid));
-        String url = NetWork.PARAM_DEVICES + "/" + String.valueOf(deviceid) + "/" + NetWork.PARAM_DEVICE_WRITE_CARD;
-
-        sendRequest(tag, Card.class, Method.POST, url, null, params, null, listener, errorListener, deliverParam);
-    }
-
-    public void scanCard(String tag, String deviceid, Listener<Card> scanListener, ErrorListener errorListener, Object deliverParam) {
-        Map<String, String> params = new HashMap<String, String>();
-        params.put("device_id", String.valueOf(deviceid));
-        String url = NetWork.PARAM_DEVICES + "/" + String.valueOf(deviceid) + "/" + NetWork.PARAM_DEVICE_SCAN_CARD;
-
-        sendRequest(tag, Card.class, Method.POST, url, null, params, null, scanListener, errorListener, deliverParam);
-    }
-
-
-
-    public void verifyFingerprint(String tag, String deviceid, int security_leve, ListFingerprintTemplate fingerprintTemplate, Listener<FingerprintVerify> listener, ErrorListener errorListener, Object deliverParam) {
-        String url = NetWork.PARAM_DEVICES + "/" + String.valueOf(deviceid) + "/" + NetWork.PARAM_DEVICE_VERIFY_FINGERPRINT;
+    public Call<FingerprintVerify> verifyFingerprint(String deviceid, ListFingerprintTemplate fingerprintTemplate, Callback<FingerprintVerify> callback) {
+        if (!checkParamAndAPI(callback,deviceid,fingerprintTemplate)) {
+            return null;
+        }
         VerifyFingerprintOption verifyFingerprintOption = new VerifyFingerprintOption("DEFAULT", fingerprintTemplate.template0, fingerprintTemplate.template1);
-        String json = mGson.toJson(verifyFingerprintOption);
-        sendRequest(tag, FingerprintVerify.class, Method.POST, url, null, null, json, listener, errorListener, deliverParam);
+        Call<FingerprintVerify> call = mApiInterface.post_verify_fingerprint(getCloudVersionString(mContext), deviceid, verifyFingerprintOption);
+        call.enqueue(callback);
+        return call;
+    }
+
+    public Call<Card> scanCard(String deviceid, Callback<Card> callback) {
+        if (!checkParamAndAPI(callback,deviceid)) {
+            return null;
+        }
+        Call<Card> call = mApiInterface.post_scan_card(getCloudVersionString(mContext), deviceid);
+        call.enqueue(callback);
+        return call;
+    }
+
+    public Call<Face> scanFace(String deviceid, int quality, Callback<Face> callback) {
+        if (!checkParamAndAPI(callback,deviceid)) {
+            return null;
+        }
+        JsonObject object = new JsonObject();
+        if (quality > -1) {
+            object.addProperty(Device.SCAN_FACE_SENSITIVITY, quality);
+        } else {
+            object.addProperty(Device.SCAN_FACE_SENSITIVITY, 4);
+        }
+        Call<Face> call = mApiInterface.post_scan_face(getCloudVersionString(mContext), deviceid, object);
+        call.enqueue(callback);
+        return call;
     }
 }

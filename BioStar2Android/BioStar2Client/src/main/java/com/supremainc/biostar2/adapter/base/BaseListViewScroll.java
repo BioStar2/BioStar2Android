@@ -24,8 +24,8 @@ import android.widget.AbsListView.OnScrollListener;
 import android.widget.ListView;
 
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutDirection;
-import com.supremainc.biostar2.meta.Setting;
 import com.supremainc.biostar2.impl.OnSingleClickListener;
+import com.supremainc.biostar2.meta.Setting;
 import com.tekinarslan.material.sample.FloatingActionButton;
 
 public class BaseListViewScroll implements OnScrollListener {
@@ -41,7 +41,7 @@ public class BaseListViewScroll implements OnScrollListener {
     protected boolean mSkipScroll;
     protected int mVisibleItemCount;
     protected Handler mHandler;
-    Runnable mScrollBottomEnd = new Runnable() {
+    private Runnable mScrollBottomEnd = new Runnable() {
         @Override
         public void run() {
             if (mFab == null && mListView == null) {
@@ -68,7 +68,7 @@ public class BaseListViewScroll implements OnScrollListener {
 
         }
     };
-    Runnable mScrollBottom = new Runnable() {
+    private Runnable mScrollBottom = new Runnable() {
         @Override
         public void run() {
             if (mFab == null && mListView == null) {
@@ -103,7 +103,7 @@ public class BaseListViewScroll implements OnScrollListener {
             }
         }
     };
-    Runnable mScrollTopEnd = new Runnable() {
+    private Runnable mScrollTopEnd = new Runnable() {
         @Override
         public void run() {
             if (mFab == null && mListView == null) {
@@ -114,7 +114,7 @@ public class BaseListViewScroll implements OnScrollListener {
             setDirectioDown();
         }
     };
-    Runnable mScrollTop = new Runnable() {
+    private Runnable mScrollTop = new Runnable() {
         @Override
         public void run() {
             if (mFab == null && mListView == null) {

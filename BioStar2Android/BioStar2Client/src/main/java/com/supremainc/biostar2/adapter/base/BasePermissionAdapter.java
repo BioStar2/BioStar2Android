@@ -21,19 +21,20 @@ import android.widget.AbsListView.OnScrollListener;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 
+import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutDirection;
 import com.supremainc.biostar2.R;
 import com.supremainc.biostar2.meta.Setting;
-import com.supremainc.biostar2.sdk.datatype.v1.Permission.CloudRole;
-import com.supremainc.biostar2.sdk.datatype.v1.Permission.CloudRoles;
+import com.supremainc.biostar2.sdk.models.v1.permission.CloudRole;
+import com.supremainc.biostar2.sdk.models.v1.permission.CloudRoles;
 import com.supremainc.biostar2.sdk.provider.PermissionDataProvider;
-import com.supremainc.biostar2.sdk.volley.Response;
-import com.supremainc.biostar2.sdk.volley.Response.Listener;
-import com.supremainc.biostar2.sdk.volley.VolleyError;
 import com.supremainc.biostar2.widget.popup.Popup;
 import com.supremainc.biostar2.widget.popup.Popup.OnPopupClickListener;
-import com.supremainc.biostar2.widget.popup.Popup.PopupType;
 
 import java.util.ArrayList;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public abstract class BasePermissionAdapter extends BaseListAdapter<CloudRole> {
     protected static final int FIRST_LIMIT = 50;
@@ -41,19 +42,43 @@ public abstract class BasePermissionAdapter extends BaseListAdapter<CloudRole> {
     protected int mLimit = FIRST_LIMIT;
     protected int mOffset = 0;
     protected PermissionDataProvider mPermissionDataProvider;
-    Listener<CloudRoles> mItemListener = new Listener<CloudRoles>() {
+
+    private Callback<CloudRoles> mItemListener = new Callback<CloudRoles>() {
         @Override
-        public void onResponse(CloudRoles response, Object deliverParam) {
-            if (mPopup != null) {
-                mPopup.dismiss();
-            }
-            if (isDestroy()) {
+        public void onFailure(Call<CloudRoles> call, Throwable t) {
+            if (isIgnoreCallback(call, true)) {
                 return;
             }
-            if (response == null || response.records == null || response.records.size() < 1) {
+
+            showRetryPopup(t.getMessage(), new OnPopupClickListener() {
+                @Override
+                public void OnNegative() {
+
+                }
+
+                @Override
+                public void OnPositive() {
+                    showWait(null);
+                    mHandler.removeCallbacks(mRunGetItems);
+                    mHandler.post(mRunGetItems);
+                }
+            });
+        }
+
+        @Override
+        public void onResponse(Call<CloudRoles> call, Response<CloudRoles> response) {
+            if (isIgnoreCallback(call, response, true)) {
+                return;
+            }
+            if (isInvalidResponse(response, false, false)) {
+                mItemListener.onFailure(call, new Throwable(getResponseErrorMessage(response)));
+                return;
+            }
+            CloudRoles cloudRoles = response.body();
+            if (cloudRoles.records == null || cloudRoles.records.size() < 1) {
                 if (mItems == null || mItems.size() < 1) {
-                    mTotal =0;
-                    mOnItemsListener.onNoMoreData();
+                    mTotal = 0;
+                    mOnItemsListener.onNoneData();
                 } else {
                     mTotal = mItems.size();
                     mOnItemsListener.onSuccessNull(mItems.size());
@@ -74,61 +99,34 @@ public abstract class BasePermissionAdapter extends BaseListAdapter<CloudRole> {
                 mItems.add(none);
             }
             if (mOnItemsListener != null) {
-                mOnItemsListener.onTotalReceive(response.total);
+                mOnItemsListener.onTotalReceive(cloudRoles.total);
             }
 
-            for (CloudRole ListCard : response.records) {
+            for (CloudRole ListCard : cloudRoles.records) {
                 mItems.add(ListCard);
             }
             setData(mItems);
-            mOffset = mItems.size() ;
-            mTotal = response.total;
+            mOffset = mItems.size();
+            mTotal = cloudRoles.total;
         }
     };
-    Response.ErrorListener mItemErrorListener = new Response.ErrorListener() {
-        @Override
-        public void onErrorResponse(VolleyError error, Object deliverParam) {
-            if (mPopup != null) {
-                mPopup.dismiss();
-            }
-            if (isDestroy(error)) {
-                return;
-            }
-            if (mPopup != null) {
-                mPopup.show(PopupType.ALERT, mActivity.getString(R.string.fail_retry), Setting.getErrorMessage(error, mActivity), new OnPopupClickListener() {
-                    @Override
-                    public void OnNegative() {
-                        mCancelExitListener.onCancel(null);
-                    }
 
-                    @Override
-                    public void OnPositive() {
-                        mHandler.removeCallbacks(mRunGetItems);
-                        mHandler.post(mRunGetItems);
-                    }
-                }, mActivity.getString(R.string.ok), mActivity.getString(R.string.cancel), false);
-            }
-        }
-    };
-    Runnable mRunGetItems = new Runnable() {
+
+    private Runnable mRunGetItems = new Runnable() {
         @Override
         public void run() {
-            if (isDestroy()) {
+            if (isInValidCheck()) {
                 return;
             }
             if (isMemoryPoor()) {
-                if (mPopup != null) {
-                    mPopup.dismiss();
-                }
-                if (mSwipyRefreshLayout != null) {
-                    mSwipyRefreshLayout.setRefreshing(false);
-                }
+                dismissWait();
                 mToastPopup.show(mActivity.getString(R.string.memory_poor), null);
                 return;
             }
-            mPermissionDataProvider.getCloudRoles(TAG, mItemListener, mItemErrorListener, null);
+            request(mPermissionDataProvider.getCloudRoles(mItemListener));
         }
     };
+
 
     public BasePermissionAdapter(Activity context, ArrayList<CloudRole> items, ListView listView, OnItemClickListener itemClickListener, Popup popup, OnItemsListener onItemsListener) {
         super(context, items, listView, itemClickListener, popup, onItemsListener);
@@ -163,10 +161,8 @@ public abstract class BasePermissionAdapter extends BaseListAdapter<CloudRole> {
         mTotal = 0;
         mLimit = FIRST_LIMIT;
         mHandler.removeCallbacks(mRunGetItems);
-        mPermissionDataProvider.cancelAll(TAG);
-        if (mPopup != null) {
-            mPopup.showWait(mCancelExitListener);
-        }
+        clearRequest();
+        showWait(SwipyRefreshLayoutDirection.TOP);
         if (mItems != null) {
             mItems.clear();
             notifyDataSetChanged();

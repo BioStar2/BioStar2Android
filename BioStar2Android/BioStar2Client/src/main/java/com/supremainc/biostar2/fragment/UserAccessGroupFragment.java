@@ -28,10 +28,10 @@ import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 
 import com.supremainc.biostar2.R;
-import com.supremainc.biostar2.meta.Setting;
 import com.supremainc.biostar2.adapter.UserAccessGroupAdapter;
-import com.supremainc.biostar2.sdk.datatype.v2.AccessControl.ListAccessGroup;
-import com.supremainc.biostar2.sdk.datatype.v2.User.User;
+import com.supremainc.biostar2.meta.Setting;
+import com.supremainc.biostar2.sdk.models.v2.accesscontrol.ListAccessGroup;
+import com.supremainc.biostar2.sdk.models.v2.user.User;
 import com.supremainc.biostar2.view.SubToolbar;
 import com.supremainc.biostar2.widget.ScreenControl.ScreenType;
 import com.supremainc.biostar2.widget.popup.Popup.OnPopupClickListener;
@@ -125,7 +125,7 @@ public class UserAccessGroupFragment extends BaseFragment {
             mUserInfo.access_groups = new ArrayList<ListAccessGroup>();
         }
         if (mItemAdapter == null) {
-            mItemAdapter = new UserAccessGroupAdapter(mContext, mUserInfo.access_groups, getListView(), new OnItemClickListener() {
+            mItemAdapter = new UserAccessGroupAdapter(mActivity, mUserInfo.access_groups, getListView(), new OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                     if (mSubToolbar == null) {
@@ -133,7 +133,13 @@ public class UserAccessGroupFragment extends BaseFragment {
                     }
                     if (mSubMode == MODE_DELETE) {
                         mSubToolbar.setSelectAllViewOff();
-                        mSubToolbar.setSelectedCount(mItemAdapter.getCheckedItemCount());
+                        int count = mItemAdapter.getCheckedItemCount();
+                        mSubToolbar.setSelectedCount(count);
+                        if (count == mItemAdapter.getAvailableTotal()) {
+                            if (!mSubToolbar.getSelectAll()) {
+                                mSubToolbar.showReverseSelectAll();
+                            }
+                        }
                         return;
                     }
                     ListAccessGroup item = (ListAccessGroup) mItemAdapter.getItem(position);
@@ -210,7 +216,7 @@ public class UserAccessGroupFragment extends BaseFragment {
                 mSubToolbar.showMultipleSelectInfo(true, mItemAdapter.getCheckedItemCount());
                 break;
         }
-        mContext.invalidateOptionsMenu();
+        mActivity.invalidateOptionsMenu();
     }
 
     private void onCreateMenu(Menu menu, MenuInflater inflater) {
@@ -272,7 +278,7 @@ public class UserAccessGroupFragment extends BaseFragment {
         if (mIsDisableModify) {
             return;
         }
-        onCreateMenu(menu, mContext.getMenuInflater());
+        onCreateMenu(menu, mActivity.getMenuInflater());
         super.onPrepareOptionsMenu(menu);
     }
 
@@ -286,7 +292,7 @@ public class UserAccessGroupFragment extends BaseFragment {
             mItemAdapter.clearChoices();
         }
         if (mSelectAccessGroupPopup == null) {
-            mSelectAccessGroupPopup = new SelectPopup<ListAccessGroup>(mContext, mPopup);
+            mSelectAccessGroupPopup = new SelectPopup<ListAccessGroup>(mActivity, mPopup);
         }
         if (mSubToolbar != null) {
             mSubToolbar.setSelectedCount(mItemAdapter.getCheckedItemCount());
@@ -306,8 +312,8 @@ public class UserAccessGroupFragment extends BaseFragment {
         mSelectAccessGroupPopup.setDuplicateItems(mUserInfo.access_groups);
         mSelectAccessGroupPopup.show(SelectType.ACCESS_GROUPS, new OnSelectResultListener<ListAccessGroup>() {
             @Override
-            public void OnResult(ArrayList<ListAccessGroup> selectedItem,boolean isPositive) {
-                if (isInValidCheck(null)) {
+            public void OnResult(ArrayList<ListAccessGroup> selectedItem, boolean isPositive) {
+                if (isInValidCheck()) {
                     return;
                 }
                 if (selectedItem == null) {

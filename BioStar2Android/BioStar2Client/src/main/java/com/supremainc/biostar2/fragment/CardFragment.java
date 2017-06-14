@@ -21,7 +21,6 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.os.Bundle;
-import android.os.Environment;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -37,20 +36,15 @@ import android.widget.ListView;
 import com.supremainc.biostar2.BuildConfig;
 import com.supremainc.biostar2.R;
 import com.supremainc.biostar2.adapter.CardAdapter;
-import com.supremainc.biostar2.meta.Setting;
 import com.supremainc.biostar2.adapter.NewCardAdapter;
-import com.supremainc.biostar2.sdk.datatype.v2.Card.Card;
-import com.supremainc.biostar2.sdk.datatype.v2.Card.Cards;
-import com.supremainc.biostar2.sdk.datatype.v2.Card.CardsList;
-import com.supremainc.biostar2.sdk.datatype.v2.Card.ListCard;
-import com.supremainc.biostar2.sdk.datatype.v2.Common.ResponseStatus;
-import com.supremainc.biostar2.sdk.datatype.v2.Common.VersionData;
-import com.supremainc.biostar2.sdk.datatype.v2.Device.ListDevice;
-import com.supremainc.biostar2.sdk.datatype.v2.User.User;
-import com.supremainc.biostar2.sdk.provider.ConfigDataProvider;
-import com.supremainc.biostar2.sdk.volley.Response;
-import com.supremainc.biostar2.sdk.volley.Response.Listener;
-import com.supremainc.biostar2.sdk.volley.VolleyError;
+import com.supremainc.biostar2.meta.Setting;
+import com.supremainc.biostar2.sdk.models.v2.card.Card;
+import com.supremainc.biostar2.sdk.models.v2.card.CardsList;
+import com.supremainc.biostar2.sdk.models.v2.card.ListCard;
+import com.supremainc.biostar2.sdk.models.v2.common.ResponseStatus;
+import com.supremainc.biostar2.sdk.models.v2.common.VersionData;
+import com.supremainc.biostar2.sdk.models.v2.device.ListDevice;
+import com.supremainc.biostar2.sdk.models.v2.user.User;
 import com.supremainc.biostar2.view.SubToolbar;
 import com.supremainc.biostar2.widget.ScreenControl.ScreenType;
 import com.supremainc.biostar2.widget.popup.Popup.OnPopupClickListener;
@@ -62,6 +56,10 @@ import com.supremainc.biostar2.widget.popup.SelectPopup.SelectType;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class CardFragment extends BaseFragment {
     private static final int ASSGIGN_CARD = 1;
@@ -102,82 +100,82 @@ public class CardFragment extends BaseFragment {
             }
         }
     };
-    private Response.ErrorListener mScanErrorListener = new Response.ErrorListener() {
+    private Callback<CardsList> mCardsListener = new Callback<CardsList>() {
         @Override
-        public void onErrorResponse(VolleyError error, Object deliverParam) {
-            if (isInValidCheck(error)) {
+        public void onFailure(Call<CardsList> call, Throwable t) {
+            if (isIgnoreCallback(call,true)) {
                 return;
             }
-            mPopup.dismiss();
-            mPopup.show(PopupType.ALERT, getString(R.string.fail_retry), Setting.getErrorMessage(error, mContext), new OnPopupClickListener() {
-                @Override
-                public void OnNegative() {
-                    clearValue();
-                }
-
-                @Override
-                public void OnPositive() {
-                    mHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            mPopup.show(PopupType.CARD, mOldItemAdapter.getName(mReplacePosition), getString(R.string.card_on_device), null, null, null, false);
-                            mDeviceDataProvider.scanCard(TAG, mDeviceId, mScanListener, mScanErrorListener, null);
-                        }
-                    });
-                }
-
-
-            }, getString(R.string.ok), getString(R.string.cancel), false);
+            showErrorPopup(t.getMessage(),true);
         }
-    };
 
-    private Listener<CardsList> mCardsListener = new Response.Listener<CardsList>() {
         @Override
-        public void onResponse(final CardsList response, Object deliverParam) {
-            if (isInValidCheck(null)) {
+        public void onResponse(Call<CardsList> call, Response<CardsList> response) {
+            if (isIgnoreCallback(call,response,true)) {
                 return;
             }
-            mPopup.dismiss();
-            if (mUserInfo == null || response == null || response.records == null) {
-                mErrorBackListener.onErrorResponse(new VolleyError(getString(R.string.server_null)),deliverParam);
+            if (isInvalidResponse( response,true,true)) {
                 return;
             }
-            mUserInfo.cards = response.records;
+            mUserInfo.cards = response.body().records;
             mUserInfo.card_count = mUserInfo.cards.size();
             refreshValue();
         }
     };
-    private Listener<Card> mScanListener = new Response.Listener<Card>() {
-        @Override
-        public void onResponse(final Card response, Object deliverParam) {
-            if (isInValidCheck(null)) {
-                return;
-            }
-            mPopup.dismiss();
-            if (response == null) {
-                if (mScanErrorListener != null) {
-                    mScanErrorListener.onErrorResponse(new VolleyError(getString(R.string.server_null)), deliverParam);
-                }
-                return;
-            }
-            if (!response.unassigned) {
-                mToastPopup.show(getString(R.string.already_assigned), null);
-                return;
-            }
 
-            mPopup.show(PopupType.CARD_CONFIRM, mOldItemAdapter.getName(mReplacePosition), response.card_id, new OnPopupClickListener() {
+    private Callback<Card> mScanListener = new Callback<Card>() {
+        @Override
+        public void onFailure(Call<Card> call, Throwable t) {
+            if (isIgnoreCallback(call,true)) {
+                return;
+            }
+            clearValue();
+            showErrorPopup(t.getMessage(),false);
+        }
+
+        @Override
+        public void onResponse(Call<Card> call, final Response<Card> response) {
+            if (isIgnoreCallback(call,response,true)) {
+                return;
+            }
+            if (isInvalidResponse( response,true,false)) {
+                return;
+            }
+            if (!response.body().unassigned) {
+                showErrorPopup(getString(R.string.already_assigned),false);
+                return;
+            }
+            mPopup.show(PopupType.CARD_CONFIRM, mOldItemAdapter.getName(mReplacePosition), response.body().card_id, new OnPopupClickListener() {
                 @Override
                 public void OnNegative() {
-
                 }
-
                 @Override
                 public void OnPositive() {
-                    setCard(response);
+                    setCard(response.body());
                 }
-
-
             }, getString(R.string.ok), null, false);
+        }
+    };
+
+    private Callback<ResponseStatus> mModifyCardListener = new Callback<ResponseStatus>() {
+        @Override
+        public void onFailure(Call<ResponseStatus> call, Throwable t) {
+            if (isIgnoreCallback(call,true)) {
+                return;
+            }
+            showErrorPopup(t.getMessage(),false);
+        }
+
+        @Override
+        public void onResponse(Call<ResponseStatus> call, Response<ResponseStatus> response) {
+            if (isIgnoreCallback(call,response,true)){
+                return;
+            }
+            if (isInvalidResponse( response,true,true)) {
+                return;
+            }
+            mPopup.showWait(mCancelExitListener);
+            request(mUserDataProvider.getCards(mUserInfo.user_id, mCardsListener));
         }
     };
 
@@ -190,19 +188,6 @@ public class CardFragment extends BaseFragment {
     private void clearValue() {
         mReplacePosition = -1;
     }
-    private Response.Listener<ResponseStatus> mModifyCardListener = new Response.Listener<ResponseStatus>() {
-        @Override
-        public void onResponse(ResponseStatus response, Object param) {
-            if (isInValidCheck(null)) {
-                return;
-            }
-            if (response == null) {
-                mErrorBackListener.onErrorResponse(new VolleyError(null,"Server response is null"),null);
-                return;
-            }
-            mUserDataProvider.getCards(TAG, mUserInfo.user_id,mCardsListener,mErrorBackListener,null);
-        }
-    };
 
     private void deleteConfirm(int selectedCount) {
         mPopup.show(PopupType.ALERT, getString(R.string.delete_confirm_question), getString(R.string.selected_count) + " " + selectedCount, new OnPopupClickListener() {
@@ -215,7 +200,7 @@ public class CardFragment extends BaseFragment {
                 mHandler.post(new Runnable() {
                     @Override
                     public void run() {
-                        if (VersionData.getCloudVersion(mContext) > 1 ) {
+                        if (VersionData.getCloudVersion(mActivity) > 1) {
                             if (mItemAdapter != null) {
                                 int i = mItemAdapter.getCount() - 1;
                                 ArrayList<ListCard> cards = (ArrayList<ListCard>) mUserInfo.cards.clone();
@@ -232,7 +217,7 @@ public class CardFragment extends BaseFragment {
                                         mScreenControl.backScreen();
                                     }
                                 });
-                                mUserDataProvider.modifyCards(TAG,mUserInfo.user_id,cards,mModifyCardListener,mErrorStayListener,null);
+                                request(mUserDataProvider.modifyCards(mUserInfo.user_id, cards, mModifyCardListener));
                             } else {
                                 refreshValue();
                             }
@@ -275,9 +260,9 @@ public class CardFragment extends BaseFragment {
             mUserInfo.cards = new ArrayList<ListCard>();
         }
 
-        if (VersionData.getCloudVersion(mContext) > 1) {
+        if (VersionData.getCloudVersion(mActivity) > 1) {
             if (mItemAdapter == null) {
-                mItemAdapter = new NewCardAdapter(mContext, mUserInfo.user_id,mUserInfo.cards, getListView(), new OnItemClickListener() {
+                mItemAdapter = new NewCardAdapter(mActivity, mUserInfo.user_id, mUserInfo.cards, getListView(), new OnItemClickListener() {
                     @Override
                     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                         if (mSubToolbar == null) {
@@ -285,14 +270,20 @@ public class CardFragment extends BaseFragment {
                         }
                         if (mSubMode == MODE_DELETE) {
                             mSubToolbar.setSelectAllViewOff();
-                            mSubToolbar.setSelectedCount(mItemAdapter.getCheckedItemCount());
+                            int count = mItemAdapter.getCheckedItemCount();
+                            mSubToolbar.setSelectedCount(count);
+                            if (count == mItemAdapter.getAvailableTotal()) {
+                                if (!mSubToolbar.getSelectAll()) {
+                                    mSubToolbar.showReverseSelectAll();
+                                }
+                            }
                         }
                     }
                 }, mPopup, null, mIsDisableModify);
             }
         } else {
             if (mOldItemAdapter == null) {
-                mOldItemAdapter = new CardAdapter(mContext, mUserInfo.cards, getListView(), new OnItemClickListener() {
+                mOldItemAdapter = new CardAdapter(mActivity, mUserInfo.cards, getListView(), new OnItemClickListener() {
                     @Override
                     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                         if (mSubToolbar == null) {
@@ -300,7 +291,13 @@ public class CardFragment extends BaseFragment {
                         }
                         if (mSubMode == MODE_DELETE) {
                             mSubToolbar.setSelectAllViewOff();
-                            mSubToolbar.setSelectedCount(mOldItemAdapter.getCheckedItemCount());
+                            int count = mItemAdapter.getCheckedItemCount();
+                            mSubToolbar.setSelectedCount(count);
+                            if (count == mItemAdapter.getCount()) {
+                                if (!mSubToolbar.getSelectAll()) {
+                                    mSubToolbar.showReverseSelectAll();
+                                }
+                            }
                         } else {
                             mReplacePosition = position;
                             showSelectItem();
@@ -322,7 +319,7 @@ public class CardFragment extends BaseFragment {
         unRegisterBroadcast();
         if (mUserInfo != null && mUserInfo.cards != null) {
             if (mUserInfo.card_count != mUserInfo.cards.size()) {
-                mUserInfo.card_count =  mUserInfo.cards.size();
+                mUserInfo.card_count = mUserInfo.cards.size();
             }
             try {
                 sendLocalBroadcast(Setting.BROADCAST_UPDATE_CARD, (Serializable) mUserInfo.clone());
@@ -346,7 +343,7 @@ public class CardFragment extends BaseFragment {
         }
         switch (item.getItemId()) {
             case R.id.action_delete_confirm:
-                int selectedCount=0;
+                int selectedCount = 0;
                 if (mItemAdapter != null) {
                     selectedCount = mItemAdapter.getCheckedItemCount();
                 } else {
@@ -363,8 +360,7 @@ public class CardFragment extends BaseFragment {
                     mToastPopup.show(getString(R.string.max_size), null);
                     return true;
                 }
-                //TODO
-                if (VersionData.getCloudVersion(mContext) > 1) {
+                if (VersionData.getCloudVersion(mActivity) > 1) {
                     Bundle bundle = new Bundle();
                     try {
                         bundle.putSerializable(User.TAG, mUserInfo.clone());
@@ -425,7 +421,7 @@ public class CardFragment extends BaseFragment {
 
                 break;
         }
-        mContext.invalidateOptionsMenu();
+        mActivity.invalidateOptionsMenu();
     }
 
     @Override
@@ -449,15 +445,10 @@ public class CardFragment extends BaseFragment {
             }, 1000);
             return null;
         }
-        if (VersionData.getCloudVersion(mContext) > 1) {
+        if (VersionData.getCloudVersion(mActivity) > 1) {
             if (!mIsDisableModify) {
-                mPopup.showWait(new DialogInterface.OnCancelListener() {
-                    @Override
-                    public void onCancel(DialogInterface dialog) {
-                        mScreenControl.backScreen();
-                    }
-                });
-                mUserDataProvider.getCards(TAG, mUserInfo.user_id, mCardsListener, mErrorBackListener, null);
+                mPopup.showWait(mCancelExitListener);
+                request(mUserDataProvider.getCards( mUserInfo.user_id, mCardsListener));
             }
         }
         return mRootView;
@@ -481,7 +472,7 @@ public class CardFragment extends BaseFragment {
     @Override
     public void onPrepareOptionsMenu(Menu menu) {
         menu.clear();
-        MenuInflater inflater = mContext.getMenuInflater();
+        MenuInflater inflater = mActivity.getMenuInflater();
         if (mIsDisableModify) {
             return;
         }
@@ -502,10 +493,10 @@ public class CardFragment extends BaseFragment {
     private void refreshValue() {
         clearValue();
         if (mSelectCardPopup == null) {
-            mSelectCardPopup = new SelectPopup<ListCard>(mContext, mPopup);
+            mSelectCardPopup = new SelectPopup<ListCard>(mActivity, mPopup);
         }
         if (mSelectDevicePopup == null) {
-            mSelectDevicePopup = new SelectPopup<ListDevice>(mContext, mPopup);
+            mSelectDevicePopup = new SelectPopup<ListDevice>(mActivity, mPopup);
         }
         if (mUserInfo.cards == null) {
             mUserInfo.cards = new ArrayList<ListCard>();
@@ -544,17 +535,12 @@ public class CardFragment extends BaseFragment {
                         return;
                     }
                     if (action.equals(Setting.BROADCAST_UPDATE_CARD)) {
-                         User user = getExtraData(Setting.BROADCAST_UPDATE_CARD, intent);
+                        User user = getExtraData(Setting.BROADCAST_UPDATE_CARD, intent);
                         if (user == null || user.cards == null) {
-                            if (VersionData.getCloudVersion(mContext) > 1) {
+                            if (VersionData.getCloudVersion(mActivity) > 1) {
                                 if (!mIsDisableModify) {
-                                    mPopup.showWait(new DialogInterface.OnCancelListener() {
-                                        @Override
-                                        public void onCancel(DialogInterface dialog) {
-                                            mScreenControl.backScreen();
-                                        }
-                                    });
-                                    mUserDataProvider.getCards(TAG, mUserInfo.user_id, mCardsListener, mErrorBackListener, null);
+                                    mPopup.showWait(mCancelExitListener);
+                                    request(mUserDataProvider.getCards(mUserInfo.user_id, mCardsListener));
                                 }
                             }
                             return;
@@ -576,15 +562,15 @@ public class CardFragment extends BaseFragment {
 
     private void selectAddOption() {
         mReplacePosition = mUserInfo.cards.size();
-        SelectPopup<SelectCustomData> selectPopup = new SelectPopup<SelectCustomData>(mContext, mPopup);
+        SelectPopup<SelectCustomData> selectPopup = new SelectPopup<SelectCustomData>(mActivity, mPopup);
         ArrayList<SelectCustomData> registerationOption = new ArrayList<SelectCustomData>();
         registerationOption.add(new SelectCustomData(getString(R.string.registeration_option_card_reader), CARD_READER, false));
         registerationOption.add(new SelectCustomData(getString(R.string.registeration_option_assign_card), ASSGIGN_CARD, false));
 
         selectPopup.show(SelectType.CUSTOM, new OnSelectResultListener<SelectCustomData>() {
             @Override
-            public void OnResult(ArrayList<SelectCustomData> selectedItem,boolean isPositive) {
-                if (isInValidCheck(null)) {
+            public void OnResult(ArrayList<SelectCustomData> selectedItem, boolean isPositive) {
+                if (isInValidCheck()) {
                     return;
                 }
                 if (selectedItem == null) {
@@ -631,8 +617,8 @@ public class CardFragment extends BaseFragment {
     private void showSelectDevice() {
         mSelectDevicePopup.show(SelectType.DEVICE_CARD, new OnSelectResultListener<ListDevice>() {
             @Override
-            public void OnResult(ArrayList<ListDevice> selectedItem,boolean isPositive) {
-                if (isInValidCheck(null)) {
+            public void OnResult(ArrayList<ListDevice> selectedItem, boolean isPositive) {
+                if (isInValidCheck()) {
                     return;
                 }
                 if (selectedItem == null) {
@@ -644,7 +630,7 @@ public class CardFragment extends BaseFragment {
                     @Override
                     public void run() {
                         mPopup.show(PopupType.CARD, mOldItemAdapter.getName(mReplacePosition), getString(R.string.card_on_device), null, null, null, false);
-                        mDeviceDataProvider.scanCard(TAG, mDeviceId, mScanListener, mScanErrorListener, null);
+                        request(mDeviceDataProvider.scanCard(mDeviceId, mScanListener));
                     }
                 });
             }
@@ -654,8 +640,8 @@ public class CardFragment extends BaseFragment {
     private void showSelectItem() {
         mSelectCardPopup.show(SelectType.CARD, new OnSelectResultListener<ListCard>() {
             @Override
-            public void OnResult(ArrayList<ListCard> selectedItem,boolean isPositive) {
-                if (isInValidCheck(null)) {
+            public void OnResult(ArrayList<ListCard> selectedItem, boolean isPositive) {
+                if (isInValidCheck()) {
                     return;
                 }
                 if (selectedItem == null) {

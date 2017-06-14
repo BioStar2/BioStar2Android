@@ -1,0 +1,12 @@
+<component name="libraryTable">
+  <library name="stetho-okhttp3-1.4.2">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/BioStar2Client/build/intermediates/exploded-aar/com.facebook.stetho/stetho-okhttp3/1.4.2/jars/classes.jar!/" />
+      <root url="file://$PROJECT_DIR$/BioStar2Client/build/intermediates/exploded-aar/com.facebook.stetho/stetho-okhttp3/1.4.2/res" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="jar://$USER_HOME$/.gradle/caches/modules-2/files-2.1/com.facebook.stetho/stetho-okhttp3/1.4.2/79c646fe8c58855dac7eabaa4164d458beac216/stetho-okhttp3-1.4.2-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>

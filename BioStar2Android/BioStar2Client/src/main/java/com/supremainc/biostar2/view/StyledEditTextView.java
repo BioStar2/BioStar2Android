@@ -37,6 +37,7 @@ public class StyledEditTextView extends EditText {
     private static Typeface robotoLight;
     private static Typeface robotoMedium;
     private static Typeface robotoRegular;
+    protected String TAG;
 
 
     public StyledEditTextView(Context context, AttributeSet attrs, int defStyle) {
@@ -87,6 +88,7 @@ public class StyledEditTextView extends EditText {
         } catch (Exception ignored) {
         }
         arr.recycle();
+        TAG = getClass().getSimpleName() + String.valueOf(System.currentTimeMillis());
     }
 
     private void loadFont(Context context) {
@@ -113,6 +115,7 @@ public class StyledEditTextView extends EditText {
         }
         return "";
     }
+
 
     public String toValue() {
         if (getText() != null && getText().toString() != null) {

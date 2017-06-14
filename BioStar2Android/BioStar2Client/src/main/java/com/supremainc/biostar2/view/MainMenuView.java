@@ -116,7 +116,7 @@ public class MainMenuView extends BaseView {
     }
 
     private boolean isExist(LinearLayout view, MenuItemView.MenuItemType type) {
-        if (getExistView(view,type) != null) {
+        if (getExistView(view, type) != null) {
             return true;
         } else {
             return false;
@@ -135,9 +135,9 @@ public class MainMenuView extends BaseView {
     }
 
     public View getItemView(MenuItemView.MenuItemType type) {
-        View view = getExistView(mFirstMenuGroup,type);
+        View view = getExistView(mFirstMenuGroup, type);
         if (view == null) {
-            view = getExistView(mSecondMenuGroup,type);
+            view = getExistView(mSecondMenuGroup, type);
         }
         return view;
     }

@@ -26,20 +26,19 @@ import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout;
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutDirection;
 import com.supremainc.biostar2.BuildConfig;
 import com.supremainc.biostar2.R;
-import com.supremainc.biostar2.meta.Setting;
-import com.supremainc.biostar2.sdk.datatype.v2.User.ListUser;
-import com.supremainc.biostar2.sdk.datatype.v2.User.User;
-import com.supremainc.biostar2.sdk.datatype.v2.User.Users;
+import com.supremainc.biostar2.sdk.models.v2.user.ListUser;
+import com.supremainc.biostar2.sdk.models.v2.user.User;
+import com.supremainc.biostar2.sdk.models.v2.user.Users;
 import com.supremainc.biostar2.sdk.provider.UserDataProvider;
-import com.supremainc.biostar2.sdk.volley.Response;
-import com.supremainc.biostar2.sdk.volley.Response.Listener;
-import com.supremainc.biostar2.sdk.volley.VolleyError;
 import com.supremainc.biostar2.widget.popup.Popup;
 import com.supremainc.biostar2.widget.popup.Popup.OnPopupClickListener;
-import com.supremainc.biostar2.widget.popup.Popup.PopupType;
 import com.tekinarslan.material.sample.FloatingActionButton;
 
 import java.util.ArrayList;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public abstract class BaseUserAdapter extends BaseListAdapter<ListUser> {
     protected static final int FIRST_LIMIT = 25;
@@ -48,71 +47,96 @@ public abstract class BaseUserAdapter extends BaseListAdapter<ListUser> {
     protected int mLimit = FIRST_LIMIT;
     protected int mOffset = 0;
     protected UserDataProvider mUserDataProvider;
-    Listener<Users> mUsersListener = new Listener<Users>() {
+
+    private Callback<Users> mItemListener = new Callback<Users>() {
         @Override
-        public void onResponse(Users response, Object deliverParam) {
-            if (mPopup != null) {
-                mPopup.dismiss();
-            }
-            if (isDestroy()) {
+        public void onFailure(Call<Users> call, Throwable t) {
+            if (isIgnoreCallback(call, true)) {
                 return;
             }
-            if (mSwipyRefreshLayout != null) {
-                mSwipyRefreshLayout.setRefreshing(false);
+
+            showRetryPopup(t.getMessage(), new OnPopupClickListener() {
+                @Override
+                public void OnNegative() {
+
+                }
+
+                @Override
+                public void OnPositive() {
+                    showWait(null);
+                    mHandler.removeCallbacks(mRunGetItems);
+                    mHandler.post(mRunGetItems);
+                }
+            });
+        }
+
+        @Override
+        public void onResponse(Call<Users> call, Response<Users> response) {
+            if (isIgnoreCallback(call, response, true)) {
+                return;
             }
-            onUserListener(response, deliverParam);
+            if (isInvalidResponse(response, false, false)) {
+                mItemListener.onFailure(call, new Throwable(getResponseErrorMessage(response)));
+                return;
+            }
+            Users users = response.body();
+            if (users.records == null || users.records.size() < 1) {
+                if (mOnItemsListener != null) {
+                    if (mItems == null || mItems.size() < 1) {
+                        mTotal = 0;
+                        mOnItemsListener.onNoneData();
+                    } else {
+                        mTotal = mItems.size();
+                        mOnItemsListener.onSuccessNull(mItems.size());
+                    }
+                }
+                if (mTotal <= getCount() && mSwipyRefreshLayout != null) {
+                    mSwipyRefreshLayout.setEnableBottom(false);
+                }
+                return;
+            }
+
+            if (mItems == null) {
+                mItems = new ArrayList<ListUser>();
+            }
+
+            for (ListUser user : users.records) {
+                mItems.add(user);
+            }
+            setData(mItems);
+            mOffset = mItems.size();
+
+            mLimit = SECOND_LIMIT;
+            mTotal = users.total;
+            if (mTotal < mItems.size()) {
+                mTotal = mItems.size();
+            }
+            if (mOnItemsListener != null) {
+                mOnItemsListener.onTotalReceive(mTotal);
+            }
+            if (BuildConfig.DEBUG) {
+                Log.e(TAG, "mTotal:" + mTotal + " mOffset:" + mOffset + " getCount():" + getCount());
+            }
+            if (mTotal <= getCount() && mSwipyRefreshLayout != null) {
+                mSwipyRefreshLayout.setEnableBottom(false);
+            }
         }
     };
-    private String mGroupId = "1";
+
+    //    private String mGroupId = "1";
+    private String mGroupId = null;
     Runnable mRunGetItems = new Runnable() {
         @Override
         public void run() {
-            if (isDestroy()) {
+            if (isInValidCheck()) {
                 return;
             }
             if (isMemoryPoor()) {
-                if (mPopup != null) {
-                    mPopup.dismiss();
-                }
-                if (mSwipyRefreshLayout != null) {
-                    mSwipyRefreshLayout.setRefreshing(false);
-                }
+                dismissWait();
                 mToastPopup.show(mActivity.getString(R.string.memory_poor), null);
                 return;
             }
-            mUserDataProvider.getUsers(TAG, mUsersListener, mUsersErrorListener, mOffset, mLimit, mGroupId, mQuery, null);
-        }
-    };
-    Response.ErrorListener mUsersErrorListener = new Response.ErrorListener() {
-        @Override
-        public void onErrorResponse(VolleyError error, Object deliverParam) {
-            if (mPopup != null) {
-                mPopup.dismiss();
-            }
-            if (isDestroy(error)) {
-                return;
-            }
-            if (mSwipyRefreshLayout != null) {
-                mSwipyRefreshLayout.setRefreshing(false);
-            }
-            if (mPopup != null) {
-                mPopup.show(PopupType.ALERT, mActivity.getString(R.string.fail_retry), Setting.getErrorMessage(error, mActivity), new OnPopupClickListener() {
-                    @Override
-                    public void OnNegative() {
-                    }
-
-                    @Override
-                    public void OnPositive() {
-                        if (mSwipyRefreshLayout != null) {
-                            mSwipyRefreshLayout.setRefreshing(true);
-                        } else {
-                            mPopup.showWait(mCancelExitListener);
-                        }
-                        mHandler.removeCallbacks(mRunGetItems);
-                        mHandler.post(mRunGetItems);
-                    }
-                }, mActivity.getString(R.string.ok), mActivity.getString(R.string.cancel), false);
-            }
+            request(mUserDataProvider.getUsers(mOffset, mLimit, mGroupId, mQuery, mItemListener));
         }
     };
     private BaseListViewScroll mOnScroll;
@@ -124,15 +148,11 @@ public abstract class BaseUserAdapter extends BaseListAdapter<ListUser> {
             @Override
             public void onScrollStateChanged(AbsListView view, int scrollState) {
                 if (scrollState == OnScrollListener.SCROLL_STATE_IDLE && mIsLastItemVisible && mTotal - 1 > mOffset) {
-                    if (mPopup != null) {
-                        mPopup.showWait(true);
-                    }
+                    showWait(SwipyRefreshLayoutDirection.BOTTOM);
                     mHandler.removeCallbacks(mRunGetItems);
                     mHandler.postDelayed(mRunGetItems, 100);
                 } else {
-                    if (mPopup != null) {
-                        mPopup.dismissWiat();
-                    }
+                    dismissWait();
                 }
             }
 
@@ -163,7 +183,7 @@ public abstract class BaseUserAdapter extends BaseListAdapter<ListUser> {
         return false;
     }
 
-    public boolean modifyCardItem(String userID,int cardCount) {
+    public boolean modifyCardItem(String userID, int cardCount) {
         if (userID == null || mItems == null) {
             return false;
         }
@@ -178,7 +198,31 @@ public abstract class BaseUserAdapter extends BaseListAdapter<ListUser> {
         return false;
     }
 
-    public boolean modifyFingerPrintItem(String userID,int fingerCount) {
+    public boolean modifyFaceItem(User user) {
+
+        if (user == null || mItems == null) {
+            return false;
+        }
+        String userID = user.user_id;
+        int faceCount = user.face_template_count;
+
+        for (int i = 0; i < mItems.size(); i++) {
+            ListUser itemUser = mItems.get(i);
+            if (itemUser.user_id.equals(userID)) {
+                itemUser.face_template_count = faceCount;
+                if (itemUser.last_modify != null && !itemUser.last_modify.equals(user.last_modify)) {
+                    itemUser.photo_exist = user.photo_exist;
+                    itemUser.last_modify = user.last_modify;
+                }
+
+                notifyDataSetChanged();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public boolean modifyFingerPrintItem(String userID, int fingerCount) {
         if (userID == null || mItems == null) {
             return false;
         }
@@ -194,19 +238,13 @@ public abstract class BaseUserAdapter extends BaseListAdapter<ListUser> {
         return false;
     }
 
-    public void clearItems() {
-        if (mUserDataProvider != null) {
-            mUserDataProvider.cancelAll(TAG);
-        }
-        super.clearItems();
-    }
 
     @Override
     public void getItems(String query) {
         mQuery = query;
         mLimit = FIRST_LIMIT;
         mHandler.removeCallbacks(mRunGetItems);
-        mUserDataProvider.cancelAll(TAG);
+        clearRequest();
 //        mLastModify = String.valueOf(System.currentTimeMillis());
         mOffset = 0;
         mTotal = 0;
@@ -214,15 +252,7 @@ public abstract class BaseUserAdapter extends BaseListAdapter<ListUser> {
             mItems.clear();
             notifyDataSetChanged();
         }
-        if (mSwipyRefreshLayout != null) {
-            mSwipyRefreshLayout.setRefreshing(false);
-            mSwipyRefreshLayout.setEnableBottom(true);
-            mSwipyRefreshLayout.onRefresh(SwipyRefreshLayoutDirection.TOP, false);
-        } else {
-            if (mPopup != null) {
-                mPopup.showWait(mCancelExitListener);
-            }
-        }
+        showWait(SwipyRefreshLayoutDirection.TOP);
         mHandler.removeCallbacks(mRunGetItems);
         mHandler.postDelayed(mRunGetItems, 500);
     }
@@ -232,48 +262,6 @@ public abstract class BaseUserAdapter extends BaseListAdapter<ListUser> {
         return mGroupId;
     }
 
-    private void onUserListener(Users response, Object deliverParam) {
-        if (response == null || response.records == null || response.records.size() < 1) {
-            if (mOnItemsListener != null) {
-                if (mItems == null || mItems.size() < 1) {
-                    mTotal =0;
-                    mOnItemsListener.onNoMoreData();
-                } else {
-                    mTotal = mItems.size();
-                    mOnItemsListener.onSuccessNull(mItems.size());
-                }
-            }
-            if (mTotal <= getCount() && mSwipyRefreshLayout != null) {
-                mSwipyRefreshLayout.setEnableBottom(false);
-            }
-            return;
-        }
-
-        if (mItems == null) {
-            mItems = new ArrayList<ListUser>();
-        }
-
-        for (ListUser user : response.records) {
-            mItems.add(user);
-        }
-        setData(mItems);
-        mOffset = mItems.size();
-
-        mLimit = SECOND_LIMIT;
-        mTotal = response.total;
-        if (mTotal < mItems.size()) {
-            mTotal = mItems.size();
-        }
-        if (mOnItemsListener != null) {
-            mOnItemsListener.onTotalReceive(mTotal);
-        }
-        if (BuildConfig.DEBUG) {
-            Log.e(TAG, "mTotal:" + mTotal + " mOffset:" + mOffset + " getCount():" + getCount());
-        }
-        if (mTotal <= getCount() && mSwipyRefreshLayout != null) {
-            mSwipyRefreshLayout.setEnableBottom(false);
-        }
-    }
 
 
     public void setSwipyRefreshLayout(SwipyRefreshLayout swipyRefreshLayout, FloatingActionButton fab) {
@@ -284,7 +272,6 @@ public abstract class BaseUserAdapter extends BaseListAdapter<ListUser> {
         mSwipyRefreshLayout.setOnRefreshListener(new SwipyRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh(SwipyRefreshLayoutDirection direction) {
-                Log.e(TAG, "SwipyRefreshLayoutDirection:" + direction);
                 switch (direction) {
                     case TOP:
                         getItems(mQuery);
@@ -306,7 +293,8 @@ public abstract class BaseUserAdapter extends BaseListAdapter<ListUser> {
     }
 
     public void setUserGroupId(String id) {
-        mGroupId = id;
-        getItems(mQuery);
+        if (id != null && !id.isEmpty()) {
+            mGroupId = id;
+        }
     }
 }

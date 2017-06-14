@@ -24,7 +24,7 @@ import android.widget.ListView;
 
 import com.supremainc.biostar2.R;
 import com.supremainc.biostar2.adapter.base.BaseSimpleDataAdapter;
-import com.supremainc.biostar2.sdk.datatype.v2.Common.SimpleData;
+import com.supremainc.biostar2.sdk.models.v2.common.SimpleData;
 import com.supremainc.biostar2.widget.popup.Popup;
 
 import java.util.ArrayList;
@@ -32,8 +32,8 @@ import java.util.ArrayList;
 public class SimpleDataAdapter extends BaseSimpleDataAdapter {
 
 
-    public SimpleDataAdapter(Activity context, ArrayList<SimpleData> items, ListView listView, OnItemClickListener itemClickListener, Popup popup, OnItemsListener onItemsListener,SimpleDataAdapterType type) {
-        super(context, items, listView, itemClickListener, popup, onItemsListener,type);
+    public SimpleDataAdapter(Activity context, ArrayList<SimpleData> items, ListView listView, OnItemClickListener itemClickListener, Popup popup, OnItemsListener onItemsListener) {
+        super(context, items, listView, itemClickListener, popup, onItemsListener);
     }
 
 

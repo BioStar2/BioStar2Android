@@ -16,15 +16,19 @@
 package com.supremainc.biostar2.sdk.provider;
 
 import android.content.Context;
-import com.supremainc.biostar2.sdk.datatype.v2.Common.ResponseStatus;
-import com.supremainc.biostar2.sdk.datatype.v2.Door.Door;
-import com.supremainc.biostar2.sdk.datatype.v2.Door.Doors;
-import com.supremainc.biostar2.sdk.datatype.v2.Door.ListDoor;
-import com.supremainc.biostar2.sdk.volley.Request.Method;
-import com.supremainc.biostar2.sdk.volley.Response.ErrorListener;
-import com.supremainc.biostar2.sdk.volley.Response.Listener;
 
-import java.util.ArrayList;
+import com.google.gson.JsonObject;
+import com.supremainc.biostar2.sdk.models.v2.common.ResponseStatus;
+import com.supremainc.biostar2.sdk.models.v2.door.Door;
+import com.supremainc.biostar2.sdk.models.v2.door.Doors;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+
+import static com.supremainc.biostar2.sdk.models.v2.common.VersionData.getCloudVersionString;
 
 public class DoorDataProvider extends BaseDataProvider {
     private static DoorDataProvider mSelf = null;
@@ -52,59 +56,102 @@ public class DoorDataProvider extends BaseDataProvider {
         }
         return null;
     }
-//    private static int test_count=0;
-    public void getDoors(String tag, Listener<Doors> listener, ErrorListener errorListener, int offset, int limit, String query, Object deliverParam) {
-        sendRequest(tag, Doors.class, Method.GET, NetWork.PARAM_DOORS, null, createParams(offset, limit,null, query), null, listener, errorListener, deliverParam);
-//        Doors doors = new Doors();
-//        ArrayList<ListDoor> list = new ArrayList<ListDoor>();
-//        int count = test_count +limit;
-//        for (int i=test_count; i < count ; i++) {
-//            ListDoor item = new ListDoor();
-//            item.id = String.valueOf(test_count);
-//            item.name = String.valueOf(test_count)+"door";
-//            item.description = String.valueOf(test_count)+"description";
-//            list.add(item);
-//            test_count++;
-//        }
-//        doors.total = 1000;
-//        doors.records = list;
-//        listener.onResponse(doors,deliverParam);
-    }
 
-    public void getDoor(String tag, String id, Listener<Door> listener, ErrorListener errorListener, Object deliverParam) {
-        sendRequest(tag, Door.class, Method.GET, createUrl(NetWork.PARAM_DOORS, id), null, null, null, listener, errorListener, deliverParam);
-    }
-
-    public void openDoor(String tag, String id, Listener<ResponseStatus> listener, ErrorListener errorListener, Object deliverParam) {
-        sendRequest(tag, ResponseStatus.class, Method.POST, createUrl(NetWork.PARAM_DOORS, id, NetWork.PARAM_OPEN), null, null, null, listener, errorListener, deliverParam);
-    }
-
-    public void unlockDoor(String tag, String id, Listener<ResponseStatus> listener, ErrorListener errorListener, Object deliverParam) {
-        sendRequest(tag, ResponseStatus.class, Method.POST, createUrl(NetWork.PARAM_DOORS, id, NetWork.PARAM_UNLOCK), null, null, null, listener, errorListener, deliverParam);
-    }
-
-    public void lockDoor(String tag, String id, Listener<ResponseStatus> listener, ErrorListener errorListener, Object deliverParam) {
-        sendRequest(tag, ResponseStatus.class, Method.POST, createUrl(NetWork.PARAM_DOORS, id, NetWork.PARAM_LOCK), null, null, null, listener, errorListener, deliverParam);
-    }
-
-    public void releaseDoor(String tag, String id, Listener<ResponseStatus> listener, ErrorListener errorListener, Object deliverParam) {
-        sendRequest(tag, ResponseStatus.class, Method.POST, createUrl(NetWork.PARAM_DOORS, id, NetWork.PARAM_RELEASE), null, null, null, listener, errorListener, deliverParam);
-    }
-
-    public void clearAlarm(String tag, String id, Listener<ResponseStatus> listener, ErrorListener errorListener, Object deliverParam) {
-        sendRequest(tag, ResponseStatus.class, Method.POST, createUrl(NetWork.PARAM_DOORS, id, NetWork.PARAM_CLEAR_ALARM), null, null, null, listener, errorListener, deliverParam);
-    }
-
-    public void clearAntiPassback(String tag, String id, Listener<ResponseStatus> listener, ErrorListener errorListener, Object deliverParam) {
-        sendRequest(tag, ResponseStatus.class, Method.POST, createUrl(NetWork.PARAM_DOORS, id, NetWork.PARAM_CLEAR_APB), null, null, null, listener, errorListener, deliverParam);
-    }
-
-    public void openRequestDoor(String tag, String id, String phone, Listener<ResponseStatus> listener, ErrorListener errorListener, Object deliverParam) {
-        String body = null;
-        if (phone != null) {
-            body = "{\"phone_number\":\"" + phone + "\"}";
+    public Call<Doors> getDoors(int offset, int limit, String query, Callback<Doors> callback) {
+        if (offset < -1 || limit < 1) {
+            onParamError(callback);
+            return null;
+        }
+        if (!checkAPI(callback)) {
+            return null;
         }
 
-        sendRequest(tag, ResponseStatus.class, Method.POST, createUrl(NetWork.PARAM_DOORS, id, NetWork.PARAM_OPEN_REQUEST), null, null, body, listener, errorListener, deliverParam);
+        Map<String, String> params = new HashMap<String, String>();
+        params.put("limit", String.valueOf(limit));
+        params.put("offset", String.valueOf(offset));
+        if (query != null) {
+            params.put("text", query);
+        }
+        Call<Doors> call = mApiInterface.get_doors(getCloudVersionString(mContext), params);
+        call.enqueue(callback);
+        return call;
+    }
+
+    public Call<Door> getDoor(String id, Callback<Door> callback) {
+        if (!checkParamAndAPI(callback,id)) {
+            return null;
+        }
+        Call<Door> call = mApiInterface.get_door(getCloudVersionString(mContext), id);
+        call.enqueue(callback);
+        return call;
+    }
+
+    public Call<ResponseStatus> openDoor(String id, Callback<ResponseStatus> callback) {
+        if (!checkParamAndAPI(callback,id)) {
+            return null;
+        }
+        Call<ResponseStatus> call = mApiInterface.post_doors_open(getCloudVersionString(mContext), id);
+        call.enqueue(callback);
+        return call;
+    }
+
+    public Call<ResponseStatus> unlockDoor(String id, Callback<ResponseStatus> callback) {
+        if (!checkParamAndAPI(callback,id)) {
+            return null;
+        }
+        Call<ResponseStatus> call = mApiInterface.post_doors_unlock(getCloudVersionString(mContext), id);
+        call.enqueue(callback);
+        return call;
+    }
+
+    public Call<ResponseStatus> lockDoor(String id, Callback<ResponseStatus> callback) {
+        if (!checkParamAndAPI(callback,id)) {
+            return null;
+        }
+        Call<ResponseStatus> call = mApiInterface.post_doors_lock(getCloudVersionString(mContext), id);
+        call.enqueue(callback);
+        return call;
+    }
+
+    public Call<ResponseStatus> releaseDoor(String id, Callback<ResponseStatus> callback) {
+        if (!checkParamAndAPI(callback,id)) {
+            return null;
+        }
+        Call<ResponseStatus> call = mApiInterface.post_doors_release(getCloudVersionString(mContext), id);
+        call.enqueue(callback);
+        return call;
+    }
+
+    public Call<ResponseStatus> clearAlarm(String id, Callback<ResponseStatus> callback) {
+        if (!checkParamAndAPI(callback,id)) {
+            return null;
+        }
+        Call<ResponseStatus> call = mApiInterface.post_doors_clear_alaram(getCloudVersionString(mContext), id);
+        call.enqueue(callback);
+        return call;
+    }
+
+    public Call<ResponseStatus> clearAntiPassback(String id, Callback<ResponseStatus> callback) {
+        if (!checkParamAndAPI(callback,id)) {
+            return null;
+        }
+        Call<ResponseStatus> call = mApiInterface.post_doors_clear_antipassback(getCloudVersionString(mContext), id);
+        call.enqueue(callback);
+        return call;
+    }
+
+    public Call<ResponseStatus> openRequestDoor(String id,String phone, Callback<ResponseStatus> callback) {
+        if (!checkParamAndAPI(callback,id)) {
+            return null;
+        }
+        JsonObject object = null;
+        if (phone != null) {
+            object = new JsonObject();
+            object.addProperty("phone_number", phone);
+        }
+        //TODO test 필요
+        Call<ResponseStatus> call = mApiInterface.post_doors_request_open(getCloudVersionString(mContext), id,object);
+        call.enqueue(callback);
+        return call;
     }
 }

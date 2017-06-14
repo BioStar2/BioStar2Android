@@ -16,20 +16,22 @@
 package com.supremainc.biostar2.sdk.provider;
 
 import android.content.Context;
-import android.util.Log;
 
-
-import com.supremainc.biostar2.sdk.datatype.v2.Common.ResponseStatus;
-import com.supremainc.biostar2.sdk.datatype.v2.Login.NotificationToken;
+import com.supremainc.biostar2.sdk.models.v2.common.ResponseStatus;
+import com.supremainc.biostar2.sdk.models.v2.login.NotificationToken;
 import com.supremainc.biostar2.sdk.utils.PreferenceUtil;
-import com.supremainc.biostar2.sdk.volley.Request.Method;
-import com.supremainc.biostar2.sdk.volley.Response;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+
+import static com.supremainc.biostar2.sdk.models.v2.common.VersionData.getCloudVersionString;
 
 public class PushDataProvider extends BaseDataProvider {
     private static final String NOTIFICATION_TOKEN = "notifytoken";
     private static PushDataProvider mSelf = null;
     private static boolean mIsRunning = false;
     private static String mToken;
+    private static String mTransferToken;
     private final String TAG = getClass().getSimpleName();
 
     private PushDataProvider(Context context) {
@@ -43,37 +45,36 @@ public class PushDataProvider extends BaseDataProvider {
         return mSelf;
     }
 
-    public void setNeedUpdateNotificationToken(final String token) {
-        NotificationToken notificationToken = new NotificationToken(mContext, token);
-        String json = null;
-        try {
-            json = mGson.toJson(notificationToken);
-        } catch (Exception e) {
-            return;
-        }
-        final String body = json;
-        mIsRunning = true;
-        final Response.Listener<ResponseStatus> listener = new Response.Listener<ResponseStatus>() {
-            @Override
-            public void onResponse(ResponseStatus response, Object param) {
-                mIsRunning = false;
-                String tempToken = mToken;
-                mToken = null;
-
-                if (response != null) {
-                    PreferenceUtil.putSharedPreference(mContext, NOTIFICATION_TOKEN, token);
-                } else {
-                    if (ConfigDataProvider.DEBUG) {
-                        Log.e(TAG, "setNeedUpdateNotificationToken null");
-                    }
-                }
-
-                if (tempToken != null && !tempToken.equals(token)) {
-                    sendRequest(null, ResponseStatus.class, Method.PUT, NetWork.PARAM_SETTING_NOTIFICATIONTOKEN, null, null, body, this, null, null);
+    private Callback<ResponseStatus> mCallback = new Callback<ResponseStatus>() {
+        @Override
+        public void onResponse(Call<ResponseStatus> call, retrofit2.Response<ResponseStatus> response) {
+            mIsRunning = false;
+            if (response.isSuccessful() && mTransferToken != null) {
+                PreferenceUtil.putSharedPreference(mContext, NOTIFICATION_TOKEN, mTransferToken);
+                if (!mTransferToken.equals(mToken) && mToken != null) {
+                    mTransferToken = mToken;
+                    NotificationToken notificationToken = new NotificationToken(mContext, mTransferToken);
+                    Call<ResponseStatus> reCall = mApiInterface.put_update_notification_token(getCloudVersionString(mContext), notificationToken);
+                    reCall.enqueue(null);
                 }
             }
-        };
-        sendRequest(null, ResponseStatus.class, Method.PUT, NetWork.PARAM_SETTING_NOTIFICATIONTOKEN, null, null, body, listener, null, null);
+        }
+
+        @Override
+        public void onFailure(Call<ResponseStatus> call, Throwable t) {
+            mIsRunning = false;
+        }
+    };
+    public Call<ResponseStatus> setNeedUpdateNotificationToken(String token) {
+        if (mIsRunning) {
+            return null;
+        }
+        mTransferToken = token;
+        mIsRunning = true;
+        NotificationToken notificationToken = new NotificationToken(mContext, token);
+        Call<ResponseStatus> call = mApiInterface.put_update_notification_token(getCloudVersionString(mContext), notificationToken);
+        call.enqueue(mCallback);
+        return call;
     }
 
     public void checkUpdateNotificationToken(String token) {
@@ -84,10 +85,8 @@ public class PushDataProvider extends BaseDataProvider {
         if (savedToken != null && savedToken.equals(token)) {
             return;
         }
-        if (mIsRunning) {
-            mToken = token;
-            return;
-        }
+        mToken = token;
+
         setNeedUpdateNotificationToken(token);
     }
 }

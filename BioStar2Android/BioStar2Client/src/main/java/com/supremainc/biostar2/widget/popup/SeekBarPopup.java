@@ -42,6 +42,10 @@ public class SeekBarPopup {
     private Handler mHandler;
     private RangeBar mRangeBar;
     private StyledTextView mGuide;
+    private int mStart;
+    private int mInterval;
+    private int mEnd;
+
     private OnCancelListener cancelListener = new OnCancelListener() {
         @Override
         public void onCancel(DialogInterface mDialog) {
@@ -60,14 +64,19 @@ public class SeekBarPopup {
     }
 
     protected void onClickPositive(String content) {
-          if (mOnResult != null) {
-              mOnResult.OnResult(content);
-        }
         mDialog.dismiss();
+        if (mOnResult != null) {
+            mOnResult.OnResult(content);
+        }
     }
 
+    public void setRange(int start, int end, int interval) {
+        mStart = start;
+        mEnd = end;
+        mInterval = interval;
+    }
 
-    public void show(String title, OnResult listener,int value) {
+    public void show(String title, OnResult listener, int value) {
         if (mContext.isFinishing()) {
             return;
         }
@@ -83,6 +92,9 @@ public class SeekBarPopup {
         mGuide = (StyledTextView) layout.findViewById(R.id.rangebar_guide);
         mGuide.setText(String.valueOf(value));
         mRangeBar = (RangeBar) layout.findViewById(R.id.rangebar);
+        mRangeBar.setTickStart(mStart);
+        mRangeBar.setTickInterval(mInterval);
+        mRangeBar.setTickEnd(mEnd);
         mRangeBar.setOnRangeBarChangeListener(new RangeBar.OnRangeBarChangeListener() {
             @Override
             public void onRangeChangeListener(RangeBar rangeBar, int leftPinIndex,

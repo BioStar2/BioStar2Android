@@ -28,7 +28,6 @@ public class SummaryDoorView extends BaseView {
     private StyledTextView mActionButton;
     private StyledTextView mTitle;
     private StyledTextView mContent;
-    private View mGoViewLog;
     private ImageView mIcon;
 
     private SummaryDoorViewListener mListener;
@@ -42,9 +41,6 @@ public class SummaryDoorView extends BaseView {
             switch (v.getId()) {
                 case R.id.door_control:
                     mListener.onDoorAction();
-                    break;
-                case R.id.go_view:
-                    mListener.onGoLog();
                     break;
                 case R.id.icon:
                     mListener.onStatus();
@@ -73,11 +69,9 @@ public class SummaryDoorView extends BaseView {
         mActionButton = (StyledTextView) findViewById(R.id.door_control);
         mTitle = (StyledTextView) findViewById(R.id.title_name);
         mContent = (StyledTextView) findViewById(R.id.title_content);
-        mGoViewLog = findViewById(R.id.go_view);
         mIcon = (ImageView) findViewById(R.id.icon);
 
         mActionButton.setOnClickListener(mClickListener);
-        mGoViewLog.setOnClickListener(mClickListener);
         mIcon.setOnClickListener(mClickListener);
     }
 
@@ -121,18 +115,9 @@ public class SummaryDoorView extends BaseView {
         }
     }
 
-    public void showGoLogBtn(boolean isShow) {
-        if (isShow) {
-            mGoViewLog.setVisibility(View.VISIBLE);
-        } else {
-            mGoViewLog.setVisibility(View.GONE);
-        }
-    }
 
     public interface SummaryDoorViewListener {
         public void onDoorAction();
-
-        public void onGoLog();
 
         public void onStatus();
     }

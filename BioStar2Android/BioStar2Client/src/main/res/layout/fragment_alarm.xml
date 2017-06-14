@@ -1,21 +1,21 @@
 <!-- <~SCREEN NAME)> {Alarm_Detail} </~SCREEN NAME> -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:background="@color/white"
-    android:gravity="center|top"
-    android:orientation="vertical">
+              android:layout_width="fill_parent"
+              android:layout_height="fill_parent"
+              android:background="@color/white"
+              android:gravity="center|top"
+              android:orientation="vertical">
 
     <android.support.v7.widget.Toolbar
         android:id="@+id/toolbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:minHeight="?attr/actionBarSize" />
+        android:minHeight="?attr/actionBarSize"/>
 
     <com.supremainc.biostar2.view.SummaryDoorView
         android:id="@+id/summary_door"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"/>
 
     <ListView
         android:id="@+id/listview"
@@ -31,6 +31,6 @@
         android:scrollbarFadeDuration="500"
         android:scrollbarSize="4dp"
         android:scrollbarThumbVertical="@drawable/shape_scrollbar_thumb"
-        android:smoothScrollbar="true" />
+        android:smoothScrollbar="true"/>
 
 </LinearLayout>

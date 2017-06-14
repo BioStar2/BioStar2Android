@@ -21,19 +21,19 @@ import android.widget.AbsListView.OnScrollListener;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 
+import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutDirection;
 import com.supremainc.biostar2.R;
-import com.supremainc.biostar2.meta.Setting;
-import com.supremainc.biostar2.sdk.datatype.v2.Common.SimpleData;
-import com.supremainc.biostar2.sdk.datatype.v2.Common.SimpleDatas;
+import com.supremainc.biostar2.sdk.models.v2.common.SimpleData;
+import com.supremainc.biostar2.sdk.models.v2.common.SimpleDatas;
 import com.supremainc.biostar2.sdk.provider.CardDataProvider;
-import com.supremainc.biostar2.sdk.volley.Response;
-import com.supremainc.biostar2.sdk.volley.Response.Listener;
-import com.supremainc.biostar2.sdk.volley.VolleyError;
 import com.supremainc.biostar2.widget.popup.Popup;
 import com.supremainc.biostar2.widget.popup.Popup.OnPopupClickListener;
-import com.supremainc.biostar2.widget.popup.Popup.PopupType;
 
 import java.util.ArrayList;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public abstract class BaseSimpleDataAdapter extends BaseListAdapter<SimpleData> {
     protected static final int FIRST_LIMIT = 50;
@@ -41,21 +41,59 @@ public abstract class BaseSimpleDataAdapter extends BaseListAdapter<SimpleData> 
     protected boolean mIsLastItemVisible = false;
     protected int mLimit = FIRST_LIMIT;
     protected int mOffset = 0;
-    protected SimpleDataAdapterType mAdapterType = SimpleDataAdapterType.TEST;
-
-    public enum SimpleDataAdapterType { TEST}
-    Listener<SimpleDatas> mItemListener = new Listener<SimpleDatas>() {
+    private Runnable mRunGetItems = new Runnable() {
         @Override
-        public void onResponse(SimpleDatas response, Object deliverParam) {
-            if (isDestroy()) {
+        public void run() {
+            if (isInValidCheck()) {
                 return;
             }
-            mPopup.dismiss();
-            if (response == null || response.records == null || response.records.size() < 1) {
+            if (isMemoryPoor()) {
+                mPopup.dismiss();
+                if (mSwipyRefreshLayout != null) {
+                    mSwipyRefreshLayout.setRefreshing(false);
+                }
+                mToastPopup.show(mActivity.getString(R.string.memory_poor), null);
+                return;
+            }
+        }
+    };
+    private Callback<SimpleDatas> mItemListener = new Callback<SimpleDatas>() {
+        @Override
+        public void onFailure(Call<SimpleDatas> call, Throwable t) {
+            if (isIgnoreCallback(call, true)) {
+                return;
+            }
+
+            showRetryPopup(t.getMessage(), new OnPopupClickListener() {
+                @Override
+                public void OnNegative() {
+
+                }
+
+                @Override
+                public void OnPositive() {
+                    showWait(null);
+                    mHandler.removeCallbacks(mRunGetItems);
+                    mHandler.post(mRunGetItems);
+                }
+            });
+        }
+
+        @Override
+        public void onResponse(Call<SimpleDatas> call, Response<SimpleDatas> response) {
+            if (isIgnoreCallback(call, response, true)) {
+                return;
+            }
+            if (isInvalidResponse(response, false, false)) {
+                mItemListener.onFailure(call, new Throwable(getResponseErrorMessage(response)));
+                return;
+            }
+            SimpleDatas simpleDatas = response.body();
+            if (simpleDatas.records == null || simpleDatas.records.size() < 1) {
                 if (mOnItemsListener != null) {
                     if (mItems == null || mItems.size() < 1) {
-                        mTotal =0;
-                        mOnItemsListener.onNoMoreData();
+                        mTotal = 0;
+                        mOnItemsListener.onNoneData();
                     } else {
                         mTotal = mItems.size();
                         mOnItemsListener.onSuccessNull(mItems.size());
@@ -67,75 +105,33 @@ public abstract class BaseSimpleDataAdapter extends BaseListAdapter<SimpleData> 
                 mItems = new ArrayList<SimpleData>();
             }
             if (mOnItemsListener != null) {
-                mOnItemsListener.onTotalReceive(response.total);
+                mOnItemsListener.onTotalReceive(simpleDatas.total);
             }
-            for (SimpleData data : response.records) {
+            for (SimpleData data : simpleDatas.records) {
                 mItems.add(data);
             }
             setData(mItems);
-            mOffset = mItems.size() ;
-            mTotal = response.total;
+            mOffset = mItems.size();
+            mTotal = simpleDatas.total;
             if (mTotal < mItems.size()) {
                 mTotal = mItems.size();
             }
         }
     };
-    Response.ErrorListener mItemErrorListener = new Response.ErrorListener() {
-        @Override
-        public void onErrorResponse(VolleyError error, Object deliverParam) {
-            if (isDestroy(error)) {
-                return;
-            }
-            mPopup.dismiss();
-            mPopup.show(PopupType.ALERT, mActivity.getString(R.string.fail_retry), Setting.getErrorMessage(error, mActivity), new OnPopupClickListener() {
-                @Override
-                public void OnNegative() {
-                    mCancelExitListener.onCancel(null);
-                }
 
-                @Override
-                public void OnPositive() {
-                    mHandler.removeCallbacks(mRunGetItems);
-                    mHandler.post(mRunGetItems);
-                }
-            }, mActivity.getString(R.string.ok), mActivity.getString(R.string.cancel), false);
-        }
-    };
 
-    Runnable mRunGetItems = new Runnable() {
-        @Override
-        public void run() {
-            if (isDestroy()) {
-                return;
-            }
-            if (isMemoryPoor()) {
-                mPopup.dismiss();
-                if (mSwipyRefreshLayout != null) {
-                    mSwipyRefreshLayout.setRefreshing(false);
-                }
-                mToastPopup.show(mActivity.getString(R.string.memory_poor), null);
-                return;
-            }
-//            switch (mAdapterType) {
-////                case SMARTCARD_LAYOUT: //to move -> other adapter
-////                    mCardDataProvider.getSmartCardLayout(TAG, mItemListener, mItemErrorListener, mOffset, mLimit,  mQuery, null);
-//                    break;
-//            }
-        }
-    };
-
-    public BaseSimpleDataAdapter(Activity context, ArrayList<SimpleData> items, ListView listView, OnItemClickListener itemClickListener, Popup popup, OnItemsListener onItemsListener,SimpleDataAdapterType type) {
+    public BaseSimpleDataAdapter(Activity context, ArrayList<SimpleData> items, ListView listView, OnItemClickListener itemClickListener, Popup popup, OnItemsListener onItemsListener) {
         super(context, items, listView, itemClickListener, popup, onItemsListener);
         mCardDataProvider = CardDataProvider.getInstance(context);
         setOnScrollListener(new OnScrollListener() {
             @Override
             public void onScrollStateChanged(AbsListView view, int scrollState) {
                 if (scrollState == OnScrollListener.SCROLL_STATE_IDLE && mIsLastItemVisible && mTotal - 1 > mOffset) {
-                    mPopup.showWait(true);
+                    showWait(SwipyRefreshLayoutDirection.BOTTOM);
                     mHandler.removeCallbacks(mRunGetItems);
                     mHandler.postDelayed(mRunGetItems, 100);
                 } else {
-                    mPopup.dismissWiat();
+                    dismissWait();
                 }
             }
 
@@ -144,11 +140,6 @@ public abstract class BaseSimpleDataAdapter extends BaseListAdapter<SimpleData> 
                 mIsLastItemVisible = (totalItemCount > 0) && (firstVisibleItem + visibleItemCount >= totalItemCount);
             }
         });
-        setDataType(type);
-    }
-
-    public void setDataType(SimpleDataAdapterType type) {
-        mAdapterType = type;
     }
 
     @Override
@@ -158,8 +149,8 @@ public abstract class BaseSimpleDataAdapter extends BaseListAdapter<SimpleData> 
         mTotal = 0;
         mLimit = FIRST_LIMIT;
         mHandler.removeCallbacks(mRunGetItems);
-        mCardDataProvider.cancelAll(TAG);
-        mPopup.showWait(mCancelExitListener);
+        clearRequest();
+        showWait(SwipyRefreshLayoutDirection.TOP);
         if (mItems != null) {
             mItems.clear();
             notifyDataSetChanged();

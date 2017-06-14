@@ -18,14 +18,18 @@ package com.supremainc.biostar2.sdk.provider;
 import android.content.Context;
 import android.util.Log;
 
-import com.supremainc.biostar2.sdk.datatype.v1.Permission.CloudRoles;
-import com.supremainc.biostar2.sdk.datatype.v2.Common.VersionData;
-import com.supremainc.biostar2.sdk.datatype.v2.Permission.PermissionItem;
-import com.supremainc.biostar2.sdk.datatype.v2.Permission.PermissionModule;
-import com.supremainc.biostar2.sdk.datatype.v2.Permission.UserPermissions;
-import com.supremainc.biostar2.sdk.volley.Request.Method;
-import com.supremainc.biostar2.sdk.volley.Response;
-import com.supremainc.biostar2.sdk.volley.VolleyError;
+import com.supremainc.biostar2.sdk.models.v1.permission.CloudRoles;
+import com.supremainc.biostar2.sdk.models.v2.permission.PermissionItem;
+import com.supremainc.biostar2.sdk.models.v2.permission.PermissionModule;
+import com.supremainc.biostar2.sdk.models.v2.permission.UserPermissions;
+import com.supremainc.biostar2.sdk.models.v2.user.ListUser;
+
+import java.util.ArrayList;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+
+import static com.supremainc.biostar2.sdk.models.v2.common.VersionData.getCloudVersionString;
 
 public class PermissionDataProvider extends BaseDataProvider {
     private static PermissionDataProvider mSelf = null;
@@ -54,29 +58,6 @@ public class PermissionDataProvider extends BaseDataProvider {
         return null;
     }
 
-//	public void getPermissions(String tag, Response.Listener<Permissions> listener, Response.ErrorListener errorListener, Object deliverParam) {
-//
-//		sendRequest(tag, Permissions.class, Method.GET, NetWork.PARAM_PERMISSIONS, null, null, null, listener, errorListener, deliverParam);
-//	}
-//
-//	public void getPermissionIds(String tag, Response.Listener<PermissionIds> listener, Response.ErrorListener errorListener, Object deliverParam) {
-//
-//		sendRequest(tag, PermissionIds.class, Method.GET, NetWork.PARAM_PERMISSIONS, null, null, null, listener, errorListener, deliverParam);
-//	}
-//
-//	public void modifyPermissions(String tag, PermissionContainer item, Listener<ResponseStatus> listener, ErrorListener errorListener, Object deliverParam) {
-//		String json = mGson.toJson(item);
-//
-//		if (item == null || item.mPermission == null) {
-//			if (errorListener != null) {
-//				errorListener.onErrorResponse(new VolleyError("PermissionContainer/Permission Param is null"), deliverParam);
-//			}
-//			return;
-//		}
-//
-//		sendRequest(tag, ResponseStatus.class, Method.PUT, NetWork.PARAM_PERMISSIONS + "/" + item.mPermission.id, null, null, json, listener, errorListener, deliverParam);
-//	}
-
     public boolean getPermission(PermissionModule module, boolean isWriteAllow) {
         if (mPermissionMap == null) {
             Log.e(TAG, "map is null");
@@ -98,17 +79,55 @@ public class PermissionDataProvider extends BaseDataProvider {
         return true;
     }
 
-    public void getCloudRoles(String tag, Response.Listener<CloudRoles> listener, Response.ErrorListener errorListener, Object deliverParam) {
-        sendRequest(tag, CloudRoles.class, Method.GET, NetWork.PARAM_REFERENCE_CODES, null, null, null, listener, errorListener, deliverParam);
-    }
-    public void getPermissions(String tag, Response.Listener<UserPermissions> listener, Response.ErrorListener errorListener, Object deliverParam) {
-        if (VersionData.getCloudVersion(mContext) < 2) {
-            if (errorListener != null) {
-                errorListener.onErrorResponse(new VolleyError("V2 API"),deliverParam);
-            }
-        } else {
-            sendRequest(tag, UserPermissions.class, Method.GET, createUrl(NetWork.PARAM_SETTING,  NetWork.PARAM_PERMISSION_LIST), null, null, null, listener, errorListener, deliverParam);
+    public Call<CloudRoles> getCloudRoles(Callback<CloudRoles> callback) {
+        if (!checkAPI(callback)) {
+            return null;
         }
+        Call<CloudRoles> call = mApiInterface.get_reference_role_codes(getCloudVersionString(mContext));
+        call.enqueue(callback);
+        return call;
+    }
+    public Call<UserPermissions> getPermissions(Callback<UserPermissions> callback) {
+        if (!checkAPI(callback)) {
+            return null;
+        }
+        Call<UserPermissions> call = mApiInterface.get_setting_permission_list(getCloudVersionString(mContext));
+        call.enqueue(callback);
+        return call;
+    }
+
+    public boolean isEnableModifyUser(ListUser user) {
+        if (user.user_id.equals("1")) {
+            return false;
+        }
+        if (mUserInfo != null && mUserInfo.permission != null && mUserInfo.permission.id.equals("1")) {
+            return true;
+        }
+        if (!getPermission(PermissionModule.USER, true)) {
+            return false;
+        }
+        if (user.permission == null || user.permission.id == null) {
+            return true;
+        }
+        if (user.permission.id.equals("255")) {
+            return true;
+        }
+        return false;
+    }
+
+    public ArrayList<String> getDefaultAllowUserGroupSize() {
+        if (mUserInfo == null || mUserInfo.permission == null || mUserInfo.permission.permissions == null) {
+            return null;
+        }
+        for (PermissionItem item:mUserInfo.permission.permissions) {
+            if (PermissionModule.USER.mName.equals(item.module)) {
+                if (item.allowed_group_id_list == null) {
+                    return null;
+                }
+                return item.allowed_group_id_list;
+            }
+        }
+        return null;
     }
 
 }

@@ -50,6 +50,12 @@ public class DetailEditItemView extends BaseView {
         initView(context, attrs);
     }
 
+    public void setContentText(String text) {
+        if (text != null) {
+            content.setText(text);
+        }
+    }
+
     private void initView(Context context, AttributeSet attr) {
         mInflater.inflate(R.layout.view_detail_edit_link_item, this, true);
         container = (LinearLayout) findViewById(R.id.item_container);
@@ -61,6 +67,7 @@ public class DetailEditItemView extends BaseView {
             TypedArray arr = context.obtainStyledAttributes(attr, R.styleable.DetailtemView);
             int inputType = attr.getAttributeIntValue(NAME_SPACE, "inputType", 0);
 //            String inputType = arr.getString(R.styleable.DetailtemView_inputType);
+
             switch (inputType) {
                 case 0:
                     setInputType(InputType.TYPE_TEXT_VARIATION_PERSON_NAME);
@@ -109,7 +116,7 @@ public class DetailEditItemView extends BaseView {
     }
 
     public void setInputType(int type) {
-        content.setInputType(type);
+        content.setInputType(type | InputType.TYPE_TEXT_FLAG_NO_SUGGESTIONS | InputType.TYPE_TEXT_VARIATION_FILTER);
     }
 
 

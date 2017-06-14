@@ -17,7 +17,6 @@ package com.supremainc.biostar2.view;
 
 import android.content.Context;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
@@ -25,18 +24,19 @@ import android.widget.EditText;
 
 import com.supremainc.biostar2.R;
 import com.supremainc.biostar2.impl.OnSingleClickListener;
-import com.supremainc.biostar2.sdk.datatype.v2.Card.Card;
-import com.supremainc.biostar2.sdk.datatype.v2.Card.ListCard;
-import com.supremainc.biostar2.sdk.datatype.v2.Card.WiegandCardID;
-import com.supremainc.biostar2.sdk.datatype.v2.Card.WiegandFormat;
-import com.supremainc.biostar2.sdk.datatype.v2.Device.ListDevice;
-import com.supremainc.biostar2.sdk.datatype.v2.Card.SmartCardLayout;
-import com.supremainc.biostar2.sdk.datatype.v2.User.User;
+import com.supremainc.biostar2.sdk.models.v2.card.Card;
+import com.supremainc.biostar2.sdk.models.v2.card.ListCard;
+import com.supremainc.biostar2.sdk.models.v2.card.SmartCardLayout;
+import com.supremainc.biostar2.sdk.models.v2.card.WiegandCardID;
+import com.supremainc.biostar2.sdk.models.v2.card.WiegandFormat;
+import com.supremainc.biostar2.sdk.models.v2.device.ListDevice;
+import com.supremainc.biostar2.sdk.models.v2.user.User;
 import com.supremainc.biostar2.sdk.provider.CardDataProvider;
-import com.supremainc.biostar2.sdk.provider.TimeConvertProvider;
-import com.supremainc.biostar2.util.TextWatcherFilter;
+import com.supremainc.biostar2.sdk.provider.DateTimeDataProvider;
+import com.supremainc.biostar2.util.InputCardFilter;
 import com.supremainc.biostar2.widget.popup.ToastPopup;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 
 public class RegisterCardView extends BaseView {
@@ -67,33 +67,15 @@ public class RegisterCardView extends BaseView {
     private DetailTextItemView mFingerPrint;
 
 
-    private TextWatcherFilter mCSNWatcher;
-    private TextWatcherFilter mSecureWatcher;
-//    private TextWatcherFilter mAocWatcher;
-    private TextWatcherFilter mWiegandCardID1Watcher;
-    private TextWatcherFilter mWiegandCardID2Watcher;
-    private TextWatcherFilter mWiegandCardID3Watcher;
-    private TextWatcherFilter mWiegandCardID4Watcher;
+    private InputCardFilter mCSNWatcher;
+    private InputCardFilter mSecureWatcher;
+    //    private InputCardFilter mAocWatcher;
+    private InputCardFilter mWiegandCardID1Watcher;
+    private InputCardFilter mWiegandCardID2Watcher;
+    private InputCardFilter mWiegandCardID3Watcher;
+    private InputCardFilter mWiegandCardID4Watcher;
     private InputMethodManager mImm;
-
-    public enum CARD_TYPE {
-        CSN,WIEGAND,SMARTCARD,MOBILE_CARD,READ_CARD
-    }
-
-    public enum REGISTER_METHOD {
-        DEVICE,ASSIGN_CARD,DIRECT_INPUT
-    }
-    public interface RegisterCardViewListener {
-        public void onCardType();
-        public void onRegisterMethod();
-        public void onDevice();
-        public void onWiegandFormat();
-        public void onAction();
-        public void onSmartCardLayout();
-        public void onSmartCardType();
-        public void onFingerPrint();
-    }
-
+    private ToastPopup mToastPopup;
     private OnSingleClickListener mClickListener = new OnSingleClickListener() {
         @Override
         public void onSingleClick(View v) {
@@ -114,7 +96,7 @@ public class RegisterCardView extends BaseView {
                 case R.id.device:
                     mListener.onDevice();
                     break;
-                case R.id.card_id : {
+                case R.id.card_id: {
                     DetailEditItemView view = (DetailEditItemView) v;
                     view.content.setSelection(view.content.toString2().length());
                     showIme(view.content);
@@ -139,13 +121,6 @@ public class RegisterCardView extends BaseView {
         }
     };
 
-    private void showIme(EditText view) {
-        if (mImm != null && view != null) {
-            view.requestFocus();
-            mImm.showSoftInput(view, 0);
-        }
-    }
-
     public RegisterCardView(Context context, AttributeSet attrs, int defStyle) {
         super(context, attrs, defStyle);
         initView(context);
@@ -161,29 +136,38 @@ public class RegisterCardView extends BaseView {
         initView(context);
     }
 
+    private void showIme(EditText view) {
+        if (mImm != null && view != null) {
+            view.requestFocus();
+            mImm.showSoftInput(view, 0);
+        }
+    }
+
     private void initView(Context context) {
         mInflater.inflate(R.layout.view_register_card, this, true);
         mCardType = (DetailTextItemView) findViewById(R.id.card_type);
         mCardType.setOnClickListener(mClickListener);
         mRegisterMethod = (DetailTextItemView) findViewById(R.id.register_method);
-        mRegisterMethod.enableLink(true,mClickListener);
+        mRegisterMethod.enableLink(true, mClickListener);
         mDevice = (DetailTextItemView) findViewById(R.id.device);
-        mDevice.enableLink(true,mClickListener);
+        mDevice.enableLink(true, mClickListener);
         mWiegandFormat = (DetailTextItemView) findViewById(R.id.card_wigand_format); //TODO clicklink
         mAction = (DetailTextItemView) findViewById(R.id.card_action);
-        mAction.enableLink(true,mClickListener);
+        mAction.enableLink(true, mClickListener);
         mSmartCardLayout = (DetailTextItemView) findViewById(R.id.card_layout_format);
         mSmartCardType = (DetailTextItemView) findViewById(R.id.smartcard_type);
-        mSmartCardType.enableLink(true,mClickListener);
+        mSmartCardType.enableLink(true, mClickListener);
         mCardID = (DetailEditItemView) findViewById(R.id.card_id);
         mCardID.content.setImeOptions(EditorInfo.IME_ACTION_DONE);
         mCardID.setOnClickListener(mClickListener);
-
-        mCSNWatcher = new TextWatcherFilter(mCardID.content, TextWatcherFilter.EDIT_TYPE.NUMBER, mContext, 32);
+        if (mToastPopup == null) {
+            mToastPopup = new ToastPopup(mContext);
+        }
+        mCSNWatcher = new InputCardFilter(mCardID.content, mToastPopup, 32);
         mCSNWatcher.setCheckZero(true);
 
         //TODO string 확인
-        mSecureWatcher = new TextWatcherFilter(mCardID.content, TextWatcherFilter.EDIT_TYPE.NUMBER, mContext, 24);
+        mSecureWatcher = new InputCardFilter(mCardID.content, mToastPopup, 57);
         mSecureWatcher.setCheckZero(true);
 //        mAocWatcher = new TextWatcherFilter(mCardID.content, TextWatcherFilter.EDIT_TYPE.USER_ID, mContext, 32);
         //TODO
@@ -193,19 +177,20 @@ public class RegisterCardView extends BaseView {
 //        mCardIDCode.content.setImeOptions(EditorInfo.IME_ACTION_NEXT);
 
         mWiegandCardID1 = (DetailEditItemView) findViewById(R.id.wigand_card_id1);
-        mWiegandCardID1Watcher = new TextWatcherFilter(mWiegandCardID1.content, TextWatcherFilter.EDIT_TYPE.NUMBER, mContext, 512);
+        mWiegandCardID1Watcher = new InputCardFilter(mWiegandCardID1.content, mToastPopup, 90);
         mWiegandCardID1Watcher.setCheckZero(true);
+
         mWiegandCardID1.content.addTextChangedListener(mWiegandCardID1Watcher);
         mWiegandCardID2 = (DetailEditItemView) findViewById(R.id.wigand_card_id2);
-        mWiegandCardID2Watcher = new TextWatcherFilter(mWiegandCardID2.content, TextWatcherFilter.EDIT_TYPE.NUMBER, mContext, 512);
+        mWiegandCardID2Watcher = new InputCardFilter(mWiegandCardID2.content, mToastPopup, 90);
         mWiegandCardID2Watcher.setCheckZero(true);
         mWiegandCardID2.content.addTextChangedListener(mWiegandCardID2Watcher);
         mWiegandCardID3 = (DetailEditItemView) findViewById(R.id.wigand_card_id3);
-        mWiegandCardID3Watcher = new TextWatcherFilter(mWiegandCardID3.content, TextWatcherFilter.EDIT_TYPE.NUMBER, mContext, 512);
+        mWiegandCardID3Watcher = new InputCardFilter(mWiegandCardID3.content, mToastPopup, 90);
         mWiegandCardID3Watcher.setCheckZero(true);
         mWiegandCardID3.content.addTextChangedListener(mWiegandCardID3Watcher);
         mWiegandCardID4 = (DetailEditItemView) findViewById(R.id.wigand_card_id4);
-        mWiegandCardID4Watcher = new TextWatcherFilter(mWiegandCardID4.content, TextWatcherFilter.EDIT_TYPE.NUMBER, mContext, 512);
+        mWiegandCardID4Watcher = new InputCardFilter(mWiegandCardID4.content, mToastPopup, 90);
         mWiegandCardID4Watcher.setCheckZero(true);
         mWiegandCardID4.content.addTextChangedListener(mWiegandCardID4Watcher);
 
@@ -214,7 +199,7 @@ public class RegisterCardView extends BaseView {
         mAccessGroup = (DetailTextItemView) findViewById(R.id.access_group);
         mPeriod = (DetailTextItemView) findViewById(R.id.period);
         mFingerPrint = (DetailTextItemView) findViewById(R.id.fingerprint);
-        mFingerPrint.enableLink(true,mClickListener);
+        mFingerPrint.enableLink(true, mClickListener);
     }
 
     public void init(RegisterCardViewListener l) {
@@ -238,7 +223,7 @@ public class RegisterCardView extends BaseView {
         mFingerPrint.content.setText("");
     }
 
-    public void setDevice(ListDevice device,CARD_TYPE type) {
+    public void setDevice(ListDevice device, CARD_TYPE type) {
         switch (type) {
             case CSN:
                 break;
@@ -268,7 +253,7 @@ public class RegisterCardView extends BaseView {
         }
     }
 
-    private void setWiegandCardID(DetailEditItemView view,TextWatcherFilter filter,WiegandCardID cardID,REGISTER_METHOD method,String displayCardID) {
+    private void setWiegandCardID(DetailEditItemView view, InputCardFilter filter, WiegandCardID cardID, REGISTER_METHOD method, String displayCardID) {
         if (cardID == null) {
             return;
         }
@@ -279,7 +264,7 @@ public class RegisterCardView extends BaseView {
             view.enableEdit(false);
         }
 //        filter.setMaxlength(cardID.getLength());
-        filter.setMaxSize(cardID.max,true);
+        filter.setMaxSize(cardID.max, true);
 //        view.content.setHint("1"+" - "+cardID.max);
 //        view.content.setHintTextColor(mContext.getResources().getColor(R.color.gray_1));
         if (displayCardID != null) {
@@ -294,7 +279,7 @@ public class RegisterCardView extends BaseView {
         mWiegandCardID4.content.setText("");
     }
 
-    public void setWiegandFormat(WiegandFormat selectedWiegandFormat,Card card,REGISTER_METHOD method) {
+    public void setWiegandFormat(WiegandFormat selectedWiegandFormat, Card card, REGISTER_METHOD method) {
         mWiegandCardID1.setVisibility(View.GONE);
         mWiegandCardID2.setVisibility(View.GONE);
         mWiegandCardID3.setVisibility(View.GONE);
@@ -327,35 +312,35 @@ public class RegisterCardView extends BaseView {
             if (card.card_id != null && !card.card_id.isEmpty()) {
                 int exist = card.card_id.indexOf("-");
                 if (exist == -1) {
-                    mWiegandCardID1Watcher.setMaxSize(1028,false);
+                    mWiegandCardID1Watcher.setMaxSize("9999999999999999999999999999999999999999999999999999", false);
                     mWiegandCardID1.setVisibility(View.VISIBLE);
                     mWiegandCardID1.title.setText(mContext.getString(R.string.card_id));
                     mWiegandCardID1.content.setText(card.card_id);
                     mWiegandCardID1.enableEdit(false);
                 } else {
                     mWiegandCardID1.title.setText(mContext.getString(R.string.id_code));
-                    for (int i=0; i < cardIds.length; i++) {
+                    for (int i = 0; i < cardIds.length; i++) {
                         switch (i) {
                             case 0:
-                                mWiegandCardID1Watcher.setMaxSize(1028,false);
+                                mWiegandCardID1Watcher.setMaxSize("9999999999999999999999999999999999999999999999999999", false);
                                 mWiegandCardID1.setVisibility(View.VISIBLE);
                                 mWiegandCardID1.content.setText(cardIds[i]);
                                 mWiegandCardID1.enableEdit(false);
                                 break;
                             case 1:
-                                mWiegandCardID2Watcher.setMaxSize(1028,false);
+                                mWiegandCardID2Watcher.setMaxSize("9999999999999999999999999999999999999999999999999999", false);
                                 mWiegandCardID2.setVisibility(View.VISIBLE);
                                 mWiegandCardID2.content.setText(cardIds[i]);
                                 mWiegandCardID2.enableEdit(false);
                                 break;
                             case 2:
-                                mWiegandCardID3Watcher.setMaxSize(1028,false);
+                                mWiegandCardID3Watcher.setMaxSize("9999999999999999999999999999999999999999999999999999", false);
                                 mWiegandCardID3.setVisibility(View.VISIBLE);
                                 mWiegandCardID3.content.setText(cardIds[i]);
                                 mWiegandCardID3.enableEdit(false);
                                 break;
                             case 3:
-                                mWiegandCardID4Watcher.setMaxSize(1028,false);
+                                mWiegandCardID4Watcher.setMaxSize("9999999999999999999999999999999999999999999999999999", false);
                                 mWiegandCardID4.setVisibility(View.VISIBLE);
                                 mWiegandCardID4.content.setText(cardIds[i]);
                                 mWiegandCardID4.enableEdit(false);
@@ -376,16 +361,16 @@ public class RegisterCardView extends BaseView {
                 }
                 switch (i) {
                     case 0:
-                        setWiegandCardID(mWiegandCardID1, mWiegandCardID1Watcher, selectedWiegandFormat.wiegand_card_ids.get(i), method,cardID);
+                        setWiegandCardID(mWiegandCardID1, mWiegandCardID1Watcher, selectedWiegandFormat.wiegand_card_ids.get(i), method, cardID);
                         break;
                     case 1:
-                        setWiegandCardID(mWiegandCardID2, mWiegandCardID2Watcher, selectedWiegandFormat.wiegand_card_ids.get(i), method,cardID);
+                        setWiegandCardID(mWiegandCardID2, mWiegandCardID2Watcher, selectedWiegandFormat.wiegand_card_ids.get(i), method, cardID);
                         break;
                     case 2:
-                        setWiegandCardID(mWiegandCardID3, mWiegandCardID3Watcher, selectedWiegandFormat.wiegand_card_ids.get(i), method,cardID);
+                        setWiegandCardID(mWiegandCardID3, mWiegandCardID3Watcher, selectedWiegandFormat.wiegand_card_ids.get(i), method, cardID);
                         break;
                     case 3:
-                        setWiegandCardID(mWiegandCardID4, mWiegandCardID4Watcher, selectedWiegandFormat.wiegand_card_ids.get(i), method,cardID);
+                        setWiegandCardID(mWiegandCardID4, mWiegandCardID4Watcher, selectedWiegandFormat.wiegand_card_ids.get(i), method, cardID);
                         break;
                 }
             }
@@ -444,8 +429,8 @@ public class RegisterCardView extends BaseView {
                 }
                 mAccessGroup.content.setText(content);
             }
-            String start = card.getTimeFormmat(TimeConvertProvider.getInstance(), ListCard.TimeType.start_datetime, TimeConvertProvider.DATE_TYPE.FORMAT_DATE_HOUR_MIN);
-            String end = card.getTimeFormmat(TimeConvertProvider.getInstance(), ListCard.TimeType.expiry_datetime, TimeConvertProvider.DATE_TYPE.FORMAT_DATE_HOUR_MIN);
+            String start = card.getTimeFormmat(DateTimeDataProvider.getInstance(), ListCard.TimeType.start_datetime, DateTimeDataProvider.DATE_TYPE.FORMAT_DATE_HOUR_MIN);
+            String end = card.getTimeFormmat(DateTimeDataProvider.getInstance(), ListCard.TimeType.expiry_datetime, DateTimeDataProvider.DATE_TYPE.FORMAT_DATE_HOUR_MIN);
             if (start != null && end != null) {
                 mPeriod.setVisibility(View.VISIBLE);
                 mPeriod.enableLink(false);
@@ -454,7 +439,7 @@ public class RegisterCardView extends BaseView {
         }
     }
 
-    public void setCard(Card card,ListDevice device,CARD_TYPE type,REGISTER_METHOD method) {
+    public void setCard(Card card, ListDevice device, CARD_TYPE type, REGISTER_METHOD method) {
         if (card == null) {
             return;
         }
@@ -465,7 +450,7 @@ public class RegisterCardView extends BaseView {
                 mCardID.content.setText(card.card_id);
                 break;
             case WIEGAND:
-                setWiegandFormat(card.wiegand_format,card,method);
+                setWiegandFormat(card.wiegand_format, card, method);
                 break;
             case SMARTCARD:
 //                mCardID.setVisibility(View.VISIBLE);
@@ -478,7 +463,7 @@ public class RegisterCardView extends BaseView {
                 mCardID.setVisibility(View.VISIBLE);
                 if (Card.WIEGAND.equals(card.type) || Card.CSN_WIEGAND.equals(card.type)) {
                     mCardID.setVisibility(View.GONE);
-                    setWiegandFormat(card.wiegand_format,card,method);
+                    setWiegandFormat(card.wiegand_format, card, method);
                     if (card.wiegand_format != null) {
                         mWiegandFormat.setVisibility(View.VISIBLE);
                         mWiegandFormat.enableLink(false);
@@ -501,7 +486,11 @@ public class RegisterCardView extends BaseView {
     }
 
     public void setFingerPrint(ArrayList<Integer> fingerPrints) {
-        if ( mFingerPrint == null) {
+        if (mFingerPrint == null) {
+            return;
+        }
+        if (fingerPrints == null) {
+            mFingerPrint.content.setText("");
             return;
         }
         if (fingerPrints.size() > 0) {
@@ -511,26 +500,27 @@ public class RegisterCardView extends BaseView {
         }
     }
 
-
     public String getCardID() {
         return mCardID.content.toString2();
     }
 
-    private boolean generatorWiegandCardID(DetailEditItemView view,ToastPopup toast,WiegandCardID differ,ArrayList<WiegandCardID> result) {
+    private boolean generatorWiegandCardID(DetailEditItemView view, ToastPopup toast, WiegandCardID differ, ArrayList<WiegandCardID> result) {
         if (view.content.toString2().isEmpty()) {
             toast.show(mContext.getString(R.string.none_select_card), null);
             return false;
         }
-        int cardID = Integer.valueOf(view.content.toString2());
-        if (cardID > differ.max) {
-            toast.show(mContext.getString(R.string.over_value),  cardID+" / "+differ.max);
-            return false;
+        BigInteger value = new BigInteger(view.content.toString2());
+        BigInteger value2 = new BigInteger(differ.max);
+        if (value.compareTo(value2) > 0) {
+            toast.show(mContext.getString(R.string.over_value), view.content.toString2() + " / " + differ.max);
+            return true;
         }
-        result.add(new WiegandCardID(cardID));
+
+        result.add(new WiegandCardID(view.content.toString2()));
         return true;
     }
 
-    public WiegandFormat getWigandID(WiegandFormat wiegandFormat ,ToastPopup toast,REGISTER_METHOD method) {
+    public WiegandFormat getWigandID(WiegandFormat wiegandFormat, ToastPopup toast, REGISTER_METHOD method) {
         ArrayList<WiegandCardID> result = new ArrayList<WiegandCardID>();
         WiegandFormat resultWiegandFormat = new WiegandFormat(result);
         resultWiegandFormat.id = wiegandFormat.id;
@@ -544,45 +534,45 @@ public class RegisterCardView extends BaseView {
                 }
                 return null;
             }
-            int cardID = Integer.valueOf(mWiegandCardID1.content.toString2());
-            result.add(new WiegandCardID(cardID));
+            result.add(new WiegandCardID(mWiegandCardID1.content.toString2()));
             if (mWiegandCardID2.content.toString2().isEmpty()) {
                 return resultWiegandFormat;
             }
-            cardID = Integer.valueOf(mWiegandCardID2.content.toString2());
-            result.add(new WiegandCardID(cardID));
+
+            result.add(new WiegandCardID(mWiegandCardID2.content.toString2()));
             if (mWiegandCardID3.content.toString2().isEmpty()) {
                 return resultWiegandFormat;
             }
-            cardID = Integer.valueOf(mWiegandCardID3.content.toString2());
-            result.add(new WiegandCardID(cardID));
+            result.add(new WiegandCardID(mWiegandCardID3.content.toString2()));
             if (mWiegandCardID4.content.toString2().isEmpty()) {
                 return resultWiegandFormat;
             }
-            cardID = Integer.valueOf(mWiegandCardID4.content.toString2());
-            result.add(new WiegandCardID(cardID));
+
+            result.add(new WiegandCardID(mWiegandCardID4.content.toString2()));
             return resultWiegandFormat;
         }
 
         WiegandCardID wiegandCardID = null;
         for (int i = 0; i < wiegandFormat.wiegand_card_ids.size(); i++) {
-             wiegandCardID = wiegandFormat.wiegand_card_ids.get(i);
+            wiegandCardID = wiegandFormat.wiegand_card_ids.get(i);
             switch (i) {
                 case 0: {
                     if (mWiegandCardID1.content.toString2().isEmpty()) {
-                         if (wiegandFormat.use_facility_code) {
+                        if (wiegandFormat.use_facility_code) {
                             toast.show(mContext.getString(R.string.discern_empty), null);
                         } else {
                             toast.show(mContext.getString(R.string.none_select_card), null);
                         }
                         return null;
                     }
-                    int cardID = Integer.valueOf(mWiegandCardID1.content.toString2());
-                    if (cardID > wiegandCardID.max) {
-                        toast.show(mContext.getString(R.string.over_value), cardID+" / "+wiegandCardID.max);
+                    BigInteger value = new BigInteger(mWiegandCardID1.content.toString2());
+                    BigInteger value2 = new BigInteger(wiegandCardID.max);
+                    if (value.compareTo(value2) > 0) {
+                        toast.show(mContext.getString(R.string.over_value), mWiegandCardID1.content.toString2() + " / " + wiegandCardID.max);
                         return null;
                     }
-                    result.add(new WiegandCardID(cardID));
+
+                    result.add(new WiegandCardID(mWiegandCardID1.content.toString2()));
                     break;
                 }
                 case 1: {
@@ -616,30 +606,31 @@ public class RegisterCardView extends BaseView {
         }
     }
 
-    public void setView(CARD_TYPE type,REGISTER_METHOD method,WiegandFormat selectedWiegandFormat,ListDevice selectedDevice,Card selectedCard,ArrayList<Integer> selectedFingerPrint,CardDataProvider.SmartCardType selectedSmartCardType,User user) {
+    public void setView(CARD_TYPE type, REGISTER_METHOD method, WiegandFormat selectedWiegandFormat, ListDevice selectedDevice, Card selectedCard, ArrayList<Integer> selectedFingerPrint, CardDataProvider.SmartCardType selectedSmartCardType, User user) {
         removeTextChangedListener();
-        setCommon(selectedDevice,selectedCard);
+        setCommon(selectedDevice, selectedCard);
         switch (type) {
             case CSN:
                 setCSN(method);
                 break;
             case WIEGAND:
-                setWiegandFormat(selectedWiegandFormat,selectedCard,method);
+                setWiegandFormat(selectedWiegandFormat, selectedCard, method);
                 setWIEGAND(method);
                 break;
             case SMARTCARD:
                 setFingerPrint(selectedFingerPrint);
-                setSmartCard(method,user,selectedSmartCardType);
+                setSmartCard(method, user, selectedSmartCardType);
                 break;
             case MOBILE_CARD:
-                setMobileCard(method,user,selectedSmartCardType);
+                setFingerPrint(selectedFingerPrint);
+                setMobileCard(method, user, selectedSmartCardType);
                 break;
             case READ_CARD:
                 setReadCard();
                 break;
         }
-        setCard(selectedCard,selectedDevice,type,method);
-        setDevice(selectedDevice,type);
+        setCard(selectedCard, selectedDevice, type, method);
+        setDevice(selectedDevice, type);
     }
 
     public void setWIEGAND(REGISTER_METHOD method) {
@@ -650,7 +641,7 @@ public class RegisterCardView extends BaseView {
                 mRegisterMethod.content.setText(mContext.getString(R.string.registeration_option_card_reader));
                 mAction.title.setText(mContext.getString(R.string.read_card));
                 mWiegandFormat.enableLink(false);
-                 break;
+                break;
             case ASSIGN_CARD:
                 mRegisterMethod.content.setText(mContext.getString(R.string.registeration_option_assign_card));
                 mDevice.setVisibility(View.GONE);
@@ -661,12 +652,12 @@ public class RegisterCardView extends BaseView {
                 mRegisterMethod.content.setText(mContext.getString(R.string.registeration_option_direct_input));
                 mAction.setVisibility(View.GONE);
                 mDevice.setVisibility(View.GONE);
-                mWiegandFormat.enableLink(true,mClickListener);
+                mWiegandFormat.enableLink(true, mClickListener);
                 break;
         }
     }
 
-    public void setCommon(ListDevice selectedDevice,Card selectedCard) {
+    public void setCommon(ListDevice selectedDevice, Card selectedCard) {
         mAction.setVisibility(View.VISIBLE);
         mRegisterMethod.setVisibility(View.VISIBLE);
         mDevice.setVisibility(View.VISIBLE);
@@ -695,10 +686,10 @@ public class RegisterCardView extends BaseView {
         mFingerPrint.setVisibility(View.GONE);
     }
 
-    public void setMobileCard (REGISTER_METHOD method,User user,CardDataProvider.SmartCardType selectedSmartCardType) {
-        mCardType.content.setText(mContext.getString(R.string.smartcard));
+    public void setMobileCard(REGISTER_METHOD method, User user, CardDataProvider.SmartCardType selectedSmartCardType) {
+        mCardType.content.setText(mContext.getString(R.string.mobile_card));
         mSmartCardLayout.setVisibility(View.VISIBLE);
-        mSmartCardLayout.enableLink(true,mClickListener);
+        mSmartCardLayout.enableLink(true, mClickListener);
         mSmartCardType.enableLink(true, mClickListener);
         mSmartCardType.setVisibility(View.VISIBLE);
         mFingerPrint.enableLink(true, mClickListener);
@@ -744,19 +735,19 @@ public class RegisterCardView extends BaseView {
                     }
                 }
 
-                mPeriod.content.setText(user.getTimeFormmat(TimeConvertProvider.getInstance(mContext), User.UserTimeType.start_datetime, TimeConvertProvider.DATE_TYPE.FORMAT_DATE) +
-                        " - " + user.getTimeFormmat(TimeConvertProvider.getInstance(mContext), User.UserTimeType.expiry_datetime, TimeConvertProvider.DATE_TYPE.FORMAT_DATE));
+                mPeriod.content.setText(user.getTimeFormmat(DateTimeDataProvider.getInstance(mContext), User.UserTimeType.start_datetime, DateTimeDataProvider.DATE_TYPE.FORMAT_DATE) +
+                        " - " + user.getTimeFormmat(DateTimeDataProvider.getInstance(mContext), User.UserTimeType.expiry_datetime, DateTimeDataProvider.DATE_TYPE.FORMAT_DATE));
                 break;
         }
     }
 
-    public void setSmartCard(REGISTER_METHOD method,User user,CardDataProvider.SmartCardType selectedSmartCardType) {
+    public void setSmartCard(REGISTER_METHOD method, User user, CardDataProvider.SmartCardType selectedSmartCardType) {
         mCardType.content.setText(mContext.getString(R.string.smartcard));
         mSmartCardLayout.setVisibility(View.VISIBLE);
         mSmartCardLayout.enableLink(false);
-        mSmartCardType.enableLink(true,mClickListener);
+        mSmartCardType.enableLink(true, mClickListener);
         mSmartCardType.setVisibility(View.VISIBLE);
-        mFingerPrint.enableLink(true,mClickListener);
+        mFingerPrint.enableLink(true, mClickListener);
         mFingerPrint.setVisibility(View.VISIBLE);
         mRegisterMethod.setVisibility(View.GONE);
         mAction.setVisibility(View.GONE);
@@ -782,7 +773,7 @@ public class RegisterCardView extends BaseView {
                 mSmartCardType.content.setText(mContext.getString(R.string.access_on_card));
                 mCardID.enableEdit(false);
                 if (user.user_id.length() > 32) {
-                    mCardID.content.setText(user.user_id.substring(0,32));
+                    mCardID.content.setText(user.user_id.substring(0, 32));
                 } else {
                     mCardID.content.setText(user.user_id);
                 }
@@ -797,8 +788,8 @@ public class RegisterCardView extends BaseView {
                     }
                 }
 
-                mPeriod.content.setText(user.getTimeFormmat(TimeConvertProvider.getInstance(mContext), User.UserTimeType.start_datetime, TimeConvertProvider.DATE_TYPE.FORMAT_DATE) +
-                        " - " + user.getTimeFormmat(TimeConvertProvider.getInstance(mContext), User.UserTimeType.expiry_datetime, TimeConvertProvider.DATE_TYPE.FORMAT_DATE));
+                mPeriod.content.setText(user.getTimeFormmat(DateTimeDataProvider.getInstance(mContext), User.UserTimeType.start_datetime, DateTimeDataProvider.DATE_TYPE.FORMAT_DATE) +
+                        " - " + user.getTimeFormmat(DateTimeDataProvider.getInstance(mContext), User.UserTimeType.expiry_datetime, DateTimeDataProvider.DATE_TYPE.FORMAT_DATE));
                 break;
         }
     }
@@ -826,6 +817,32 @@ public class RegisterCardView extends BaseView {
                 mCardID.enableEdit(true);
                 break;
         }
+    }
+
+    public enum CARD_TYPE {
+        CSN, WIEGAND, SMARTCARD, MOBILE_CARD, READ_CARD
+    }
+
+    public enum REGISTER_METHOD {
+        DEVICE, ASSIGN_CARD, DIRECT_INPUT
+    }
+
+    public interface RegisterCardViewListener {
+        public void onCardType();
+
+        public void onRegisterMethod();
+
+        public void onDevice();
+
+        public void onWiegandFormat();
+
+        public void onAction();
+
+        public void onSmartCardLayout();
+
+        public void onSmartCardType();
+
+        public void onFingerPrint();
     }
 
 //    private void setMobileCard() {

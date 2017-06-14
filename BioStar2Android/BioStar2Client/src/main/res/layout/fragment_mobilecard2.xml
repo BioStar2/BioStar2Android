@@ -1,25 +1,83 @@
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:background="@color/main_bg"
-    android:gravity="center|top"
-    android:orientation="vertical">
-
-    <android.support.v7.widget.Toolbar
-        android:id="@+id/toolbar"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+             xmlns:androidfont="http://schemas.android.com/apk/res-auto"
+             xmlns:app="http://schemas.android.com/apk/res-auto"
+             android:id="@+id/main_bg"
+             android:layout_width="match_parent"
+             android:layout_height="match_parent"
+             android:background="@color/main_bg"
+    >
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:minHeight="?attr/actionBarSize" />
+        android:layout_height="match_parent"
+        android:layout_marginTop="45dp"
+        android:gravity="top|center"
+        android:layout_gravity="top|center"
+        android:orientation="vertical">
+        <com.airbnb.lottie.LottieAnimationView
+            android:id="@+id/animation_view"
+            android:layout_width="match_parent"
+            android:layout_height="350dp"
+            app:lottie_loop="false"
+            app:lottie_autoPlay="false" />
+    </LinearLayout>
 
-    <com.supremainc.biostar2.view.SubToolbar
-        android:id="@+id/subtoolbar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+    <com.supremainc.biostar2.view.MobileCardView
+        android:id="@+id/mobile_card"
+        android:gravity="top|center"
+        android:layout_width="380dp"
+        android:layout_height="230dp"
+        android:layout_marginTop="100dp"
+        android:visibility="invisible"/>
 
-    <com.supremainc.biostar2.view.MobileCardListView
-        android:id="@+id/mobile_card_list"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+    <ImageView
+        android:id="@+id/mobile_card_image"
+        android:layout_width="230dp"
+        android:layout_height="380dp"
+        android:scaleType="fitXY"
+        android:visibility="visible"
+        android:gravity="top|center"
+        android:layout_gravity="top|center"
+        android:layout_marginTop="220dp"
+        />
+    <ImageView
+        android:id="@+id/result"
+        android:layout_width="70dp"
+        android:layout_height="70dp"
+        android:scaleType="fitXY"
+        android:visibility="invisible"
+        android:gravity="top|center"
+        android:layout_gravity="top|center"
+        android:layout_marginTop="124dp"
+        />
 
 
-</LinearLayout>
+    <LinearLayout
+        android:id="@+id/background"
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:background="@color/transparent80"
+        android:gravity="center|top"
+        android:orientation="vertical">
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:minHeight="?attr/actionBarSize" />
+
+        <com.supremainc.biostar2.view.StyledTextView
+            android:id="@+id/guide"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center|top"
+            android:gravity="center|top"
+            android:layout_marginTop="19dp"
+            android:textColor="@color/white"
+            android:textSize="14dp"
+            android:layout_marginLeft="30dp"
+            android:layout_marginRight="30dp"
+            android:visibility="gone"
+            androidfont:typeface="roboto_medium.ttf" />
+
+    </LinearLayout>
+</FrameLayout>

@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:androidfont="http://schemas.android.com/apk/res-auto"
-    android:id="@+id/container"
-    android:layout_width="match_parent"
-    android:layout_height="54.8dp"
-    android:gravity="center"
-    android:orientation="vertical">
+              xmlns:androidfont="http://schemas.android.com/apk/res-auto"
+              android:id="@+id/container"
+              android:layout_width="match_parent"
+              android:layout_height="54.8dp"
+              android:gravity="center"
+              android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -22,9 +22,10 @@
             android:layout_weight="1"
             android:ellipsize="end"
             android:gravity="left"
+            android:maxLines="2"
             android:textColor="@color/select_text"
             android:textSize="16dp"
-            androidfont:typeface="roboto_medium.ttf" />
+            androidfont:typeface="roboto_medium.ttf"/>
 
         <FrameLayout
             android:layout_width="22.67dp"
@@ -37,13 +38,13 @@
                 android:layout_gravity="center|right"
                 android:contentDescription="@string/image"
                 android:gravity="center|right"
-                android:scaleType="fitXY" />
+                android:scaleType="fitXY"/>
         </FrameLayout>
     </LinearLayout>
 
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0.8dp"
-        android:background="@color/list_devider" />
+        android:background="@color/list_devider"/>
 
 </LinearLayout>

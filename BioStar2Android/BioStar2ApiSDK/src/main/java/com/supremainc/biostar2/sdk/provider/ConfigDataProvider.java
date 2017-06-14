@@ -18,7 +18,7 @@ package com.supremainc.biostar2.sdk.provider;
 import android.content.Context;
 
 import com.supremainc.biostar2.sdk.BuildConfig;
-import com.supremainc.biostar2.sdk.datatype.v2.Common.VersionData;
+import com.supremainc.biostar2.sdk.models.v2.common.VersionData;
 import com.supremainc.biostar2.sdk.utils.PreferenceUtil;
 
 public class ConfigDataProvider  {
@@ -28,13 +28,15 @@ public class ConfigDataProvider  {
     public static final boolean DEBUG = false;
     public static final boolean DEBUG_SDCARD = false;
     public static final boolean SSL_ALL_PASS = false;
-    public static final NetworkType mNetworkType = NetworkType.OK_HTTP;
+    public static final String LOGIN_EXPIRE = "authentication expire";
+
     public static final String URL = "https://api.biostar2.com/";
     public static final String V1 = "v1/";
     public static final String V2 = "v2/";
     private static final String LATEST_DOMAIN = "save_domain";
     private static final String LATEST_URL = "save_url";
     private static final String LATEST_USERID = "save_userid";
+
 
     private static String mSubDomain;
     private static String mURL;

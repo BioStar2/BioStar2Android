@@ -139,11 +139,26 @@ public class SwitchView extends BaseView {
         if (mOn == on) {
             return false;
         }
+        boolean changeConfirm = true;
+        if (mOnChangeListener != null) {
+            changeConfirm = mOnChangeListener.onChange(on);
+        }
+        if (changeConfirm) {
+            mOn = on;
+            changeSwitchImage();
+        }
+        return true;
+    }
+
+    public boolean setSwitchNotNotiy(boolean on) {
+        if (mOnOff == null) {
+            return false;
+        }
+        if (mOn == on) {
+            return false;
+        }
         mOn = on;
         changeSwitchImage();
-        if (mOnChangeListener != null) {
-            mOnChangeListener.onChange(on);
-        }
         return true;
     }
 
@@ -152,6 +167,6 @@ public class SwitchView extends BaseView {
     }
 
     public interface OnChangeListener {
-        public void onChange(boolean on);
+        public boolean onChange(boolean on);
     }
 }

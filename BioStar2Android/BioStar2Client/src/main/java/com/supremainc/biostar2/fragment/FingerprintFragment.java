@@ -15,9 +15,11 @@
  */
 package com.supremainc.biostar2.fragment;
 
-import android.content.DialogInterface;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.os.Bundle;
-import android.util.Base64;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -28,27 +30,22 @@ import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
-import android.widget.Toast;
 
 import com.supremainc.biostar2.BuildConfig;
 import com.supremainc.biostar2.R;
+import com.supremainc.biostar2.adapter.FingerPrintAdapter;
 import com.supremainc.biostar2.datatype.BioMiniTemplate;
 import com.supremainc.biostar2.meta.Setting;
-import com.supremainc.biostar2.adapter.FingerPrintAdapter;
 import com.supremainc.biostar2.provider.BioMiniDataProvider;
-import com.supremainc.biostar2.sdk.datatype.v2.Common.ResponseStatus;
-import com.supremainc.biostar2.sdk.datatype.v2.Common.VersionData;
-import com.supremainc.biostar2.sdk.datatype.v2.Device.Device;
-import com.supremainc.biostar2.sdk.datatype.v2.Device.Devices;
-import com.supremainc.biostar2.sdk.datatype.v2.Device.FingerprintVerify;
-import com.supremainc.biostar2.sdk.datatype.v2.Device.ListDevice;
-import com.supremainc.biostar2.sdk.datatype.v2.FingerPrint.FingerPrints;
-import com.supremainc.biostar2.sdk.datatype.v2.FingerPrint.ListFingerprintTemplate;
-import com.supremainc.biostar2.sdk.datatype.v2.FingerPrint.ScanFingerprintTemplate;
-import com.supremainc.biostar2.sdk.datatype.v2.User.User;
-import com.supremainc.biostar2.sdk.volley.Response;
-import com.supremainc.biostar2.sdk.volley.Response.Listener;
-import com.supremainc.biostar2.sdk.volley.VolleyError;
+import com.supremainc.biostar2.sdk.models.v2.common.ResponseStatus;
+import com.supremainc.biostar2.sdk.models.v2.common.VersionData;
+import com.supremainc.biostar2.sdk.models.v2.device.Device;
+import com.supremainc.biostar2.sdk.models.v2.device.FingerprintVerify;
+import com.supremainc.biostar2.sdk.models.v2.device.ListDevice;
+import com.supremainc.biostar2.sdk.models.v2.fingerprint.FingerPrints;
+import com.supremainc.biostar2.sdk.models.v2.fingerprint.ListFingerprintTemplate;
+import com.supremainc.biostar2.sdk.models.v2.fingerprint.ScanFingerprintTemplate;
+import com.supremainc.biostar2.sdk.models.v2.user.User;
 import com.supremainc.biostar2.view.SubToolbar;
 import com.supremainc.biostar2.widget.ScreenControl.ScreenType;
 import com.supremainc.biostar2.widget.popup.Popup.OnPopupClickListener;
@@ -58,9 +55,16 @@ import com.supremainc.biostar2.widget.popup.SelectCustomData;
 import com.supremainc.biostar2.widget.popup.SelectPopup;
 import com.supremainc.biostar2.widget.popup.SelectPopup.OnSelectResultListener;
 import com.supremainc.biostar2.widget.popup.SelectPopup.SelectType;
+import com.supremainc.biostar2.widget.popup.ToastPopup;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
+import static com.supremainc.biostar2.provider.BioMiniDataProvider.UFA_OK;
 
 public class FingerprintFragment extends BaseFragment {
     private static final int MODE_DELETE = 1;
@@ -74,102 +78,79 @@ public class FingerprintFragment extends BaseFragment {
     private boolean mIsDisableModify;
     private boolean mIsTwiceInput;
     private int mQuality = 80;
+    private int mScanQuality1st = 0;
+    private int mScanQuality2nd = 0;
     private int mReplacePosition = -1;
     private SeekBarPopup mSeekBarPopup;
     private BioMiniDataProvider mBioMiniDataProvider;
+    private BioMiniTemplate mBioMiniTemplate0;
     private BioMiniTemplate mBioMiniTemplate1;
-    private BioMiniTemplate mBioMiniTemplate2;
     private boolean mIsBioMiniRescan;
-
-    private SeekBarPopup.OnResult mOnResult = new SeekBarPopup.OnResult() {
+    private BroadcastReceiver mUsbReceiver;
+    private Callback<FingerPrints> mFingerPrintListener = new Callback<FingerPrints>() {
         @Override
-        public void OnResult(String data) {
-            if (data != null && !data.isEmpty()) {
-                mQuality = Integer.valueOf(data);
-                mHandler.removeCallbacks(mRunReScan);
-                mHandler.postDelayed(mRunReScan,500);
-            } else {
-                mHandler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        reScan();
-                    }
-                },500);
-            }
-        }
-    };
-
-    private Response.ErrorListener mScanConfirmErrorListener = new Response.ErrorListener() {
-        @Override
-        public void onErrorResponse(VolleyError error, Object deliverParam) {
-            if (isInValidCheck(error)) {
+        public void onFailure(Call<FingerPrints> call, Throwable t) {
+            if (isIgnoreCallback(call, true)) {
                 return;
             }
-            mPopup.dismiss();
-            mPopup.show(PopupType.ALERT, getString(R.string.info), Setting.getErrorMessage(error, mContext), new OnPopupClickListener() {
-                @Override
-                public void OnNegative() {
-                    clearValue();
-                }
-
-                @Override
-                public void OnPositive() {
-                    clearValue();
-                }
-
-
-            }, getString(R.string.ok), null, false);
+            showErrorPopup(t.getMessage(), true);
         }
-    };
-    private Response.ErrorListener mScanErrorListener = new Response.ErrorListener() {
+
         @Override
-        public void onErrorResponse(final VolleyError error, Object deliverParam) {
-            if (isInValidCheck(error)) {
+        public void onResponse(Call<FingerPrints> call, Response<FingerPrints> response) {
+            if (isIgnoreCallback(call, response, true)) {
                 return;
             }
-            mPopup.dismiss();
-            mPopup.show(PopupType.ALERT, getString(R.string.fail_retry), Setting.getErrorMessage(error, mContext), new OnPopupClickListener() {
+            if (isInvalidResponse(response, true, true)) {
+                return;
+            }
+            mUserInfo.fingerprint_templates = response.body().records;
+            mUserInfo.card_count = mUserInfo.fingerprint_templates.size();
+            refreshValue();
+        }
+    };
+    private Callback<ResponseStatus> mModifyFingerPrintListener = new Callback<ResponseStatus>() {
+        @Override
+        public void onFailure(Call<ResponseStatus> call, Throwable t) {
+            if (isIgnoreCallback(call, true)) {
+                return;
+            }
+            showErrorPopup(t.getMessage(), true);
+        }
+
+        @Override
+        public void onResponse(Call<ResponseStatus> call, Response<ResponseStatus> response) {
+            if (isIgnoreCallback(call, response, false)) {
+                return;
+            }
+            if (isInvalidResponse(response, true, true)) {
+                return;
+            }
+            request(mUserDataProvider.getFingerPrints(mUserInfo.user_id, mFingerPrintListener));
+        }
+    };
+    private Callback<FingerprintVerify> mScanConfirmListener = new Callback<FingerprintVerify>() {
+        @Override
+        public void onFailure(Call<FingerprintVerify> call, Throwable t) {
+            showRetryPopup(t.getMessage(), new OnPopupClickListener() {
                 @Override
                 public void OnPositive() {
-                    mHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (error != null) {
-                                if (error.getCode().equals(Device.SCAN_QUALITY_IS_LOW)) {
-                                    reScan();
-                                    return;
-                                }
-                            }
-                            if (mIsTwiceInput) {
-                                mPopup.show(PopupType.FINGERPRINT_AGAGIN, mItemAdapter.getName(mReplacePosition), getString(R.string.finger_on_device_same), null, null, null, false);
-                            } else {
-                                mPopup.show(PopupType.FINGERPRINT, mItemAdapter.getName(mReplacePosition), getString(R.string.finger_on_device), null, null, null, false);
-                            }
-                            mDeviceDataProvider.scanFingerprint(TAG, mDeviceId, mQuality, false, mScanListener, mScanErrorListener, null);
-                        }
-                    });
+                    scanVerify();
                 }
 
                 @Override
                 public void OnNegative() {
                     clearValue();
                 }
-            }, getString(R.string.ok), getString(R.string.cancel), false);
+            });
         }
-    };
-    private Listener<FingerprintVerify> mScanConfirmListener = new Response.Listener<FingerprintVerify>() {
+
         @Override
-        public void onResponse(FingerprintVerify response, Object deliverParam) {
-            if (isInValidCheck(null)) {
+        public void onResponse(Call<FingerprintVerify> call, Response<FingerprintVerify> response) {
+            if (isIgnoreCallback(call, response, true)) {
                 return;
             }
-            mPopup.dismiss();
-            if (response == null) {
-                Log.e(TAG, "error");
-                mScanErrorListener.onErrorResponse(new VolleyError(getString(R.string.server_null)), deliverParam);
-                return;
-            }
-            if (!response.verify_result) {
+            if (isInvalidResponse(response, false, false) || !response.body().verify_result) {
                 mPopup.show(PopupType.ALERT, getString(R.string.info), getString(R.string.fail_verify_finger), new OnPopupClickListener() {
                     @Override
                     public void OnPositive() {
@@ -183,127 +164,10 @@ public class FingerprintFragment extends BaseFragment {
                 }, getString(R.string.ok), null, false);
                 return;
             }
-
-            mPopup.show(PopupType.FINGERPRINT_CONFIRM, mItemAdapter.getName(mReplacePosition), getString(R.string.scan_success), new OnPopupClickListener() {
-                @Override
-                public void OnPositive() {
-                    mHandler.post(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (BuildConfig.DEBUG) {
-                                Log.i(TAG, "mReplacePosition:" + mReplacePosition + " size:" + mUserInfo.fingerprint_templates.size());
-                            }
-                            if (mReplacePosition == -1 || mReplacePosition >= mUserInfo.fingerprint_templates.size()) {
-                                try {
-                                    mUserInfo.fingerprint_templates.add(mFingerprintTemplate.clone());
-                                } catch (CloneNotSupportedException e) {
-                                    e.printStackTrace();
-                                }
-                            } else {
-                                try {
-                                    mUserInfo.fingerprint_templates.set(mReplacePosition, mFingerprintTemplate.clone());
-                                } catch (CloneNotSupportedException e) {
-                                    e.printStackTrace();
-                                }
-                            }
-                            refreshValue();
-                            if (VersionData.getCloudVersion(mContext) > 1) {
-                                mPopup.showWait(new DialogInterface.OnCancelListener() {
-                                    @Override
-                                    public void onCancel(DialogInterface dialog) {
-                                        mScreenControl.backScreen();
-                                    }
-                                });
-                                mUserDataProvider.modifyFingerPrints(TAG, mUserInfo.user_id, mUserInfo.fingerprint_templates, mModifyFingerPrintListener, mErrorBackListener, null);
-                            }
-                        }
-                    });
-                }
-
-                @Override
-                public void OnNegative() {
-                    clearValue();
-                }
-            }, getString(R.string.ok), null, false);
+            sucess();
         }
     };
-    private Listener<ScanFingerprintTemplate> mScanListener = new Response.Listener<ScanFingerprintTemplate>() {
-        @Override
-        public void onResponse(ScanFingerprintTemplate response, Object deliverParam) {
-            if (isInValidCheck(null)) {
-                return;
-            }
-            mPopup.dismiss();
-            if (response == null) {
-                Log.e(TAG, "error");
-                mScanErrorListener.onErrorResponse(new VolleyError(getString(R.string.server_null)), deliverParam);
-                return;
-            }
-
-            if (mFingerprintTemplate == null) {
-                mFingerprintTemplate = new ListFingerprintTemplate();
-                mFingerprintTemplate.template0 = response.template0;
-                mFingerprintTemplate.template1 = response.template0;
-            }
-            String quality = response.enroll_quality;
-            if (quality != null) {
-                if (mQuality > Integer.valueOf(quality)) {
-                    reScan();
-                    return;
-                }
-            }
-
-            if (mIsTwiceInput == true) {
-                mIsTwiceInput = false;
-                mFingerprintTemplate.template1 = response.template0;
-                mPopup.show(PopupType.FINGERPRINT_CONFIRM, mItemAdapter.getName(mReplacePosition), getString(R.string.quality) + " " + quality + "\n" + getString(R.string.verify_finger), null, null, null, false);
-                mHandler.postDelayed(new Runnable() {
-                    @Override
-                    public void run() {
-                        mDeviceDataProvider.verifyFingerprint(TAG, mDeviceId, 0, mFingerprintTemplate, mScanConfirmListener, mScanConfirmErrorListener, null);
-                    }
-                }, 1000);
-
-            } else {
-                mIsTwiceInput = true;
-                mPopup.show(PopupType.FINGERPRINT_AGAGIN, mItemAdapter.getName(mReplacePosition), getString(R.string.quality) + " " + quality + "\n" + getString(R.string.finger_on_device_same), null,
-                        null, null, false);
-                mDeviceDataProvider.scanFingerprint(TAG, mDeviceId, mQuality, false, mScanListener, mScanErrorListener, null);
-            }
-        }
-    };
-
-
-    private Listener<FingerPrints> mFingerPrintListener = new Response.Listener<FingerPrints>() {
-        @Override
-        public void onResponse(final FingerPrints response, Object deliverParam) {
-            if (isInValidCheck(null)) {
-                return;
-            }
-            mPopup.dismiss();
-            if (mUserInfo == null || response == null || response.records == null) {
-                mErrorBackListener.onErrorResponse(new VolleyError(getString(R.string.server_null)),deliverParam);
-                return;
-            }
-            mUserInfo.fingerprint_templates = response.records;
-            mUserInfo.card_count = mUserInfo.fingerprint_templates.size();
-            refreshValue();
-        }
-    };
-
-    private Response.Listener<ResponseStatus> mModifyFingerPrintListener = new Response.Listener<ResponseStatus>() {
-        @Override
-        public void onResponse(ResponseStatus response, Object param) {
-            if (isInValidCheck(null)) {
-                return;
-            }
-            if (response == null) {
-                mErrorBackListener.onErrorResponse(new VolleyError(null,"Server response is null"),null);
-                return;
-            }
-            mUserDataProvider.getFingerPrints(TAG, mUserInfo.user_id,mFingerPrintListener,mErrorBackListener,null);
-        }
-    };
+    
     private SubToolbar.SubToolBarListener mSubToolBarEvent = new SubToolbar.SubToolBarListener() {
         @Override
         public void onClickSelectAll() {
@@ -320,6 +184,89 @@ public class FingerprintFragment extends BaseFragment {
             }
         }
     };
+    
+    private SeekBarPopup.OnResult mOnChangeQualityResult = new SeekBarPopup.OnResult() {
+        @Override
+        public void OnResult(String data) {
+            if (data != null && !data.isEmpty()) {
+                mQuality = Integer.valueOf(data);
+                scanFinger();
+            } else {
+                reScan();
+            }
+        }
+    };
+    private Callback<ScanFingerprintTemplate> mScanListener = new Callback<ScanFingerprintTemplate>() {
+        @Override
+        public void onFailure(Call<ScanFingerprintTemplate> call, Throwable t) {
+            if (isIgnoreCallback(call, true)) {
+                return;
+            }
+            showRetryPopup(t.getMessage(), new OnPopupClickListener() {
+                @Override
+                public void OnPositive() {
+                    scanFinger();
+                }
+
+                @Override
+                public void OnNegative() {
+                    clearValue();
+                }
+            });
+        }
+
+        @Override
+        public void onResponse(Call<ScanFingerprintTemplate> call, Response<ScanFingerprintTemplate> response) {
+            if (isIgnoreCallback(call, response, true)) {
+                return;
+            }
+            if (!response.isSuccessful() || response.body() == null) {
+                if (response.errorBody() != null) {
+                    try {
+                        ResponseStatus responseClass = (ResponseStatus) mGson.fromJson(response.errorBody().string(), ResponseStatus.class);
+                        if (Device.SCAN_QUALITY_IS_LOW.equals(responseClass.status_code)) {
+                            reScan();
+                            return;
+                        }
+                    } catch (Exception e) {
+
+                    }
+                }
+                onFailure(call, new Throwable(getResponseErrorMessage(response)));
+                return;
+            }
+            int scanQuality = 0;
+            if (response.body().enroll_quality != null) {
+                scanQuality = Integer.valueOf(response.body().enroll_quality);
+            }
+
+            if (mFingerprintTemplate == null) {
+                mFingerprintTemplate = new ListFingerprintTemplate();
+                mFingerprintTemplate.template0 = response.body().template0;
+                mFingerprintTemplate.template1 = response.body().template0;
+            }
+
+            if (mIsTwiceInput) {
+                mScanQuality2nd = scanQuality;
+            } else {
+                mScanQuality1st = scanQuality;
+            }
+
+            if (mQuality > scanQuality) {
+                reScan();
+                return;
+            }
+
+            if (mIsTwiceInput) {
+                mIsTwiceInput = false;
+                mFingerprintTemplate.template1 = response.body().template0;
+                scanVerify();
+            } else {
+                mIsTwiceInput = true;
+                scanFinger();
+            }
+        }
+    };
 
     public FingerprintFragment() {
         super();
@@ -327,10 +274,103 @@ public class FingerprintFragment extends BaseFragment {
         TAG = getClass().getSimpleName() + String.valueOf(System.currentTimeMillis());
     }
 
+    private void scanVerify() {
+        mHandler.postDelayed(new Runnable() {
+                                 @Override
+                                 public void run() {
+                                     mPopup.show(PopupType.FINGERPRINT_CONFIRM, mItemAdapter.getName(mReplacePosition), "1" + getString(R.string.st) + " " + getString(R.string.quality) + " " + mScanQuality1st + "\n" + "2" + getString(R
+                                                     .string.nd) + " " + getString(R.string.quality) + " " + mScanQuality2nd + "\n" + getString(R.string
+                                                     .verify_finger),
+                                             null,
+                                             null, null,
+                                             false);
+                                     request(mDeviceDataProvider.verifyFingerprint(mDeviceId, mFingerprintTemplate, mScanConfirmListener));
+                                 }
+                             }
+                , 1000);
+    }
+
+    private void showGuideScanFinger() {
+        PopupType type = PopupType.FINGERPRINT;
+        String body = "\n" + getString(R.string.finger_on_device);
+
+        if (mIsTwiceInput) {
+            type = PopupType.FINGERPRINT_AGAGIN;
+            body = "1" + getString(R.string.st) + " " + getString(R.string.quality) + " " + mScanQuality1st + "\n" + getString(R.string.finger_on_device_same);
+        }
+        mPopup.show(type, mItemAdapter.getName(mReplacePosition), body, null,
+                null, null, false);
+    }
+
+    private void scanFinger() {
+        if (isInValidCheck()) {
+            return;
+        }
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                if (mIsBioMiniRescan) {
+                    int result = mBioMiniDataProvider.findDevice();
+                    if (result == UFA_OK) {
+                        scanBioMini();
+                        return;
+                    }
+                    mIsBioMiniRescan = false;
+                    mToastPopup.show(ToastPopup.TYPE_DEFAULT, getString(R.string.portable), BioMiniDataProvider.getMessage(result));
+                    return;
+                }
+                showGuideScanFinger();
+                request(mDeviceDataProvider.scanFingerprint(mDeviceId, mQuality, false, mScanListener));
+            }
+        });
+    }
+
+    private void sucess() {
+        mPopup.show(PopupType.FINGERPRINT_CONFIRM, mItemAdapter.getName(mReplacePosition), getString(R.string.scan_success), new OnPopupClickListener() {
+            @Override
+            public void OnPositive() {
+                mHandler.post(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (BuildConfig.DEBUG) {
+                            Log.i(TAG, "mReplacePosition:" + mReplacePosition + " size:" + mUserInfo.fingerprint_templates.size());
+                        }
+                        if (mReplacePosition == -1 || mReplacePosition >= mUserInfo.fingerprint_templates.size()) {
+                            try {
+                                mUserInfo.fingerprint_templates.add(mFingerprintTemplate.clone());
+                            } catch (CloneNotSupportedException e) {
+                                e.printStackTrace();
+                            }
+                        } else {
+                            try {
+                                mUserInfo.fingerprint_templates.set(mReplacePosition, mFingerprintTemplate.clone());
+                            } catch (CloneNotSupportedException e) {
+                                e.printStackTrace();
+                            }
+                        }
+                        refreshValue();
+                        if (VersionData.getCloudVersion(mActivity) > 1) {
+                            mPopup.showWait(mCancelExitListener);
+                            request(mUserDataProvider.modifyFingerPrints(mUserInfo.user_id, mUserInfo.fingerprint_templates, mModifyFingerPrintListener));
+                        }
+                    }
+                });
+            }
+
+            @Override
+            public void OnNegative() {
+                clearValue();
+            }
+        }, getString(R.string.ok), null, false);
+    }
+
     private void clearValue() {
         mReplacePosition = -1;
         mFingerprintTemplate = null;
         mIsTwiceInput = false;
+        mIsBioMiniRescan = false;
+        mBioMiniTemplate0 = null;
+        mBioMiniTemplate1 = null;
     }
 
     private void deleteConfirm(int selectedCount) {
@@ -344,7 +384,7 @@ public class FingerprintFragment extends BaseFragment {
                 mHandler.post(new Runnable() {
                     @Override
                     public void run() {
-                        if (VersionData.getCloudVersion(mContext) > 1 ) {
+                        if (VersionData.getCloudVersion(mActivity) > 1) {
                             int i = mItemAdapter.getCount() - 1;
                             ArrayList<ListFingerprintTemplate> fingerprintTemplates = (ArrayList<ListFingerprintTemplate>) mUserInfo.fingerprint_templates.clone();
                             for (; i >= 0; i--) {
@@ -353,13 +393,8 @@ public class FingerprintFragment extends BaseFragment {
                                     fingerprintTemplates.remove(i);
                                 }
                             }
-                            mPopup.showWait(new DialogInterface.OnCancelListener() {
-                                @Override
-                                public void onCancel(DialogInterface dialog) {
-                                    mScreenControl.backScreen();
-                                }
-                            });
-                            mUserDataProvider.modifyFingerPrints(TAG,mUserInfo.user_id,fingerprintTemplates,mModifyFingerPrintListener,mErrorStayListener,null);
+                            mPopup.showWait(mCancelExitListener);
+                            request(mUserDataProvider.modifyFingerPrints(mUserInfo.user_id, fingerprintTemplates, mModifyFingerPrintListener));
                         } else {
                             int i = mItemAdapter.getCount() - 1;
                             for (; i >= 0; i--) {
@@ -370,12 +405,9 @@ public class FingerprintFragment extends BaseFragment {
                             }
                             refreshValue();
                         }
-
                     }
                 });
             }
-
-
         }, getString(R.string.ok), getString(R.string.cancel));
     }
 
@@ -384,7 +416,7 @@ public class FingerprintFragment extends BaseFragment {
             mUserInfo = getExtraData(User.TAG, savedInstanceState);
         }
         if (mBioMiniDataProvider == null) {
-            mBioMiniDataProvider = BioMiniDataProvider.getInstance(mContext);
+            mBioMiniDataProvider = BioMiniDataProvider.getInstance(mActivity);
         }
         Boolean disable = getExtraData(Setting.DISABLE_MODIFY, savedInstanceState);
         if (disable != null) {
@@ -402,9 +434,10 @@ public class FingerprintFragment extends BaseFragment {
         }
         if (mSeekBarPopup == null) {
             mSeekBarPopup = new SeekBarPopup(getActivity());
+            mSeekBarPopup.setRange(20, 100, 20);
         }
         if (mItemAdapter == null) {
-            mItemAdapter = new FingerPrintAdapter(mContext, mUserInfo.fingerprint_templates, getListView(), new OnItemClickListener() {
+            mItemAdapter = new FingerPrintAdapter(mActivity, mUserInfo.fingerprint_templates, getListView(), new OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                     if (mSubToolbar == null) {
@@ -412,7 +445,13 @@ public class FingerprintFragment extends BaseFragment {
                     }
                     if (mSubMode == MODE_DELETE) {
                         mSubToolbar.setSelectAllViewOff();
-                        mSubToolbar.setSelectedCount(mItemAdapter.getCheckedItemCount());
+                        int count = mItemAdapter.getCheckedItemCount();
+                        mSubToolbar.setSelectedCount(count);
+                        if (count == mItemAdapter.getCount()) {
+                            if (!mSubToolbar.getSelectAll()) {
+                                mSubToolbar.showReverseSelectAll();
+                            }
+                        }
                     } else {
                         mReplacePosition = position;
                         showSelectDevice();
@@ -442,7 +481,27 @@ public class FingerprintFragment extends BaseFragment {
         if (mItemAdapter != null) {
             mItemAdapter.clearItems();
         }
+        if (mUsbReceiver != null) {
+            getActivity().unregisterReceiver(mUsbReceiver);
+            mUsbReceiver = null;
+        }
+        int unint = mBioMiniDataProvider.unInitDevice();
+        //      Log.e(TAG,"unInit:"+mBioMiniDataProvider.getMessage(unint));
         super.onDestroy();
+    }
+
+    @Override
+    protected void registerBroadcast() {
+        if (mUsbReceiver == null) {
+            mUsbReceiver = new BroadcastReceiver() {
+                @Override
+                public void onReceive(Context context, Intent intent) {
+                    mIsBioMiniRescan = false;
+                    mBioMiniDataProvider.unInitDevice();
+                }
+            };
+        }
+        getActivity().registerReceiver(mUsbReceiver, new IntentFilter("android.hardware.usb.action.USB_DEVICE_DETACHED"));
     }
 
     @Override
@@ -500,7 +559,7 @@ public class FingerprintFragment extends BaseFragment {
                 mSubToolbar.showMultipleSelectInfo(true, mItemAdapter.getCheckedItemCount());
                 break;
         }
-        mContext.invalidateOptionsMenu();
+        mActivity.invalidateOptionsMenu();
     }
 
     private void onCreateMenu(Menu menu, MenuInflater inflater) {
@@ -528,7 +587,7 @@ public class FingerprintFragment extends BaseFragment {
         }
 
         if (mUserInfo == null) {
-            Log.e(TAG, "data is null");
+            //         Log.e(TAG, "data is null");
             mHandler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
@@ -538,15 +597,10 @@ public class FingerprintFragment extends BaseFragment {
             }, 1000);
             return null;
         }
-        if (VersionData.getCloudVersion(mContext) > 1) {
+        if (VersionData.getCloudVersion(mActivity) > 1) {
             if (!mIsDisableModify) {
-                mPopup.showWait(new DialogInterface.OnCancelListener() {
-                    @Override
-                    public void onCancel(DialogInterface dialog) {
-                        mScreenControl.backScreen();
-                    }
-                });
-                mUserDataProvider.getFingerPrints(TAG, mUserInfo.user_id, mFingerPrintListener, mErrorBackListener, null);
+                mPopup.showWait(mCancelExitListener);
+                request(mUserDataProvider.getFingerPrints(mUserInfo.user_id, mFingerPrintListener));
             }
         }
         return mRootView;
@@ -555,7 +609,6 @@ public class FingerprintFragment extends BaseFragment {
     @Override
     public void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        Log.e(TAG, "onSaveInstanceState");
         User bundleItem = null;
         try {
             bundleItem = (User) mUserInfo.clone();
@@ -573,7 +626,7 @@ public class FingerprintFragment extends BaseFragment {
         if (mIsDisableModify) {
             return;
         }
-        onCreateMenu(menu, mContext.getMenuInflater());
+        onCreateMenu(menu, mActivity.getMenuInflater());
         super.onPrepareOptionsMenu(menu);
     }
 
@@ -587,7 +640,7 @@ public class FingerprintFragment extends BaseFragment {
             mItemAdapter.clearChoices();
         }
         if (mSelectDevicePopup == null) {
-            mSelectDevicePopup = new SelectPopup<ListDevice>(mContext, mPopup);
+            mSelectDevicePopup = new SelectPopup<ListDevice>(mActivity, mPopup);
         }
         if (mSubToolbar != null) {
             mSubToolbar.setSelectedCount(mItemAdapter.getCheckedItemCount());
@@ -598,98 +651,86 @@ public class FingerprintFragment extends BaseFragment {
     }
 
     private void scanBioMini() {
-        int result = mBioMiniDataProvider.initDevice(BioMiniDataProvider.FingerTemplateType.UFA_TEMPLATE_TYPE_SUPREMA);
-        if (result == BioMiniDataProvider.UFA_OK || result == BioMiniDataProvider.UFA_ERR_ALREADY_INITIALIZED) {
-            if (mBioMiniTemplate1 == null) {
-                mBioMiniTemplate1 = new BioMiniTemplate();
-            }
-            mPopup.show(PopupType.FINGERPRINT, mItemAdapter.getName(mReplacePosition), getString(R.string.finger_on_device), null, null, null, false);
-            mHandler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    int result = mBioMiniDataProvider.scanFingerPrint(mBioMiniTemplate1);
-                    mPopup.dismiss();
-                    if (result == BioMiniDataProvider.UFA_OK) {
-                        if (mBioMiniTemplate1.getQuality()[0] < mQuality) {
-                            reScan();
-                            return;
-                        }
-                        if (mFingerprintTemplate == null) {
-                            mFingerprintTemplate = new ListFingerprintTemplate();
-                        }
-                        mFingerprintTemplate.template0 = mBioMiniTemplate1.getTemplateString();
-                        mFingerprintTemplate.template1 = mFingerprintTemplate.template0;
-                        Toast.makeText(mContext,"size:"+mBioMiniTemplate1.getTemplateSize()[0]+" q:"+mBioMiniTemplate1.getQuality()[0],Toast.LENGTH_LONG).show();
-
-                        mPopup.show(PopupType.FINGERPRINT_CONFIRM, mItemAdapter.getName(mReplacePosition), getString(R.string.scan_success), new OnPopupClickListener() {
-                            @Override
-                            public void OnPositive() {
-                                mHandler.post(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        if (BuildConfig.DEBUG) {
-                                            Log.i(TAG, "mReplacePosition:" + mReplacePosition + " size:" + mUserInfo.fingerprint_templates.size());
-                                        }
-                                        if (mReplacePosition == -1 || mReplacePosition >= mUserInfo.fingerprint_templates.size()) {
-                                            try {
-                                                mUserInfo.fingerprint_templates.add(mFingerprintTemplate.clone());
-                                            } catch (CloneNotSupportedException e) {
-                                                e.printStackTrace();
-                                            }
-                                        } else {
-                                            try {
-                                                mUserInfo.fingerprint_templates.set(mReplacePosition, mFingerprintTemplate.clone());
-                                            } catch (CloneNotSupportedException e) {
-                                                e.printStackTrace();
-                                            }
-                                        }
-                                        refreshValue();
-                                        if (VersionData.getCloudVersion(mContext) > 1) {
-                                            mPopup.showWait(new DialogInterface.OnCancelListener() {
-                                                @Override
-                                                public void onCancel(DialogInterface dialog) {
-                                                    mScreenControl.backScreen();
-                                                }
-                                            });
-                                            mUserDataProvider.modifyFingerPrints(TAG, mUserInfo.user_id, mUserInfo.fingerprint_templates, mModifyFingerPrintListener, mErrorBackListener, null);
-                                        }
-                                    }
-                                });
-                            }
-
-                            @Override
-                            public void OnNegative() {
-                                clearValue();
-                            }
-                        }, getString(R.string.ok), null, false);
-                    } else {
-                        Toast.makeText(mContext,"err:"+BioMiniDataProvider.getMessage(result)+" code:"+result,Toast.LENGTH_LONG).show();
-                    }
-                }
-            },500);
-
-        } else {
-            mPopup.show(PopupType.ALERT,"BioMini",BioMiniDataProvider.getMessage(result),null,null,null);
+        if (isInValidCheck()) {
             return;
         }
+        mHandler.post(new Runnable() {
+            @Override
+            public void run() {
+                int result = mBioMiniDataProvider.initDevice(BioMiniDataProvider.FingerTemplateType.UFA_TEMPLATE_TYPE_SUPREMA);
+                if (result == UFA_OK || result == BioMiniDataProvider.UFA_ERR_ALREADY_INITIALIZED) {
+                    if (mBioMiniTemplate0 == null) {
+                        mBioMiniTemplate0 = new BioMiniTemplate();
+                    }
+                    if (mBioMiniTemplate1 == null) {
+                        mBioMiniTemplate1 = new BioMiniTemplate();
+                    }
+                    showGuideScanFinger();
+                    mHandler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (isInValidCheck()) {
+                                return;
+                            }
+                            int result;
+                            if (mIsTwiceInput) {
+                                result = mBioMiniDataProvider.scanFingerPrint(mBioMiniTemplate1);
+                            } else {
+                                result = mBioMiniDataProvider.scanFingerPrint(mBioMiniTemplate0);
+                            }
+                            mPopup.dismiss();
+                            if (result == UFA_OK) {
+                                int quality;
+                                if (mFingerprintTemplate == null) {
+                                    mFingerprintTemplate = new ListFingerprintTemplate();
+                                }
+                                if (mIsTwiceInput) {
+                                    quality = mBioMiniTemplate1.getQuality()[0];
+                                    mScanQuality2nd = quality;
+                                    mFingerprintTemplate.template1 = mBioMiniTemplate1.getTemplateString();
+                                } else {
+                                    quality = mBioMiniTemplate0.getQuality()[0];
+                                    mScanQuality1st = quality;
+                                    mFingerprintTemplate.template0 = mBioMiniTemplate0.getTemplateString();
+                                }
+                                if (quality < mQuality) {
+                                    reScan();
+                                    return;
+                                }
+
+                                if (mIsTwiceInput == true) {
+                                    mIsTwiceInput = false;
+                                    scanVerify();
+
+                                } else {
+                                    mIsTwiceInput = true;
+                                    scanBioMini();
+                                }
+                            } else {
+                                //TODO 재시도 팝업
+                                mPopup.show(PopupType.ALERT, getString(R.string.portable), BioMiniDataProvider.getMessage(result), null, null, null);
+                            }
+                        }
+                    }, 1000);
+
+                } else {
+                    mToastPopup.show(ToastPopup.TYPE_DEFAULT, getString(R.string.portable), BioMiniDataProvider.getMessage(result));
+                    clearValue();
+                    return;
+                }
+            }
+        });
     }
 
     private void showSelectDevice() {
-//        int result = mBioMiniDataProvider.findDevice();
-//        if (result == BioMiniDataProvider.UFA_OK) {
-//            mIsBioMiniRescan = true;
-//            scanBioMini();
-//            return;
-//        }
-//        Toast.makeText(mContext,"err:"+BioMiniDataProvider.getMessage(result)+" code:"+result,Toast.LENGTH_LONG).show();
         if (mIsDisableModify) {
             return;
         }
         mIsBioMiniRescan = false;
-        mSelectDevicePopup.show(SelectType.DEVICE_FINGERPRINT, new OnSelectResultListener<ListDevice>() {
+        mSelectDevicePopup.show(SelectType.DEVICE_FINGERPRINT_BIOMINI, new OnSelectResultListener<ListDevice>() {
             @Override
             public void OnResult(ArrayList<ListDevice> selectedItem, boolean isPositive) {
-                if (isInValidCheck(null)) {
+                if (isInValidCheck()) {
                     return;
                 }
                 if (selectedItem == null) {
@@ -700,65 +741,53 @@ public class FingerprintFragment extends BaseFragment {
                 if (mDeviceId == null) {
                     return;
                 }
-                mHandler.post(new Runnable() {
-                    @Override
-                    public void run() {
-                        mPopup.show(PopupType.FINGERPRINT, mItemAdapter.getName(mReplacePosition), getString(R.string.finger_on_device), null, null, null, false);
-                        mDeviceDataProvider.scanFingerprint(TAG, mDeviceId, mQuality, false, mScanListener, mScanErrorListener, null);
+                if (mDeviceId.equals("-10")) {
+                    int result = mBioMiniDataProvider.findDevice();
+                    if (result == UFA_OK) {
+                        mIsBioMiniRescan = true;
+                        scanBioMini();
+                        return;
+                    } else {
+                        mToastPopup.show(ToastPopup.TYPE_DEFAULT, getString(R.string.portable), BioMiniDataProvider.getMessage(result));
                     }
-                });
+                    return;
+                }
+                scanFinger();
             }
         }, null, getString(R.string.select_device_orginal), false, true);
 
     }
-    private Runnable mRunReScan = new  Runnable() {
-        @Override
-        public void run() {
-            if (isInValidCheck(null)) {
-                return;
-            }
 
-            int result = mBioMiniDataProvider.findDevice();
-            if (result == BioMiniDataProvider.UFA_OK) {
-                scanBioMini();
-                return;
-            }
-            if (mIsBioMiniRescan) {
-                mIsBioMiniRescan = false;
-                mPopup.show(PopupType.ALERT, "BioMini", BioMiniDataProvider.getMessage(result), null, null,
-                        null, false);
-                return;
-            }
-            mPopup.show(PopupType.FINGERPRINT_AGAGIN, mItemAdapter.getName(mReplacePosition), getString(R.string.low_quality) + "\n" + getString(R.string.finger_on_device_same), null, null,
-                    null, false);
-            mDeviceDataProvider.scanFingerprint(TAG, mDeviceId, mQuality, false, mScanListener, mScanErrorListener, null);
-        }
-    };
     private void reScan() {
-        if (isInValidCheck(null)) {
+        if (isInValidCheck()) {
             return;
         }
-        SelectPopup<SelectCustomData> selectPopup = new SelectPopup<SelectCustomData>(mContext, mPopup);
-        ArrayList<SelectCustomData> linkType = new ArrayList<SelectCustomData>();
-        linkType.add(new SelectCustomData(getString(R.string.rescan_default), 0, false));
-        linkType.add(new SelectCustomData(getString(R.string.rescan_change), 1, false));
-        selectPopup.show(SelectPopup.SelectType.CUSTOM, new SelectPopup.OnSelectResultListener<SelectCustomData>() {
+        //TODO 아이폰도 동일방식.
+        mHandler.post(new Runnable() {
             @Override
-            public void OnResult(ArrayList<SelectCustomData> selectedItem,boolean isPositive) {
-                if (isInValidCheck(null) || selectedItem == null) {
-                    mIsTwiceInput = false;
-                    return;
-                }
-                int select = selectedItem.get(0).getIntId();
-                if (select == 0) {
-                    mQuality = 80;
-                    mHandler.removeCallbacks(mRunReScan);
-                    mHandler.postDelayed(mRunReScan,500);
-                    return;
-                } else {
-                    mSeekBarPopup.show(getString(R.string.rescan_change),mOnResult,mQuality);
-                }
+            public void run() {
+                SelectPopup<SelectCustomData> selectPopup = new SelectPopup<SelectCustomData>(mActivity, mPopup);
+                ArrayList<SelectCustomData> linkType = new ArrayList<SelectCustomData>();
+                linkType.add(new SelectCustomData(getString(R.string.rescan_default), 0, false));
+                linkType.add(new SelectCustomData(getString(R.string.rescan_change), 1, false));
+                selectPopup.show(SelectPopup.SelectType.CUSTOM, new SelectPopup.OnSelectResultListener<SelectCustomData>() {
+                    @Override
+                    public void OnResult(ArrayList<SelectCustomData> selectedItem, boolean isPositive) {
+                        if (isInValidCheck() || selectedItem == null) {
+                            mIsTwiceInput = false;
+                            return;
+                        }
+                        int select = selectedItem.get(0).getIntId();
+                        if (select == 0) {
+                            mQuality = 80;
+                            scanFinger();
+                            return;
+                        } else {
+                            mSeekBarPopup.show(getString(R.string.rescan_change), mOnChangeQualityResult, mQuality);
+                        }
+                    }
+                }, linkType, getString(R.string.low_quality) + ". " + getString(R.string.rescan), false);
             }
-        }, linkType, getString(R.string.rescan), false);
+        });
     }
 }

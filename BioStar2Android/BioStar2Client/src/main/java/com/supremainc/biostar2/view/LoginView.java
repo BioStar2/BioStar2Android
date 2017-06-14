@@ -29,7 +29,6 @@ import android.widget.TextView;
 import com.supremainc.biostar2.R;
 import com.supremainc.biostar2.impl.OnSingleClickListener;
 import com.supremainc.biostar2.sdk.provider.ConfigDataProvider;
-import com.supremainc.biostar2.util.TextWatcherFilter;
 
 public class LoginView extends BaseView {
     public final String TAG = getClass().getSimpleName() + String.valueOf(System.currentTimeMillis());
@@ -46,9 +45,6 @@ public class LoginView extends BaseView {
     private String mAddressFullText;
     private InputMethodManager mImm;
     private LoginViewListener mLoginViewListener;
-    private TextWatcherFilter mIDTextWatcherFilter;
-    private TextWatcherFilter mPasswordTextWatcherFilter;
-
 
     private OnSingleClickListener mClickListener = new OnSingleClickListener() {
         @Override
@@ -100,9 +96,10 @@ public class LoginView extends BaseView {
             if (mIsFocusSubDomain) {
                 mSubDomain.setText(s.toString());
             } else {
-                if (!(data.startsWith("h") || data.startsWith("H"))) {
-                    mInput.setText("https://");
-                    mInput.setSelection("https://".length());
+                String data2 = data.toLowerCase();
+                if (!(data2.startsWith("http://") || data2.startsWith("https://"))) {
+                    mInput.setText("http://");
+                    mInput.setSelection("http://".length());
                     return;
                 }
                 mAddressFullText = s.toString();
@@ -146,17 +143,7 @@ public class LoginView extends BaseView {
         mLogin = (StyledTextView) findViewById(R.id.login);
         mLogin.setOnClickListener(mClickListener);
         mID = (StyledEditTextView) findViewById(R.id.login_id);
-        if (mIDTextWatcherFilter == null) {
-            mIDTextWatcherFilter = new TextWatcherFilter(mID, TextWatcherFilter.EDIT_TYPE.LOGIN_ID, mContext, 32);
-        }
-        mID.removeTextChangedListener(mIDTextWatcherFilter);
-        mID.addTextChangedListener(mIDTextWatcherFilter);
         mPassword = (StyledEditTextView) findViewById(R.id.password);
-//        if (mPasswordTextWatcherFilter == null) {
-//            mPasswordTextWatcherFilter = new TextWatcherFilter(mPassword, TextWatcherFilter.EDIT_TYPE.PASSWORD, mContext, 32);
-//        }
-//        mPassword.removeTextChangedListener(mPasswordTextWatcherFilter);
-//        mPassword.addTextChangedListener(mPasswordTextWatcherFilter);
         mPassword.setOnEditorActionListener(new TextView.OnEditorActionListener() {
             @Override
             public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {

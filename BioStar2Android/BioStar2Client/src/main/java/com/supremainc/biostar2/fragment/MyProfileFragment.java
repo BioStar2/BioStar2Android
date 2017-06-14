@@ -19,7 +19,6 @@ import android.Manifest;
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
@@ -45,25 +44,18 @@ import android.widget.TextView;
 
 import com.supremainc.biostar2.BuildConfig;
 import com.supremainc.biostar2.R;
-import com.supremainc.biostar2.meta.Setting;
 import com.supremainc.biostar2.impl.OnSingleClickListener;
-import com.supremainc.biostar2.sdk.datatype.v1.Permission.CloudRole;
-import com.supremainc.biostar2.sdk.datatype.v2.AccessControl.ListAccessGroup;
-import com.supremainc.biostar2.sdk.datatype.v2.Card.ListCard;
-import com.supremainc.biostar2.sdk.datatype.v2.Common.BioStarSetting;
-import com.supremainc.biostar2.sdk.datatype.v2.Common.ResponseStatus;
-import com.supremainc.biostar2.sdk.datatype.v2.Common.VersionData;
-import com.supremainc.biostar2.sdk.datatype.v2.FingerPrint.ListFingerprintTemplate;
-import com.supremainc.biostar2.sdk.datatype.v2.Permission.PermissionModule;
-import com.supremainc.biostar2.sdk.datatype.v2.User.User;
+import com.supremainc.biostar2.meta.Setting;
+import com.supremainc.biostar2.sdk.models.v1.permission.CloudRole;
+import com.supremainc.biostar2.sdk.models.v2.common.BioStarSetting;
+import com.supremainc.biostar2.sdk.models.v2.common.ResponseStatus;
+import com.supremainc.biostar2.sdk.models.v2.common.VersionData;
+import com.supremainc.biostar2.sdk.models.v2.user.User;
 import com.supremainc.biostar2.sdk.provider.CommonDataProvider;
-import com.supremainc.biostar2.sdk.provider.TimeConvertProvider;
+import com.supremainc.biostar2.sdk.provider.DateTimeDataProvider;
 import com.supremainc.biostar2.sdk.utils.ImageUtil;
-import com.supremainc.biostar2.sdk.volley.Response;
-import com.supremainc.biostar2.sdk.volley.VolleyError;
 import com.supremainc.biostar2.util.InvalidChecker;
 import com.supremainc.biostar2.util.TextInputFilter;
-import com.supremainc.biostar2.util.TextWatcherFilter;
 import com.supremainc.biostar2.view.DetailEditItemView;
 import com.supremainc.biostar2.view.DetailSwitchItemView;
 import com.supremainc.biostar2.view.DetailTextItemView;
@@ -81,6 +73,10 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class MyProfileFragment extends BaseFragment {
     private static final int DELETE_PICTURE = 2;
@@ -114,34 +110,17 @@ public class MyProfileFragment extends BaseFragment {
     private DetailTextItemView mAccessGroupView;
     private DetailTextItemView mFingerPrintView;
     private DetailTextItemView mCardView;
+    private DetailTextItemView mFaceView;
     private DetailSwitchItemView mPinView;
-    private TextWatcherFilter mUserNameViewTextWatcherFilter;
-    private TextWatcherFilter mEmailViewTextWatcherFilter;
-    private TextWatcherFilter mTelephoneViewTextWatcherFilter;
-    private TextWatcherFilter mLoginIDViewTextWatcherFilter;
     private TextInputFilter mTextInputFilter;
 
     private SummaryUserView.SummaryUserViewListener mSummaryUserViewListener = new SummaryUserView.SummaryUserViewListener() {
-        @Override
-        public void goLog() {
-            showUserViewLog();
-        }
-
         @Override
         public void editPhoto() {
             editUserImage();
         }
     };
 
-    private DialogInterface.OnCancelListener cancelListener = new DialogInterface.OnCancelListener() {
-        @Override
-        public void onCancel(DialogInterface dialog) {
-            if (mCommonDataProvider != null) {
-                mCommonDataProvider.cancelAll(TAG);
-            }
-            ScreenControl.getInstance().backScreen();
-        }
-    };
     private Popup.OnPopupClickListener mPopupSucess = new Popup.OnPopupClickListener() {
         @Override
         public void OnPositive() {
@@ -156,7 +135,7 @@ public class MyProfileFragment extends BaseFragment {
                 e.printStackTrace();
                 return;
             }
-            LocalBroadcastManager.getInstance(mContext).sendBroadcast(new Intent(Setting.BROADCAST_REROGIN));
+            LocalBroadcastManager.getInstance(mActivity).sendBroadcast(new Intent(Setting.BROADCAST_REROGIN));
             mScreenControl.backScreen();
         }
 
@@ -164,10 +143,22 @@ public class MyProfileFragment extends BaseFragment {
         public void OnNegative() {
         }
     };
-    private Response.Listener<ResponseStatus> mModifyUserListener = new Response.Listener<ResponseStatus>() {
+
+    private Callback<ResponseStatus> mModifyUserListener = new Callback<ResponseStatus>() {
         @Override
-        public void onResponse(ResponseStatus response, Object deliverParam) {
-            if (isInValidCheck(null)) {
+        public void onFailure(Call<ResponseStatus> call, Throwable t) {
+            if (isIgnoreCallback(call, true)) {
+                return;
+            }
+            showErrorPopup(t.getMessage(), false);
+        }
+
+        @Override
+        public void onResponse(Call<ResponseStatus> call, Response<ResponseStatus> response) {
+            if (isIgnoreCallback(call, response, true)) {
+                return;
+            }
+            if (isInvalidResponse(response, true, false)) {
                 return;
             }
             mUserInfo.photo = mBackupPhoto;
@@ -180,88 +171,44 @@ public class MyProfileFragment extends BaseFragment {
             } catch (Exception e) {
                 Log.e(TAG, " " + e.getMessage());
             }
-            mUserDataProvider.simpleLogin(null, null, null);
+            mCommonDataProvider.simpleLogin(null);
             mPopup.dismissWiat();
             mPopup.show(Popup.PopupType.CONFIRM, getString(R.string.info), getString(R.string.user_modify_success), mPopupSucess, null, null);
         }
     };
-    private Popup.OnPopupClickListener popupFail = new Popup.OnPopupClickListener() {
+
+    private Callback<BioStarSetting> mSettingListener = new Callback<BioStarSetting>() {
         @Override
-        public void OnNegative() {
+        public void onFailure(Call<BioStarSetting> call, Throwable t) {
+            if (isIgnoreCallback(call, true)) {
+                return;
+            }
+            showPasswodPopup();
         }
 
         @Override
-        public void OnPositive() {
-            mUserDataProvider.modifyMyProfile(TAG, mUserInfo, mModifyUserListener, mModifyUserErrorListener, null);
-        }
-    };
-    private Response.ErrorListener mModifyUserErrorListener = new Response.ErrorListener() {
-        @Override
-        public void onErrorResponse(VolleyError error, Object deliverParam) {
-            if (isInValidCheck(error)) {
+        public void onResponse(Call<BioStarSetting> call, Response<BioStarSetting> response) {
+            if (isIgnoreCallback(call, response, true)) {
                 return;
             }
-            mPopup.dismissWiat();
-            mPopup.show(Popup.PopupType.ALERT, getString(R.string.fail_retry), Setting.getErrorMessage(error, mContext), popupFail, getString(R.string.ok), getString(R.string.cancel));
-        }
-    };
-    private DialogInterface.OnCancelListener mCancelLoginListener = new DialogInterface.OnCancelListener() {
-        @Override
-        public void onCancel(DialogInterface dialog) {
-            if (mCommonDataProvider != null) {
-                mCommonDataProvider.cancelAll(TAG);
-            }
+            showPasswodPopup();
         }
     };
 
-    private Response.Listener<User> mLoginListener = new Response.Listener<User>() {
+    private Callback<User> mSettingListener2 = new Callback<User>() {
         @Override
-        public void onResponse(User response, Object deliverParam) {
-            if (isInValidCheck(null)) {
+        public void onFailure(Call<User> call, Throwable t) {
+            if (isIgnoreCallback(call, true)) {
                 return;
             }
-            mUserInfo = mUserDataProvider.getLoginUserInfo();
-            setView();
-            LocalBroadcastManager.getInstance(mContext).sendBroadcast(new Intent(Setting.BROADCAST_REROGIN));
-            mPopup.dismissWiat();
-        }
-    };
-    private Response.ErrorListener mSimpleLoginErrorListener = new Response.ErrorListener() {
-        @Override
-        public void onErrorResponse(VolleyError volleyError, Object deliverParam) {
-            if (isInValidCheck(null)) {
-                return;
-            }
-            mPopup.dismissWiat();
-        }
-    };
-    private Response.Listener<BioStarSetting> mSettingListener = new Response.Listener<BioStarSetting>() {
-        @Override
-        public void onResponse(BioStarSetting response, Object deliverParam) {
-            if (isInValidCheck(null)) {
-                return;
-            }
-            mPopup.dismissWiat();
             showPasswodPopup();
         }
-    };
-    private Response.Listener<User> mSettingListener2 = new Response.Listener<User>() {
+
         @Override
-        public void onResponse(User response, Object deliverParam) {
-            if (isInValidCheck(null)) {
+        public void onResponse(Call<User> call, Response<User> response) {
+            if (isIgnoreCallback(call, response, true)) {
                 return;
             }
-            mPopup.dismissWiat();
-            showPasswodPopup();
-        }
-    };
-    private Response.ErrorListener mSettingErrorListener = new Response.ErrorListener() {
-        @Override
-        public void onErrorResponse(VolleyError volleyError, Object deliverParam) {
-            if (isInValidCheck(null)) {
-                return;
-            }
-            mPopup.dismissWiat();
             showPasswodPopup();
         }
     };
@@ -293,12 +240,12 @@ public class MyProfileFragment extends BaseFragment {
                     break;
                 }
                 case R.id.login_password: {
-                    mPopup.showWait(mCancelLoginListener);
-                    if (VersionData.getCloudVersion(mContext) > 1) {
-                        mCommonDataProvider.getBioStarSetting(mSettingListener, mSettingErrorListener, null);
+                    mPopup.showWait(mCancelExitListener);
+                    if (VersionData.getCloudVersion(mActivity) > 1) {
+                        request(mCommonDataProvider.getBioStarSetting(mSettingListener));
                     } else {
-                        mCommonDataProvider.simpleLogin(mSettingListener2, mSettingErrorListener, null);
-                    };
+                        mCommonDataProvider.simpleLogin(mSettingListener2);
+                    }
                     break;
                 }
                 case R.id.access_group: {
@@ -313,11 +260,37 @@ public class MyProfileFragment extends BaseFragment {
                     editCard();
                     break;
                 }
+                case R.id.face: {
+                    editFace();
+                    break;
+                }
                 case R.id.pin: {
-                    showPinPasswodPopup();
+                    mPinSwitch.setSwitch(!mPinSwitch.getOn());
                     break;
                 }
             }
+        }
+    };
+    private Callback<User> mLoginListener = new Callback<User>() {
+        @Override
+        public void onFailure(Call<User> call, Throwable t) {
+            if (isIgnoreCallback(call, true)) {
+                return;
+            }
+            showErrorPopup(t.getMessage(), true);
+        }
+
+        @Override
+        public void onResponse(Call<User> call, Response<User> response) {
+            if (isIgnoreCallback(call, response, true)) {
+                return;
+            }
+            if (isInvalidResponse(response, true, true)) {
+                return;
+            }
+            mUserInfo = mUserDataProvider.getLoginUserInfo();
+            setView();
+            LocalBroadcastManager.getInstance(mActivity).sendBroadcast(new Intent(Setting.BROADCAST_REROGIN));
         }
     };
     private Runnable mRunRditUserImage = new Runnable() {
@@ -332,7 +305,7 @@ public class MyProfileFragment extends BaseFragment {
             if (Build.VERSION.SDK_INT >= 23) {
                 String permissionLabel = "";
                 try {
-                    PackageManager pm = mContext.getPackageManager();
+                    PackageManager pm = mActivity.getPackageManager();
                     PermissionGroupInfo pg = pm.getPermissionGroupInfo(Manifest.permission_group.STORAGE, PackageManager.GET_META_DATA);
                     permissionLabel = pg.loadLabel(pm).toString();
                 } catch (Exception e) {
@@ -350,8 +323,8 @@ public class MyProfileFragment extends BaseFragment {
                             public void onClick(View view) {
                                 Intent intent = new Intent();
                                 intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                                intent.setData(Uri.parse("package:" + mContext.getPackageName()));
-                                mContext.startActivity(intent);
+                                intent.setData(Uri.parse("package:" + mActivity.getPackageName()));
+                                mActivity.startActivity(intent);
                             }
                         });
                 //snackbar.setActionTextColor(Color.MAGENTA);
@@ -370,7 +343,7 @@ public class MyProfileFragment extends BaseFragment {
     }
 
     private void UpdateClone() {
-        if (VersionData.getCloudVersion(mContext) > 1) {
+        if (VersionData.getCloudVersion(mActivity) > 1) {
             if (mUserInfo.permission != null) {
                 mUserInfo.password = mPasswordData;
                 if (mLoginIDView.content.toString2().equals("")) {
@@ -428,23 +401,23 @@ public class MyProfileFragment extends BaseFragment {
     }
 
     private void createUser() {
-        Calendar cal = mUserInfo.getTimeCalendar(mTimeConvertProvider, User.UserTimeType.expiry_datetime);
+        Calendar cal = mUserInfo.getTimeCalendar(mDateTimeDataProvider, User.UserTimeType.expiry_datetime);
         if (cal == null) {
             cal = Calendar.getInstance();
         }
         int year = cal.get(Calendar.YEAR);
         if (year > 2030) {
             cal.set(Calendar.YEAR, 2030);
-            mUserInfo.setTimeCalendar(mTimeConvertProvider, User.UserTimeType.expiry_datetime, cal);
+            mUserInfo.setTimeCalendar(mDateTimeDataProvider, User.UserTimeType.expiry_datetime, cal);
         }
-        cal = mUserInfo.getTimeCalendar(mTimeConvertProvider, User.UserTimeType.start_datetime);
+        cal = mUserInfo.getTimeCalendar(mDateTimeDataProvider, User.UserTimeType.start_datetime);
         if (cal == null) {
             cal = Calendar.getInstance();
         }
         year = cal.get(Calendar.YEAR);
         if (year < 2000) {
             cal.set(Calendar.YEAR, 2000);
-            mUserInfo.setTimeCalendar(mTimeConvertProvider, User.UserTimeType.start_datetime, cal);
+            mUserInfo.setTimeCalendar(mDateTimeDataProvider, User.UserTimeType.start_datetime, cal);
         }
     }
 
@@ -471,6 +444,19 @@ public class MyProfileFragment extends BaseFragment {
         }
         mScreenControl.addScreen(ScreenControl.ScreenType.CARD, bundle);
     }
+
+    private void editFace() {
+        Bundle bundle = new Bundle();
+        try {
+            bundle.putSerializable(User.TAG, mUserInfo.clone());
+            bundle.putSerializable(Setting.DISABLE_MODIFY, true);
+        } catch (CloneNotSupportedException e) {
+            e.printStackTrace();
+            return;
+        }
+        mScreenControl.addScreen(ScreenControl.ScreenType.FACE, bundle);
+    }
+
 
     private void editFingerPrint() {
         Bundle bundle = new Bundle();
@@ -517,23 +503,23 @@ public class MyProfileFragment extends BaseFragment {
 
     private void editUserImage() {
         if (Build.VERSION.SDK_INT >= 23) {
-            if ((ActivityCompat.checkSelfPermission(mContext, Manifest.permission.READ_EXTERNAL_STORAGE)
-                    != PackageManager.PERMISSION_GRANTED) || (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            if ((ActivityCompat.checkSelfPermission(mActivity, Manifest.permission.READ_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) || (ActivityCompat.checkSelfPermission(mActivity, Manifest.permission.WRITE_EXTERNAL_STORAGE)
                     != PackageManager.PERMISSION_GRANTED)) {
-                ActivityCompat.requestPermissions(mContext, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE},
+                ActivityCompat.requestPermissions(mActivity, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE},
                         Setting.REQUEST_EXTERNAL_STORAGE);
                 return;
             }
         }
-        SelectPopup<SelectCustomData> selectPopup = new SelectPopup<SelectCustomData>(mContext, mPopup);
+        SelectPopup<SelectCustomData> selectPopup = new SelectPopup<SelectCustomData>(mActivity, mPopup);
         ArrayList<SelectCustomData> linkType = new ArrayList<SelectCustomData>();
         linkType.add(new SelectCustomData(getString(R.string.take_picture), TAKE_PICTURE, false));
         linkType.add(new SelectCustomData(getString(R.string.from_gallery), FROM_GALLERY, false));
         linkType.add(new SelectCustomData(getString(R.string.delete_picture), DELETE_PICTURE, false));
         selectPopup.show(SelectPopup.SelectType.CUSTOM, new SelectPopup.OnSelectResultListener<SelectCustomData>() {
             @Override
-            public void OnResult(ArrayList<SelectCustomData> selectedItem,boolean isPositive) {
-                if (isInValidCheck(null)) {
+            public void OnResult(ArrayList<SelectCustomData> selectedItem, boolean isPositive) {
+                if (isInValidCheck()) {
                     return;
                 }
                 if (selectedItem == null) {
@@ -572,7 +558,7 @@ public class MyProfileFragment extends BaseFragment {
         InputStream is = null;
         if (uri.getAuthority() != null) {
             try {
-                is = mContext.getContentResolver().openInputStream(uri);
+                is = mActivity.getContentResolver().openInputStream(uri);
                 Bitmap bmp = BitmapFactory.decodeStream(is);
                 setImage(ImageUtil.resizeBitmap(bmp, Setting.USER_PROFILE_IMAGE_SIZE, true));
             } catch (FileNotFoundException e) {
@@ -593,7 +579,7 @@ public class MyProfileFragment extends BaseFragment {
             mUserInfo = mUserDataProvider.getLoginUserInfo();
         }
         if (mTextInputFilter == null) {
-            mTextInputFilter = new TextInputFilter(mToastPopup);
+            mTextInputFilter = new TextInputFilter(mImm, mToastPopup);
         }
         if (savedInstanceState != null) {
             int photoMode = savedInstanceState.getInt("photoStatus");
@@ -614,25 +600,28 @@ public class MyProfileFragment extends BaseFragment {
         mSummaryUserView = (SummaryUserView) mRootView.findViewById(R.id.summray_user);
         mSummaryUserView.init(mSummaryUserViewListener);
         mUserIDView = (DetailTextItemView) mRootView.findViewById(R.id.user_id);
-        mUserIDView.content.setTextColor(mContext.getResources().getColor(R.color.subtext));
+        mUserIDView.content.setTextColor(mActivity.getResources().getColor(R.color.subtext));
         mUserNameView = (DetailEditItemView) mRootView.findViewById(R.id.user_name);
-        mTextInputFilter.setFilter( mUserNameView.content, TextInputFilter.EDIT_TYPE.USER_NAME);
+        mTextInputFilter.setFilter(mUserNameView.content, TextInputFilter.EDIT_TYPE.USER_NAME);
         mEmailView = (DetailEditItemView) mRootView.findViewById(R.id.email);
-        mTextInputFilter.setFilter( mEmailView.content, TextInputFilter.EDIT_TYPE.EMAIL);
+//        mTextInputFilter.setFilter( mEmailView.content, TextInputFilter.EDIT_TYPE.EMAIL);
         mTelephoneView = (DetailEditItemView) mRootView.findViewById(R.id.telephone);
+        mTextInputFilter.setFilter(mTelephoneView.content, TextInputFilter.EDIT_TYPE.TELEPHONE);
         mOperatorView = (DetailTextItemView) mRootView.findViewById(R.id.operator);
-        mOperatorView.content.setTextColor(mContext.getResources().getColor(R.color.subtext));
+        mOperatorView.content.setTextColor(mActivity.getResources().getColor(R.color.subtext));
         mLoginIDView = (DetailEditItemView) mRootView.findViewById(R.id.login_id);
+        mTextInputFilter.setFilter(mLoginIDView.content, TextInputFilter.EDIT_TYPE.LOGIN_ID);
         mLoginPasswordView = (DetailTextItemView) mRootView.findViewById(R.id.login_password);
         mUserGroupView = (DetailTextItemView) mRootView.findViewById(R.id.user_group);
-        mUserGroupView.content.setTextColor(mContext.getResources().getColor(R.color.subtext));
+        mUserGroupView.content.setTextColor(mActivity.getResources().getColor(R.color.subtext));
         mStatusView = (DetailTextItemView) mRootView.findViewById(R.id.status);
-        mStatusView.content.setTextColor(mContext.getResources().getColor(R.color.subtext));
+        mStatusView.content.setTextColor(mActivity.getResources().getColor(R.color.subtext));
         mPeriodView = (DetailTextItemView) mRootView.findViewById(R.id.period);
-        mPeriodView.content.setTextColor(mContext.getResources().getColor(R.color.subtext));
+        mPeriodView.content.setTextColor(mActivity.getResources().getColor(R.color.subtext));
         mAccessGroupView = (DetailTextItemView) mRootView.findViewById(R.id.access_group);
         mFingerPrintView = (DetailTextItemView) mRootView.findViewById(R.id.fingerprint);
         mCardView = (DetailTextItemView) mRootView.findViewById(R.id.card);
+        mFaceView = (DetailTextItemView) mRootView.findViewById(R.id.face);
         mPinView = (DetailSwitchItemView) mRootView.findViewById(R.id.pin);
         setView();
         return true;
@@ -684,7 +673,6 @@ public class MyProfileFragment extends BaseFragment {
             }
         }
     }
-
 
 
     @Override
@@ -739,7 +727,7 @@ public class MyProfileFragment extends BaseFragment {
             mCommonDataProvider = CommonDataProvider.getInstance(getActivity());
         }
         mPopup.showWait(mCancelExitListener);
-        mCommonDataProvider.simpleLogin(mLoginListener, mSimpleLoginErrorListener, null);
+        mCommonDataProvider.simpleLogin(mLoginListener);
     }
 
     @Override
@@ -752,6 +740,9 @@ public class MyProfileFragment extends BaseFragment {
 
     @Override
     public void onDestroy() {
+        if (mTextInputFilter != null && mLoginIDView != null) {
+            mTextInputFilter.setFilter(mLoginIDView.content, TextInputFilter.EDIT_TYPE.NONE);
+        }
         super.onDestroy();
         if (bmp != null) {
             bmp.recycle();
@@ -809,7 +800,7 @@ public class MyProfileFragment extends BaseFragment {
                     e.printStackTrace();
                     return true;
                 }
-                mUserDataProvider.modifyMyProfile(TAG, user, mModifyUserListener, mModifyUserErrorListener, null);
+                mUserDataProvider.modifyMyProfile(user, mModifyUserListener);
                 return true;
             default:
                 break;
@@ -829,11 +820,11 @@ public class MyProfileFragment extends BaseFragment {
                     }
 
                     if (action.equals(Setting.BROADCAST_PREFRENCE_REFRESH)) {
-                        if (mContext == null) {
+                        if (mActivity == null) {
                             return;
                         }
-                        mPeriodView.content.setText(mUserInfo.getTimeFormmat(mTimeConvertProvider, User.UserTimeType.start_datetime, TimeConvertProvider.DATE_TYPE.FORMAT_DATE) +
-                                "-" + mUserInfo.getTimeFormmat(mTimeConvertProvider, User.UserTimeType.expiry_datetime, TimeConvertProvider.DATE_TYPE.FORMAT_DATE));
+                        mPeriodView.content.setText(mUserInfo.getTimeFormmat(mDateTimeDataProvider, User.UserTimeType.start_datetime, DateTimeDataProvider.DATE_TYPE.FORMAT_DATE) +
+                                "-" + mUserInfo.getTimeFormmat(mDateTimeDataProvider, User.UserTimeType.expiry_datetime, DateTimeDataProvider.DATE_TYPE.FORMAT_DATE));
                         return;
                     }
 
@@ -867,7 +858,7 @@ public class MyProfileFragment extends BaseFragment {
 
     private void setCardCount() {
         int count = 0;
-        if (VersionData.getCloudVersion(mContext) > 1) {
+        if (VersionData.getCloudVersion(mActivity) > 1) {
             count = mUserInfo.card_count;
         } else {
             if (mUserInfo.cards != null) {
@@ -878,9 +869,15 @@ public class MyProfileFragment extends BaseFragment {
         mSummaryUserView.setCardCount(String.valueOf(count));
     }
 
+    private void setFaceCount() {
+        int count = mUserInfo.face_template_count;
+        mFaceView.content.setText(String.valueOf(count));
+        mSummaryUserView.setFaceCount(String.valueOf(count));
+    }
+
     private void setFingerCount() {
         int count = 0;
-        if (VersionData.getCloudVersion(mContext) < 2) {
+        if (VersionData.getCloudVersion(mActivity) < 2) {
             if (mUserInfo.fingerprint_templates != null) {
                 count = mUserInfo.fingerprint_templates.size();
             }
@@ -898,8 +895,7 @@ public class MyProfileFragment extends BaseFragment {
         }
         mBlurBmp = ImageUtil.fastBlur(bmp, 32);
         mSummaryUserView.setBlurBackGroud(mBlurBmp);
-        mRbmp = ImageUtil.getRoundedBitmap(bmp, false);
-        mSummaryUserView.setUserPhoto(mRbmp);
+
 
         mPhotoStatus = PhotoStatus.MODIFY;
         Bitmap bmp2 = null;
@@ -923,10 +919,12 @@ public class MyProfileFragment extends BaseFragment {
             bmp2.recycle();
             bmp2 = null;
         }
+        mRbmp = ImageUtil.getRoundedBitmap(bmp, false);
+        mSummaryUserView.setUserPhoto(mRbmp);
     }
 
     private void setPermission() {
-        if (VersionData.getCloudVersion(mContext) > 1) {
+        if (VersionData.getCloudVersion(mActivity) > 1) {
             if (mUserInfo.permission != null) {
                 mLoginIDView.setVisibility(View.VISIBLE);
                 mLoginPasswordView.setVisibility(View.VISIBLE);
@@ -971,21 +969,6 @@ public class MyProfileFragment extends BaseFragment {
     }
 
 
-
-
-    private void showUserViewLog() {
-        User bundleItem = null;
-        try {
-            bundleItem = (User) mUserInfo.clone();
-        } catch (CloneNotSupportedException e) {
-            e.printStackTrace();
-            return;
-        }
-        Bundle bundle = new Bundle();
-        bundle.putSerializable(User.TAG, bundleItem);
-        mScreenControl.addScreen(ScreenControl.ScreenType.MONITOR, bundle);
-    }
-
     private void setView() {
         if (mUserInfo == null) {
             return;
@@ -995,44 +978,18 @@ public class MyProfileFragment extends BaseFragment {
         mSummaryUserView.showPin(mUserInfo.pin_exist);
 
         mUserIDView.content.setText(mUserInfo.user_id);
-        mUserIDView.content.setTextColor(mContext.getResources().getColor(R.color.content_text));
-        if (mPermissionDataProvider.getPermission(PermissionModule.MONITORING, false)) {
-            mSummaryUserView.showUserViewLog(true);
-        } else {
-            mSummaryUserView.showUserViewLog(false);
-        }
-        if (mUserNameViewTextWatcherFilter == null) {
-            mUserNameViewTextWatcherFilter  = new TextWatcherFilter(mUserNameView.content, TextWatcherFilter.EDIT_TYPE.USER_NAME, getActivity(), 48);
-        }
-        mUserNameView.content.removeTextChangedListener(mUserNameViewTextWatcherFilter);
-        mUserNameView.content.addTextChangedListener(mUserNameViewTextWatcherFilter);
+        mUserIDView.content.setTextColor(mActivity.getResources().getColor(R.color.content_text));
         mUserNameView.setOnClickListener(mClickListener);
-        if (mUserInfo.getName() != null) {
-            mUserNameView.content.setText(mUserInfo.getName());
-        }
-        mEmailView.content.setText(mUserInfo.email);
-//        if (mEmailViewTextWatcherFilter == null) {
-//            mEmailViewTextWatcherFilter = new TextWatcherFilter(mEmailView.content, TextWatcherFilter.EDIT_TYPE.EMAIL, getActivity(), 320);
-//        }
-//        mEmailView.content.removeTextChangedListener(mEmailViewTextWatcherFilter);
-//        mEmailView.content.addTextChangedListener(mEmailViewTextWatcherFilter);
+        mUserNameView.setContentText(mUserInfo.name);
+
+        mEmailView.setContentText(mUserInfo.email);
         mEmailView.setOnClickListener(mClickListener);
-        mTelephoneView.content.setText(mUserInfo.phone_number);
-        if (mTelephoneViewTextWatcherFilter == null) {
-            mTelephoneViewTextWatcherFilter = new TextWatcherFilter(mTelephoneView.content, TextWatcherFilter.EDIT_TYPE.TELEPHONE, getActivity(), 32);
-        }
-        mTelephoneView.content.removeTextChangedListener(mTelephoneViewTextWatcherFilter );
-        mTelephoneView.content.addTextChangedListener(mTelephoneViewTextWatcherFilter  );
+        mTelephoneView.setContentText(mUserInfo.phone_number);
         mTelephoneView.setOnClickListener(mClickListener);
 
         setPermission();
-        mOperatorView.content.setTextColor(mContext.getResources().getColor(R.color.content_text));
-        mLoginIDView.content.setText(mUserInfo.login_id);
-        if (mLoginIDViewTextWatcherFilter == null) {
-            mLoginIDViewTextWatcherFilter = new TextWatcherFilter(mLoginIDView.content, TextWatcherFilter.EDIT_TYPE.LOGIN_ID, getActivity(), 32);
-        }
-        mLoginIDView.content.removeTextChangedListener(mLoginIDViewTextWatcherFilter);
-        mLoginIDView.content.addTextChangedListener(mLoginIDViewTextWatcherFilter);
+        mOperatorView.content.setTextColor(mActivity.getResources().getColor(R.color.content_text));
+        mLoginIDView.setContentText(mUserInfo.login_id);
         mLoginIDView.setOnClickListener(mClickListener);
         mLoginPasswordView.enableLink(true, mClickListener);
 
@@ -1043,26 +1000,28 @@ public class MyProfileFragment extends BaseFragment {
             mUserGroupView.content.setText(getString(R.string.all_users));
             mUserGroupView.content.setTag(String.valueOf(1));
         }
-        mUserGroupView.content.setTextColor(mContext.getResources().getColor(R.color.content_text));
+        mUserGroupView.content.setTextColor(mActivity.getResources().getColor(R.color.content_text));
         if (mUserInfo.isActive()) {
             mStatusView.content.setText(getString(R.string.active));
         } else {
             mStatusView.content.setText(getString(R.string.inactive));
         }
 
-        mPeriodView.content.setText(mUserInfo.getTimeFormmat(mTimeConvertProvider, User.UserTimeType.start_datetime, TimeConvertProvider.DATE_TYPE.FORMAT_DATE) +
-                "-" + mUserInfo.getTimeFormmat(mTimeConvertProvider, User.UserTimeType.expiry_datetime, TimeConvertProvider.DATE_TYPE.FORMAT_DATE));
-        mPeriodView.content.setTextColor(mContext.getResources().getColor(R.color.content_text));
+        mPeriodView.content.setText(mUserInfo.getTimeFormmat(mDateTimeDataProvider, User.UserTimeType.start_datetime, DateTimeDataProvider.DATE_TYPE.FORMAT_DATE) +
+                "-" + mUserInfo.getTimeFormmat(mDateTimeDataProvider, User.UserTimeType.expiry_datetime, DateTimeDataProvider.DATE_TYPE.FORMAT_DATE));
+        mPeriodView.content.setTextColor(mActivity.getResources().getColor(R.color.content_text));
         mAccessGroupView.enableLink(true, mClickListener);
-        mAccessGroupView.content.setTextColor(mContext.getResources().getColor(R.color.content_text));
+        mAccessGroupView.content.setTextColor(mActivity.getResources().getColor(R.color.content_text));
         mFingerPrintView.enableLink(true, mClickListener);
-        mFingerPrintView.content.setTextColor(mContext.getResources().getColor(R.color.content_text));
+        mFingerPrintView.content.setTextColor(mActivity.getResources().getColor(R.color.content_text));
         mCardView.enableLink(true, mClickListener);
-        mCardView.content.setTextColor(mContext.getResources().getColor(R.color.content_text));
+        mCardView.content.setTextColor(mActivity.getResources().getColor(R.color.content_text));
+        mFaceView.enableLink(true, mClickListener);
+        mFaceView.content.setTextColor(mActivity.getResources().getColor(R.color.content_text));
         setAccessGroupCount();
         setFingerCount();
         setCardCount();
-
+        setFaceCount();
 
         mPinView.setOnClickListener(mClickListener);
         mPinSwitch = mPinView.mSwitchView;
@@ -1074,16 +1033,19 @@ public class MyProfileFragment extends BaseFragment {
         }
         mPinSwitch.init(getActivity(), new SwitchView.OnChangeListener() {
             @Override
-            public void onChange(boolean on) {
-                if (BuildConfig.DEBUG) {
-                    Log.e(TAG, "pin :" + on);
-                }
+            public boolean onChange(boolean on) {
                 if (on) {
-                    showPinPasswodPopup();
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            showPinPasswodPopup();
+                        }
+                    });
                 } else {
                     mPinView.mContent.setText("");
                     mPinData = "";
                 }
+                return true;
             }
         }, (mUserInfo.pin_exist || (mPinData != null && !mPinData.isEmpty())));
         mPinSwitch.setSwitch((mUserInfo.pin_exist || (mPinData != null && !mPinData.isEmpty())));
@@ -1110,11 +1072,11 @@ public class MyProfileFragment extends BaseFragment {
     }
 
     private void showPasswodPopup() {
-        PasswordPopup passwordPopup = new PasswordPopup(mContext);
+        PasswordPopup passwordPopup = new PasswordPopup(mActivity);
         passwordPopup.show(false, getString(R.string.password), new PasswordPopup.OnPasswordResult() {
             @Override
             public void OnResult(String data) {
-                if (isInValidCheck(null)) {
+                if (isInValidCheck()) {
                     return;
                 }
                 if (data == null) {
@@ -1132,11 +1094,11 @@ public class MyProfileFragment extends BaseFragment {
     }
 
     private void showPinPasswodPopup() {
-        PasswordPopup passwordPopup = new PasswordPopup(mContext);
+        PasswordPopup passwordPopup = new PasswordPopup(mActivity);
         passwordPopup.show(true, getString(R.string.pin_upper), new PasswordPopup.OnPasswordResult() {
             @Override
             public void OnResult(String data) {
-                if (isInValidCheck(null)) {
+                if (isInValidCheck()) {
                     return;
                 }
                 if (data == null) {

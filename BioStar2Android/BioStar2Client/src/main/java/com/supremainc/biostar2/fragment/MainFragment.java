@@ -15,11 +15,15 @@
  */
 package com.supremainc.biostar2.fragment;
 
+import android.Manifest;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
+import android.content.pm.PackageManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.LocalBroadcastManager;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -32,11 +36,15 @@ import android.widget.LinearLayout;
 
 import com.supremainc.biostar2.BuildConfig;
 import com.supremainc.biostar2.R;
-import com.supremainc.biostar2.meta.Setting;
 import com.supremainc.biostar2.impl.OnSingleClickListener;
+import com.supremainc.biostar2.meta.Setting;
 import com.supremainc.biostar2.provider.AppDataProvider;
-import com.supremainc.biostar2.sdk.datatype.v2.Common.VersionData;
-import com.supremainc.biostar2.sdk.datatype.v2.Permission.PermissionModule;
+import com.supremainc.biostar2.sdk.models.v2.card.MobileCard;
+import com.supremainc.biostar2.sdk.models.v2.card.MobileCards;
+import com.supremainc.biostar2.sdk.models.v2.common.SupportFeature;
+import com.supremainc.biostar2.sdk.models.v2.common.VersionData;
+import com.supremainc.biostar2.sdk.models.v2.permission.PermissionModule;
+import com.supremainc.biostar2.sdk.provider.ConfigDataProvider;
 import com.supremainc.biostar2.util.Utils;
 import com.supremainc.biostar2.view.MainMenuView;
 import com.supremainc.biostar2.view.MenuItemView;
@@ -47,6 +55,10 @@ import com.supremainc.biostar2.widget.ScreenControl.ScreenType;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class MainFragment extends BaseFragment {
     private BroadcastReceiver mReceiverTick;
@@ -61,6 +73,7 @@ public class MainFragment extends BaseFragment {
     private RingTimeView mRingTimeView;
     private MainMenuView mMainMenuView;
     private ViewGroup mGuideView;
+    private boolean mIsWaitCard;
     private MainMenuView.MainMenuViewListener mMainMenuViewListener = new MainMenuView.MainMenuViewListener() {
         @Override
         public void onClickUser() {
@@ -102,11 +115,120 @@ public class MainFragment extends BaseFragment {
             }
         }
     };
+    private Runnable mRunnableGuide = new Runnable() {
+        @Override
+        public void run() {
+            if (isInValidCheck()) {
+                return;
+            }
+            View v = mMainMenuView.getItemView(MenuItemView.MenuItemType.MOBILE_CARD_ALERT);
+            if (v != null && mAppDataProvider.getBoolean(AppDataProvider.BooleanType.SHOW_GUIDE_MENU_CARD)) {
+                if (mGuideView == null) {
+                    int w = v.getWidth();
+                    int h = v.getHeight();
+                    if (w == 0 || h == 0) {
+                        mHandler.removeCallbacks(mRunnableGuide);
+                        mHandler.postDelayed(mRunnableGuide, 1000);
+                        return;
+                    }
+                    int[] position = {0, 0};
+                    v.getLocationOnScreen(position);
+                    LinearLayout.LayoutParams containerParam = new LinearLayout.LayoutParams(v.getWidth() + 30, v.getHeight() + 60);
+                    FrameLayout.LayoutParams itemParam = new FrameLayout.LayoutParams(w, h, Gravity.CENTER);
+
+                    FrameLayout containerView = new FrameLayout(mActivity);
+                    containerView.setBackgroundResource(R.drawable.dash);
+                    View itemView = mMainMenuView.createMenuView(MenuItemView.MenuItemType.MOBILE_CARD_ALERT);
+                    containerView.addView(itemView, itemParam);
+
+                    mGuideView = (ViewGroup) mInflater.inflate(R.layout.view_guide, null, false);
+                    StyledTextView guideText = (StyledTextView) mGuideView.findViewById(R.id.guide_text);
+                    guideText.setText(getString(R.string.guide_register_mobile_card1) + "\n" + getString(R.string.guide_register_mobile_card2));
+                    mGuideView.findViewById(R.id.close_guide).setOnClickListener(new OnSingleClickListener() {
+                        @Override
+                        public void onSingleClick(View v) {
+                            mAppDataProvider.setBoolean(AppDataProvider.BooleanType.SHOW_GUIDE_MENU_CARD, false);
+                            removeGuideView();
+                        }
+                    });
+                    mGuideView.findViewById(R.id.close_alaways).setOnClickListener(new OnSingleClickListener() {
+                        @Override
+                        public void onSingleClick(View v) {
+                            removeGuideView();
+                            mAppDataProvider.setBoolean(AppDataProvider.BooleanType.SHOW_GUIDE_MENU_CARD, false);
+                        }
+                    });
+                    mGuideView.setOnClickListener(new OnSingleClickListener() {
+                        @Override
+                        public void onSingleClick(View v) {
+                            removeGuideView();
+                        }
+                    });
+                    mGuideView.addView(containerView, containerParam);
+                    mRootView.addView(mGuideView);
+
+                    containerView.setX(position[0]);
+                    containerView.setY(position[1]);
+                    v.setVisibility(View.INVISIBLE);
+                }
+            }
+        }
+    };
+    private Callback<MobileCards> mMobileCardsCallback = new Callback<MobileCards>() {
+        @Override
+        public void onResponse(Call<MobileCards> call, Response<MobileCards> response) {
+            if (isIgnoreCallback(call,false)) {
+                return;
+            }
+            if (response == null || !response.isSuccessful() || response.body() == null) {
+                return;
+            }
+            if (response.body().records == null || response.body().records.size() < 1) {
+                mIsWaitCard = false;
+                return;
+            }
+            for (MobileCard card : response.body().records) {
+                if (!card.is_registered) {
+                    mIsWaitCard = true;
+                    applyPermission();
+                    mHandler.removeCallbacks(mRunnableGuide);
+                    mHandler.postDelayed(mRunnableGuide, 1000);
+                }
+            }
+        }
+
+        @Override
+        public void onFailure(Call<MobileCards> call, Throwable t) {
+            if (BuildConfig.DEBUG) {
+                Log.e(TAG, "" + t.getMessage());
+            }
+        }
+    };
 
     public MainFragment() {
         super();
         setType(ScreenType.MAIN);
         TAG = getClass().getSimpleName() + String.valueOf(System.currentTimeMillis());
+    }
+
+    private void judgeShowRing() {
+        if (mRingTimeView == null || mIsDestroy) {
+            return;
+        }
+        mMainMenuView.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+        mTopMenuView.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+        mLogoView.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
+
+        int otherSize = mTopMenuView.getMeasuredHeight() + mLogoView.getMeasuredHeight() + mMainMenuView.getMeasuredHeight();
+        DisplayMetrics metrics = new DisplayMetrics();
+        getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        float deviceHeight = Utils.convertPixelsToDp(metrics.heightPixels, mActivity);
+        float otherHeight = Utils.convertPixelsToDp(otherSize, mActivity) + (float) 134.69;
+        float height = deviceHeight - otherHeight;
+        if (BuildConfig.DEBUG) {
+            Log.i(TAG, "deviceHeight:" + deviceHeight + " otherHeight:" + otherHeight + " height:" + height);
+        }
+        mRingTimeView.setAdjustHeight(height);
     }
 
     private void applyPermission() {
@@ -121,7 +243,7 @@ public class MainFragment extends BaseFragment {
 
         if (mPermissionDataProvider.getPermission(PermissionModule.DOOR, false)) {
             mMainMenuView.addMenu(MenuItemView.MenuItemType.DOOR);
-          }
+        }
 
         if (mPermissionDataProvider.getPermission(PermissionModule.MONITORING, false)) {
             mMainMenuView.addMenu(MenuItemView.MenuItemType.MONITORING);
@@ -132,11 +254,15 @@ public class MainFragment extends BaseFragment {
         }
 
 
-
-        //mMainMenuView.addMenu(MenuItemView.MenuItemType.MOBILE_CARD_ALERT);
-//        if (VersionData.getCloudVersion(mContext) > 1) {
-//            mMainMenuView.addMenu(MenuItemView.MenuItemType.MOBILE_CARD);
-//        }
+        if (VersionData.getCloudVersion(mActivity) > 1 && VersionData.isSupportFeature(mActivity, SupportFeature.MOBILE_CARD) && Build.VERSION.SDK_INT >= 21) {
+            if (mActivity.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE) || mActivity.getPackageManager().hasSystemFeature(PackageManager.FEATURE_NFC_HOST_CARD_EMULATION)) {
+                if (mIsWaitCard) {
+                    mMainMenuView.addMenu(MenuItemView.MenuItemType.MOBILE_CARD_ALERT);
+                } else {
+                    mMainMenuView.addMenu(MenuItemView.MenuItemType.MOBILE_CARD);
+                }
+            }
+        }
         mMainMenuView.showMenuItem();
         judgeShowRing();
     }
@@ -152,7 +278,7 @@ public class MainFragment extends BaseFragment {
             mRingTimeView = (RingTimeView) mRootView.findViewById(R.id.ring_time);
         }
         if (mContainerRingTimeView == null) {
-            mContainerRingTimeView =  mRootView.findViewById(R.id.ring_time_container);
+            mContainerRingTimeView = mRootView.findViewById(R.id.ring_time_container);
         }
         if (mMainMenuView == null) {
             mMainMenuView = (MainMenuView) mRootView.findViewById(R.id.main_menu);
@@ -168,7 +294,7 @@ public class MainFragment extends BaseFragment {
             mTimeFormatter = new SimpleDateFormat("hh:mm", mLocale);
         }
         if (mDateFormatter == null || isRefresh) {
-            String userConfig = mCommonDataProvider.getDateFormat();
+            String userConfig = mDateTimeDataProvider.getDateFormat();
             if (userConfig != null) {
                 userConfig = userConfig.replaceAll("yyyy/", "");
                 userConfig = userConfig.replaceAll("/yyyy", "");
@@ -193,28 +319,29 @@ public class MainFragment extends BaseFragment {
         if (mMainMenuView != null) {
             mMainMenuView.setAlarmCount(mNotificationDBProvider.getUnReadMessageCount());
         }
+        if (ConfigDataProvider.TEST_DELETE && BuildConfig.DEBUG) {
+            if (Build.VERSION.SDK_INT >= 23) {
+                if ((ActivityCompat.checkSelfPermission(mActivity, Manifest.permission.READ_EXTERNAL_STORAGE)
+                        != PackageManager.PERMISSION_GRANTED) || (ActivityCompat.checkSelfPermission(mActivity, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+                        != PackageManager.PERMISSION_GRANTED)) {
+                    ActivityCompat.requestPermissions(mActivity, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE},
+                            Setting.REQUEST_EXTERNAL_STORAGE);
+                }
+            }
+        }
         judgeShowRing();
     }
 
-    private void judgeShowRing() {
-        if (mRingTimeView == null ||  mIsDestroy) {
-            return;
+    @Override
+    public void onStart() {
+        super.onStart();
+        if (VersionData.getCloudVersion(mActivity) > 1 && VersionData.isSupportFeature(mActivity, SupportFeature.MOBILE_CARD) && Build.VERSION.SDK_INT >= 21) {
+            if (mActivity.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE) || mActivity.getPackageManager().hasSystemFeature(PackageManager.FEATURE_NFC_HOST_CARD_EMULATION)) {
+                mMobileCardDataProvider.getMobileCards(mActivity, mMobileCardsCallback);
+            }
         }
-        mMainMenuView.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
-        mTopMenuView.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
-        mLogoView.measure(View.MeasureSpec.UNSPECIFIED, View.MeasureSpec.UNSPECIFIED);
-
-        int otherSize = mTopMenuView.getMeasuredHeight() + mLogoView.getMeasuredHeight() + mMainMenuView.getMeasuredHeight();
-        DisplayMetrics metrics = new DisplayMetrics();
-        getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
-        float deviceHeight = Utils.convertPixelsToDp(metrics.heightPixels,mContext);
-        float otherHeight = Utils.convertPixelsToDp(otherSize,mContext)+(float)134.69;
-        float height = deviceHeight -  otherHeight;
-        if (BuildConfig.DEBUG) {
-            Log.i(TAG,"deviceHeight:"+deviceHeight+ " otherHeight:"+otherHeight+" height:"+height);
-        }
-        mRingTimeView.setAdjustHeight(height);
     }
+
 
     @Override
     public void onDestroy() {
@@ -248,7 +375,7 @@ public class MainFragment extends BaseFragment {
             mReceiver = new BroadcastReceiver() {
                 @Override
                 public void onReceive(Context context, Intent intent) {
-                    if (isInValidCheck(null)) {
+                    if (isInValidCheck()) {
                         return;
                     }
                     String action = intent.getAction();
@@ -268,75 +395,6 @@ public class MainFragment extends BaseFragment {
         }
     }
 
-    private Runnable mRunnableGuide = new Runnable() {
-        @Override
-        public void run() {
-            if (isInValidCheck(null)) {
-                return;
-            }
-            View v = mMainMenuView.getItemView(MenuItemView.MenuItemType.MOBILE_CARD_ALERT);
-            if (v != null && mAppDataProvider.getBoolean(AppDataProvider.BooleanType.SHOW_GUIDE_MENU_CARD)) {
-                if (mGuideView == null) {
-                    int w = v.getWidth();
-                    int h = v.getHeight();
-                    if (w == 0 || h == 0) {
-                        mHandler.removeCallbacks(mRunnableGuide);
-                        mHandler.postDelayed(mRunnableGuide,1000);
-                        return;
-                    }
-                    int[] position = {0, 0};
-                    v.getLocationOnScreen(position);
-                    LinearLayout.LayoutParams containerParam = new LinearLayout.LayoutParams(v.getWidth() + 30, v.getHeight() + 60);
-                    FrameLayout.LayoutParams itemParam = new FrameLayout.LayoutParams(w, h, Gravity.CENTER);
-
-                    FrameLayout containerView = new FrameLayout(mContext);
-                    containerView.setBackgroundResource(R.drawable.dash);
-                    View itemView = mMainMenuView.createMenuView(MenuItemView.MenuItemType.MOBILE_CARD_ALERT);
-                    containerView.addView(itemView, itemParam);
-
-                    mGuideView = (ViewGroup) mInflater.inflate(R.layout.view_guide, null, false);
-                    StyledTextView guideText = (StyledTextView)mGuideView.findViewById(R.id.guide_text);
-                    guideText.setText(getString(R.string.guide_register_mobile_card1)+"\n"+getString(R.string.guide_register_mobile_card2));
-                    mGuideView.findViewById(R.id.close_guide).setOnClickListener(new OnSingleClickListener() {
-                        @Override
-                        public void onSingleClick(View v) {
-                            removeGuideView();
-                        }
-                    });
-                    mGuideView.findViewById(R.id.close_alaways).setOnClickListener(new OnSingleClickListener() {
-                        @Override
-                        public void onSingleClick(View v) {
-                            removeGuideView();
-                            mAppDataProvider.setBoolean(AppDataProvider.BooleanType.SHOW_GUIDE_MENU_CARD,false);
-                        }
-                    });
-                    mGuideView.setOnClickListener(new OnSingleClickListener(){
-                        @Override
-                        public void onSingleClick(View v) {
-
-                        }
-                    });
-                    mGuideView.addView(containerView, containerParam);
-                    mRootView.addView(mGuideView);
-
-                    containerView.setX(position[0]);
-                    containerView.setY(position[1]);
-                    Log.e(TAG,"x:"+position[0]);
-                    Log.e(TAG,"Y:"+position[1]);
-//                            containerView.setX(position[0]);
-//                            containerView.setY(0);
-                    v.setVisibility(View.INVISIBLE);
-                    containerView.setOnClickListener(new OnSingleClickListener() {
-                        @Override
-                        public void onSingleClick(View v) {
-                            removeGuideView();
-                            mScreenControl.gotoScreen(ScreenType.MOBILE_CARD_LIST, null);
-                        }
-                    });
-                }
-            }
-        }
-    };
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         setResID(R.layout.fragment_main);
@@ -350,16 +408,7 @@ public class MainFragment extends BaseFragment {
                     mScreenControl.addScreen(ScreenType.PREFERENCE, null);
                 }
             });
-//            mRootView.findViewById(R.id.main_menu).setOnClickListener(new OnSingleClickListener() {
-//                @Override
-//                public void onSingleClick(View v) {
-//                    mScreenControl.gotoScreen(ScreenType.OPEN_MENU, null);
-//                }
-//            });
             applyPermission();
-            mHandler.removeCallbacks(mRunnableGuide);
-            mHandler.postDelayed(mRunnableGuide,1000);
-            mRootView.invalidate();
         }
         return mRootView;
     }
@@ -396,7 +445,6 @@ public class MainFragment extends BaseFragment {
                 dateString = mDateFormatter.format(date) + getString(R.string.korean_day);
             }
         }
-        ;
         mRingTimeView.setDateTime(mMarkerTimeFormatter.format(date), dateString, mTimeFormatter.format(date));
     }
 }

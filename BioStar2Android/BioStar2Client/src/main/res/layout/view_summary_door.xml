@@ -1,11 +1,11 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:androidfont="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:layout_gravity="center_vertical|left"
-    android:background="@color/door_summary"
-    android:gravity="center_vertical|left"
-    android:orientation="vertical">
+              xmlns:androidfont="http://schemas.android.com/apk/res-auto"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:layout_gravity="center_vertical|left"
+              android:background="@color/door_summary"
+              android:gravity="center_vertical|left"
+              android:orientation="vertical">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -35,7 +35,7 @@
                 android:singleLine="true"
                 android:textColor="@color/user_total"
                 android:textSize="16dp"
-                androidfont:typeface="roboto_bold.ttf" />
+                androidfont:typeface="roboto_bold.ttf"/>
 
             <com.supremainc.biostar2.view.StyledTextView
                 android:id="@+id/title_content"
@@ -47,38 +47,7 @@
                 android:maxLines="3"
                 android:textColor="@color/user_total"
                 android:textSize="14dp"
-                androidfont:typeface="roboto_bold.ttf" />
-
-            <LinearLayout
-                android:id="@+id/go_view"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="bottom|center|left"
-                android:layout_marginBottom="9dp"
-                android:layout_marginTop="9dp"
-                android:gravity="bottom|center|left"
-                android:orientation="horizontal">
-
-                <ImageView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginRight="9dp"
-                    android:contentDescription="@string/image"
-                    android:gravity="left|center"
-                    android:scaleType="fitXY"
-                    android:src="@drawable/selector_btn_viewlog" />
-
-                <com.supremainc.biostar2.view.StyledTextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_gravity="left|center"
-                    android:ellipsize="end"
-                    android:gravity="left|center"
-                    android:text="@string/view_log"
-                    android:textColor="@color/actionbar_bg"
-                    android:textSize="14dp"
-                    androidfont:typeface="roboto_regular.ttf" />
-            </LinearLayout>
+                androidfont:typeface="roboto_bold.ttf"/>
         </LinearLayout>
 
         <ImageView
@@ -90,7 +59,7 @@
             android:layout_marginTop="26dp"
             android:contentDescription="@string/image"
             android:scaleType="fitXY"
-            android:src="@drawable/door_ic_3" />
+            android:src="@drawable/door_ic_3"/>
     </LinearLayout>
 
     <com.supremainc.biostar2.view.StyledTextView
@@ -107,6 +76,6 @@
         android:text="@string/door_control"
         android:textColor="@color/white"
         android:textSize="16dp"
-        androidfont:typeface="roboto_bold.ttf" />
+        androidfont:typeface="roboto_bold.ttf"/>
 </LinearLayout>
 

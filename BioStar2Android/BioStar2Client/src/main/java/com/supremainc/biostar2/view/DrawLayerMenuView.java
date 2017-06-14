@@ -17,8 +17,6 @@ package com.supremainc.biostar2.view;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.util.AttributeSet;
@@ -27,12 +25,11 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
-import android.widget.Toast;
 
 import com.supremainc.biostar2.R;
 import com.supremainc.biostar2.fragment.BaseFragment;
 import com.supremainc.biostar2.impl.OnSingleClickListener;
-import com.supremainc.biostar2.sdk.datatype.v2.User.User;
+import com.supremainc.biostar2.sdk.models.v2.user.User;
 import com.supremainc.biostar2.sdk.utils.ImageUtil;
 import com.supremainc.biostar2.widget.ScreenControl.ScreenType;
 
@@ -98,14 +95,14 @@ public class DrawLayerMenuView extends LinearLayout {
                     menuType = ScreenType.MOBILE_CARD_LIST;
                     break;
                 case R.id.side_menu_version:
-                    PackageInfo pi = null;
-
-                    try {
-                        pi = mContext.getPackageManager().getPackageInfo(mContext.getPackageName(), 0);
-                    } catch (PackageManager.NameNotFoundException e) {
-                        e.printStackTrace();
-                    }
-                    Toast.makeText(mContext, mContext.getString(R.string.app_version) + " Build number: " + pi.versionCode, Toast.LENGTH_LONG).show();
+//                    PackageInfo pi = null;
+//
+//                    try {
+//                        pi = mContext.getPackageManager().getPackageInfo(mContext.getPackageName(), 0);
+//                    } catch (PackageManager.NameNotFoundException e) {
+//                        e.printStackTrace();
+//                    }
+//                    Toast.makeText(mContext, mContext.getString(R.string.app_version) + " Build number: " + pi.versionCode, Toast.LENGTH_LONG).show();
                     break;
                 default:
                     break;
@@ -168,7 +165,7 @@ public class DrawLayerMenuView extends LinearLayout {
         }
         if (user.permission != null) {
             permission.setText(user.permission.name);
-        }else if (user.roles != null) {
+        } else if (user.roles != null) {
             int size = user.roles.size();
             size--;
             if (size == 0) {
@@ -194,7 +191,7 @@ public class DrawLayerMenuView extends LinearLayout {
         LinearLayout mainLayout = (LinearLayout) inflater.inflate(R.layout.view_drawlayer_menu, null);
         LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.MATCH_PARENT);
         addView(mainLayout, params);
-        int[] ids = {R.id.side_menu_user, R.id.side_menu_door, R.id.side_menu_monitor, R.id.side_menu_alram, R.id.side_menu_logout, R.id.my_profile,R.id.side_menu_card, R.id.side_menu_version};
+        int[] ids = {R.id.side_menu_user, R.id.side_menu_door, R.id.side_menu_monitor, R.id.side_menu_alram, R.id.side_menu_logout, R.id.my_profile, R.id.side_menu_card, R.id.side_menu_version};
         for (int i : ids) {
             mainLayout.findViewById(i).setOnClickListener(mClickListener);
         }
@@ -239,8 +236,60 @@ public class DrawLayerMenuView extends LinearLayout {
         this.mSelectionListener = mSelectionListener;
     }
 
+    public void showAlarmMenu(boolean visible) {
+        if (visible) {
+            findViewById(R.id.side_menu_alram).setVisibility(View.VISIBLE);
+            findViewById(R.id.side_menu_alram_devider).setVisibility(View.VISIBLE);
+        } else {
+            findViewById(R.id.side_menu_alram).setVisibility(View.GONE);
+            findViewById(R.id.side_menu_alram_devider).setVisibility(View.GONE);
+        }
+    }
+
+    public void showDoorMenu(boolean visible) {
+        if (visible) {
+            findViewById(R.id.side_menu_door).setVisibility(View.VISIBLE);
+            findViewById(R.id.side_menu_door_devider).setVisibility(View.VISIBLE);
+        } else {
+            findViewById(R.id.side_menu_door).setVisibility(View.GONE);
+            findViewById(R.id.side_menu_door_devider).setVisibility(View.GONE);
+        }
+    }
+
+    public void showMonitorMenu(boolean visible) {
+        if (visible) {
+            findViewById(R.id.side_menu_monitor).setVisibility(View.VISIBLE);
+            findViewById(R.id.side_menu_monitor_devider).setVisibility(View.VISIBLE);
+        } else {
+            findViewById(R.id.side_menu_monitor).setVisibility(View.GONE);
+            findViewById(R.id.side_menu_monitor_devider).setVisibility(View.GONE);
+        }
+    }
+
+    public void showUserMenu(boolean visible) {
+        if (visible) {
+            findViewById(R.id.side_menu_user).setVisibility(View.VISIBLE);
+            findViewById(R.id.side_menu_user_devider).setVisibility(View.VISIBLE);
+        } else {
+            findViewById(R.id.side_menu_user).setVisibility(View.GONE);
+            findViewById(R.id.side_menu_user_devider).setVisibility(View.GONE);
+        }
+    }
+
+    public void showMobileCard(boolean visible) {
+        if (visible) {
+            findViewById(R.id.side_menu_card).setVisibility(View.VISIBLE);
+            findViewById(R.id.side_menu_card_devider).setVisibility(View.VISIBLE);
+        } else {
+            findViewById(R.id.side_menu_card).setVisibility(View.GONE);
+            findViewById(R.id.side_menu_card_devider).setVisibility(View.GONE);
+        }
+    }
+
     public interface OnSelectionListener {
         public void addScreen(ScreenType type, Bundle args);
+
+        public void addScreenNoEffect(ScreenType type, Bundle args);
 
         public void backScreen();
 

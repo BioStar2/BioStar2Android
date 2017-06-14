@@ -15,24 +15,23 @@
  */
 package com.supremainc.biostar2.provider;
 
+import android.app.Activity;
 import android.content.Context;
+
+import com.supremainc.biostar2.R;
 import com.supremainc.biostar2.sdk.utils.PreferenceUtil;
+import com.supremainc.biostar2.widget.popup.Popup;
 
 public class AppDataProvider {
     public static final String DOOR_COUNT = "door_count";
     public static final String USER_COUNT = "user_count";
+    public static final String BLE_RANGE = "ble_range";
+    private final static String TAG = "AppDataProvider";
     private static final String LATEST_DOMAIN = "latest_domain";
     private static final String LATEST_ID = "latest_id";
     protected static Context mContext;
+    protected static Activity mContext2;
     private static AppDataProvider mSelf = null;
-
-    public enum BooleanType {
-        SHOW_GUIDE_MENU_CARD("SHOW_GUIDE_MENU_CARD"),SHOW_GUIDE_DETAIL_CARD("SHOW_GUIDE_DETAIL_CARD");
-        public final String mName;
-        private BooleanType(String name) {
-            mName = name;
-        }
-    }
 
     private AppDataProvider(Context context) {
         mContext = context;
@@ -43,6 +42,16 @@ public class AppDataProvider {
             mSelf = new AppDataProvider(context);
         }
         return mSelf;
+    }
+
+    public void set(Activity a) {
+        mContext2 = a;
+    }
+
+    public void test(String tt) {
+        Popup mPopup = new Popup(mContext2);
+        mPopup.dismiss();
+        mPopup.show(Popup.PopupType.ALERT, "test Popup", tt, null, mContext.getString(R.string.ok), null, false);
     }
 
     public int getDoorCount() {
@@ -61,11 +70,47 @@ public class AppDataProvider {
         PreferenceUtil.putSharedPreference(mContext, USER_COUNT, total);
     }
 
-    public void setBoolean(BooleanType type,boolean set) {
-        PreferenceUtil.putSharedPreference(mContext,type.mName,set);
-    }
-    public boolean getBoolean(BooleanType type) {
-       return  PreferenceUtil.getBooleanSharedPreference(mContext,type.mName,true);
+    public int getBleRange() {
+        int result = PreferenceUtil.getIntSharedPreference(mContext, BLE_RANGE);
+        if (result == -1) {
+            return 300;
+        }
+        if (result < 101) {
+            return 100;
+        } else if (result < 301) {
+            return 300;
+        } else {
+            return 500;
+        }
+
+        //      return result;
     }
 
+    public void setBleRange(int total) {
+        if (total < 101) {
+            total = 100;
+        } else if (total < 301) {
+            total = 300;
+        } else {
+            total = 500;
+        }
+        PreferenceUtil.putSharedPreference(mContext, BLE_RANGE, total);
+    }
+
+    public void setBoolean(BooleanType type, boolean set) {
+        PreferenceUtil.putSharedPreference(mContext, type.mName, set);
+    }
+
+    public boolean getBoolean(BooleanType type) {
+        return PreferenceUtil.getBooleanSharedPreference(mContext, type.mName, true);
+    }
+
+    public enum BooleanType {
+        SHOW_GUIDE_MENU_CARD("SHOW_GUIDE_MENU_CARD"), SHOW_GUIDE_DETAIL_CARD("SHOW_GUIDE_DETAIL_CARD"), MOBILE_CARD_NFC("MOBILE_CARD_NFC");
+        public final String mName;
+
+        private BooleanType(String name) {
+            mName = name;
+        }
+    }
 }

@@ -50,7 +50,6 @@ public class SerializableHttpCookie implements Serializable {
 
     public String encode(HttpCookie cookie) {
         this.cookie = cookie;
-
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         try {
             ObjectOutputStream outputStream = new ObjectOutputStream(os);

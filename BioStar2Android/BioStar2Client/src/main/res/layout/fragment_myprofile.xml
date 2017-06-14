@@ -1,10 +1,10 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    android:layout_width="fill_parent"
-    android:layout_height="fill_parent"
-    android:background="@color/white"
-    android:gravity="center|top"
-    android:orientation="vertical">
+              xmlns:app="http://schemas.android.com/apk/res-auto"
+              android:layout_width="fill_parent"
+              android:layout_height="fill_parent"
+              android:background="@color/white"
+              android:gravity="center|top"
+              android:orientation="vertical">
 
     <FrameLayout
         android:layout_width="match_parent"
@@ -26,7 +26,7 @@
                 <com.supremainc.biostar2.view.SummaryUserView
                     android:id="@+id/summray_user"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content" />
+                    android:layout_height="wrap_content"/>
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -38,7 +38,7 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         app:index="@string/user_id"
-                        app:link="false" />
+                        app:link="false"/>
 
                     <com.supremainc.biostar2.view.DetailEditItemView
                         android:id="@+id/user_name"
@@ -46,7 +46,7 @@
                         android:layout_height="wrap_content"
                         app:edit="true"
                         app:index="@string/name"
-                        app:inputType="textPersonName" />
+                        app:inputType="textPersonName"/>
 
                     <com.supremainc.biostar2.view.DetailEditItemView
                         android:id="@+id/email"
@@ -54,7 +54,7 @@
                         android:layout_height="wrap_content"
                         app:edit="true"
                         app:index="@string/email"
-                        app:inputType="textEmailAddress" />
+                        app:inputType="textEmailAddress"/>
 
                     <com.supremainc.biostar2.view.DetailEditItemView
                         android:id="@+id/telephone"
@@ -62,61 +62,61 @@
                         android:layout_height="wrap_content"
                         app:edit="true"
                         app:index="@string/telephone"
-                        app:inputType="phone" />
+                        app:inputType="phone"/>
 
                     <com.supremainc.biostar2.view.DetailTextItemView
                         android:id="@+id/operator"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         app:edit="false"
-                        app:index="@string/operator" />
+                        app:index="@string/operator"/>
 
                     <com.supremainc.biostar2.view.DetailEditItemView
                         android:id="@+id/login_id"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         app:edit="true"
-                        app:index="@string/login_id" />
+                        app:index="@string/login_id"/>
 
                     <com.supremainc.biostar2.view.DetailTextItemView
                         android:id="@+id/login_password"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         app:index="@string/password"
-                        app:link="true" />
+                        app:link="true"/>
 
                     <com.supremainc.biostar2.view.DetailTextItemView
                         android:id="@+id/user_group"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         app:index="@string/group"
-                        app:link="false" />
+                        app:link="false"/>
 
                     <FrameLayout
                         android:layout_width="match_parent"
                         android:layout_height="18dp"
-                        android:background="@color/list_devider" />
+                        android:background="@color/list_devider"/>
 
                     <com.supremainc.biostar2.view.DetailTextItemView
                         android:id="@+id/status"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         app:index="@string/status"
-                        app:link="false" />
+                        app:link="false"/>
 
                     <com.supremainc.biostar2.view.DetailTextItemView
                         android:id="@+id/period"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         app:index="@string/period"
-                        app:link="false" />
+                        app:link="false"/>
 
                     <com.supremainc.biostar2.view.DetailTextItemView
                         android:id="@+id/access_group"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         app:index="@string/access_group"
-                        app:link="true" />
+                        app:link="true"/>
 
                     <com.supremainc.biostar2.view.StyledTextView
                         android:layout_width="match_parent"
@@ -130,27 +130,34 @@
                         android:text="@string/credential"
                         android:textColor="@color/user_total"
                         android:textSize="14dp"
-                        app:typeface="roboto_bold.ttf" />
+                        app:typeface="roboto_bold.ttf"/>
 
                     <com.supremainc.biostar2.view.DetailTextItemView
                         android:id="@+id/fingerprint"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         app:index="@string/fingerprint"
-                        app:link="true" />
+                        app:link="true"/>
 
                     <com.supremainc.biostar2.view.DetailTextItemView
                         android:id="@+id/card"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         app:index="@string/card"
-                        app:link="true" />
+                        app:link="true"/>
+
+                    <com.supremainc.biostar2.view.DetailTextItemView
+                        android:id="@+id/face"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        app:index="@string/face"
+                        app:link="true"/>
 
                     <com.supremainc.biostar2.view.DetailSwitchItemView
                         android:id="@+id/pin"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        app:index="@string/pin_upper" />
+                        app:index="@string/pin_upper"/>
 
 
                 </LinearLayout>
@@ -161,7 +168,7 @@
             android:id="@+id/toolbar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:minHeight="?attr/actionBarSize" />
+            android:minHeight="?attr/actionBarSize"/>
     </FrameLayout>
 
 </LinearLayout>

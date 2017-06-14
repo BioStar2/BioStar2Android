@@ -21,8 +21,6 @@ import android.app.Activity;
 import android.app.DatePickerDialog.OnDateSetListener;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
-import android.content.DialogInterface.OnCancelListener;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
@@ -36,7 +34,6 @@ import android.provider.Settings;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.LocalBroadcastManager;
-import android.text.InputFilter;
 import android.text.InputType;
 import android.util.Base64;
 import android.util.Log;
@@ -52,29 +49,21 @@ import android.widget.TextView;
 
 import com.supremainc.biostar2.BuildConfig;
 import com.supremainc.biostar2.R;
-import com.supremainc.biostar2.meta.Setting;
 import com.supremainc.biostar2.impl.OnSingleClickListener;
-import com.supremainc.biostar2.sdk.datatype.v1.Permission.CloudRole;
-import com.supremainc.biostar2.sdk.datatype.v2.AccessControl.AccessGroup;
-import com.supremainc.biostar2.sdk.datatype.v2.AccessControl.ListAccessGroup;
-import com.supremainc.biostar2.sdk.datatype.v2.Card.ListCard;
-import com.supremainc.biostar2.sdk.datatype.v2.Common.BioStarSetting;
-import com.supremainc.biostar2.sdk.datatype.v2.Common.ResponseStatus;
-import com.supremainc.biostar2.sdk.datatype.v2.Common.VersionData;
-import com.supremainc.biostar2.sdk.datatype.v2.FingerPrint.ListFingerprintTemplate;
-import com.supremainc.biostar2.sdk.datatype.v2.Permission.PermissionModule;
-import com.supremainc.biostar2.sdk.datatype.v2.Permission.UserPermission;
-import com.supremainc.biostar2.sdk.datatype.v2.User.BaseUserGroup;
-import com.supremainc.biostar2.sdk.datatype.v2.User.User;
-import com.supremainc.biostar2.sdk.datatype.v2.User.UserGroup;
-import com.supremainc.biostar2.sdk.provider.ConfigDataProvider;
-import com.supremainc.biostar2.sdk.provider.TimeConvertProvider;
+import com.supremainc.biostar2.meta.Setting;
+import com.supremainc.biostar2.sdk.models.v1.permission.CloudRole;
+import com.supremainc.biostar2.sdk.models.v2.accesscontrol.ListAccessGroup;
+import com.supremainc.biostar2.sdk.models.v2.common.BioStarSetting;
+import com.supremainc.biostar2.sdk.models.v2.common.ResponseStatus;
+import com.supremainc.biostar2.sdk.models.v2.common.VersionData;
+import com.supremainc.biostar2.sdk.models.v2.permission.UserPermission;
+import com.supremainc.biostar2.sdk.models.v2.user.BaseUserGroup;
+import com.supremainc.biostar2.sdk.models.v2.user.User;
+import com.supremainc.biostar2.sdk.models.v2.user.UserGroup;
+import com.supremainc.biostar2.sdk.provider.DateTimeDataProvider;
 import com.supremainc.biostar2.sdk.utils.ImageUtil;
-import com.supremainc.biostar2.sdk.volley.Response;
-import com.supremainc.biostar2.sdk.volley.VolleyError;
 import com.supremainc.biostar2.util.InvalidChecker;
 import com.supremainc.biostar2.util.TextInputFilter;
-import com.supremainc.biostar2.util.TextWatcherFilter;
 import com.supremainc.biostar2.view.DetailEditItemView;
 import com.supremainc.biostar2.view.DetailSwitchItemView;
 import com.supremainc.biostar2.view.DetailTextItemView;
@@ -82,7 +71,6 @@ import com.supremainc.biostar2.view.StyledTextView;
 import com.supremainc.biostar2.view.SummaryUserView;
 import com.supremainc.biostar2.view.SwitchView;
 import com.supremainc.biostar2.widget.DateTimePicker;
-import com.supremainc.biostar2.widget.ScreenControl;
 import com.supremainc.biostar2.widget.ScreenControl.ScreenType;
 import com.supremainc.biostar2.widget.popup.PasswordPopup;
 import com.supremainc.biostar2.widget.popup.Popup;
@@ -97,6 +85,11 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
 
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+
+
 @SuppressLint("InflateParams")
 public class UserModifyFragment extends BaseFragment {
     private static final int DELETE_PICTURE = 2;
@@ -108,9 +101,8 @@ public class UserModifyFragment extends BaseFragment {
     private DateTimePicker mDateTimePicker;
     private InvalidChecker mInvalidChecker;
     private UserGroup mInitUserGroup;
-    private Bitmap bmp;
     private String mBackupPhoto = null;
-    private Bitmap mBlurBmp;
+    private Bitmap mBmpBlur;
     private int mEndDay;
     private int mEndMonth;
     private int mEndYear;
@@ -119,7 +111,7 @@ public class UserModifyFragment extends BaseFragment {
     private String mPinData;
     private SwitchView mPinSwitch;
     private SwitchView mStatusSwitch;
-    private Bitmap mRbmp;
+    private Bitmap mBmpRound;
     private int mStartDay;
     private int mStartMonth;
     private int mStartYear;
@@ -139,62 +131,17 @@ public class UserModifyFragment extends BaseFragment {
     private DetailTextItemView mAccessGroupView;
     private DetailTextItemView mFingerPrintView;
     private DetailTextItemView mCardView;
+    private DetailTextItemView mFaceView;
     private DetailSwitchItemView mPinView;
-    private TextWatcherFilter mUserNameViewTextWatcherFilter;
-    private TextWatcherFilter mEmailViewTextWatcherFilter;
-    private TextWatcherFilter mUserIDViewTextWatcherFilter32;
-    private TextWatcherFilter mUserIDViewTextWatcherFilter10;
-    private TextWatcherFilter mTelephoneViewTextWatcherFilter;
-    private TextWatcherFilter mLoginIDViewTextWatcherFilter;
     private TextInputFilter mTextInputFilter;
 
     private SummaryUserView.SummaryUserViewListener mSummaryUserViewListener = new SummaryUserView.SummaryUserViewListener() {
-        @Override
-        public void goLog() {
-            showUserViewLog();
-        }
-
         @Override
         public void editPhoto() {
             editUserImage();
         }
     };
-    private OnCancelListener cancelListener = new OnCancelListener() {
-        @Override
-        public void onCancel(DialogInterface dialog) {
-            if (mCommonDataProvider != null) {
-                mCommonDataProvider.cancelAll(TAG);
-            }
-            ScreenControl.getInstance().backScreen();
-        }
-    };
 
-    private Popup.OnPopupClickListener mNextSuccess = new Popup.OnPopupClickListener() {
-        @Override
-        public void OnNegative() {
-            sendLocalBroadcast(Setting.BROADCAST_USER, null);
-            mScreenControl.backScreen();
-        }
-
-        @Override
-        public void OnPositive() {
-            mIsNewUser = false;
-            mCardView.setVisibility(View.VISIBLE);
-            mFingerPrintView.setVisibility(View.VISIBLE);
-            sendLocalBroadcast(Setting.BROADCAST_USER, null);
-            setView();
-            initActionbar(mUserInfo.name, R.drawable.action_bar_bg);
-            mHandler.post(new Runnable() {
-                @Override
-                public void run() {
-                    ScrollView sv =  (ScrollView) mRootView.findViewById(R.id.scroll_container);
-                    if (sv != null) {
-                        sv.fullScroll(View.FOCUS_DOWN);
-                    }
-                }
-            });
-        }
-    };
     private Popup.OnPopupClickListener mPopupSucess = new Popup.OnPopupClickListener() {
         @Override
         public void OnNegative() {
@@ -205,140 +152,7 @@ public class UserModifyFragment extends BaseFragment {
             if (mIsNewUser) {
                 sendLocalBroadcast(Setting.BROADCAST_USER, null);
             }
-//            try {
-//                if (mIsNewUser) {
-//                    sendLocalBroadcast(Setting.BROADCAST_USER, null);
-//                } else {
-//                    sendLocalBroadcast(Setting.BROADCAST_USER, mUserInfo.clone());
-//                }
-//            } catch (CloneNotSupportedException e) {
-//                e.printStackTrace();
-//                return;
-//            }
             mScreenControl.backScreen();
-        }
-    };
-    private Response.Listener<User> mUpdateUserListener = new Response.Listener<User>() {
-        @Override
-        public void onResponse(User response, Object deliverParam) {
-            if (isInValidCheck(null)) {
-                return;
-            }
-            mPopup.dismissWiat();
-            if (response != null) {
-                try {
-                    mUserInfo = response.clone();
-                    if (mUserInfo.fingerprint_templates != null) {
-                        mUserInfo.fingerprint_count = mUserInfo.fingerprint_templates.size();
-                    }
-                    if (mUserInfo.cards != null) {
-                        mUserInfo.fingerprint_count = mUserInfo.cards.size();
-                        mUserInfo.card_count = mUserInfo.cards.size();
-                    }
-                    if (mUserInfo.photo != null && !mUserInfo.photo.isEmpty()) {
-                        mUserInfo.photo_exist = true;
-                    }
-                    setView();
-                } catch (Exception e) {
-
-                }
-            }
-            try {
-                sendLocalBroadcast(Setting.BROADCAST_USER, mUserInfo.clone());
-            } catch (CloneNotSupportedException e) {
-                e.printStackTrace();
-                return;
-            }
-            mPopup.show(PopupType.CONFIRM, getString(R.string.info), (String)deliverParam, mPopupSucess, null, null);
-        }
-    };
-
-    private Response.ErrorListener mErrorUpdateUserListener = new Response.ErrorListener() {
-        @Override
-        public void onErrorResponse(VolleyError error, final Object deliverParam) {
-            if (isInValidCheck(error)) {
-                return;
-            }
-            mPopup.dismissWiat();
-            try {
-                sendLocalBroadcast(Setting.BROADCAST_USER, mUserInfo.clone());
-            } catch (CloneNotSupportedException e) {
-                e.printStackTrace();
-                return;
-            }
-            mPopup.show(PopupType.CONFIRM, getString(R.string.info),  (String)deliverParam, mPopupSucess, null, null);
-        }
-    };
-    private Response.Listener<ResponseStatus> mModifyUserListener = new Response.Listener<ResponseStatus>() {
-        @Override
-        public void onResponse(ResponseStatus response, Object deliverParam) {
-            if (isInValidCheck(null)) {
-                return;
-            }
-            mUserInfo.photo = mBackupPhoto;
-            if (mPhotoStatus == PhotoStatus.DELETE) {
-                mBackupPhoto = null;
-                mUserInfo.photo = null;
-            }
-            if (mUserDataProvider.getLoginUserInfo().user_id.equals(mUserInfo.user_id)) {
-                try {
-                    mUserDataProvider.setLoginUserInfo(mUserInfo.clone());
-                } catch (Exception e) {
-                    Log.e(TAG, " " + e.getMessage());
-                }
-                mUserDataProvider.simpleLogin(mLoginListener, mSimpleLoginErrorListener, mUserInfo.user_id);
-            }
-            if (mLoginPasswordView.getVisibility() == View.VISIBLE) {
-                if (mPasswordData != null) {
-                    mUserInfo.password_exist = true;
-                }
-            }
-            mUserDataProvider.getUser(TAG, mUserInfo.user_id, mUpdateUserListener, mErrorUpdateUserListener,  getString(R.string.user_modify_success));
-        }
-    };
-    private Response.Listener<ResponseStatus> mCreateUserListener = new Response.Listener<ResponseStatus>() {
-        @Override
-        public void onResponse(ResponseStatus response, Object deliverParam) {
-            if (isInValidCheck(null)) {
-                return;
-            }
-
-            mUserInfo.photo = mBackupPhoto;
-            if (mPhotoStatus == PhotoStatus.DELETE) {
-                mBackupPhoto = null;
-                mUserInfo.photo = null;
-            }
-            mPopup.dismissWiat();
-            sendLocalBroadcast(Setting.BROADCAST_USER_COUNT, null);
-            if (VersionData.getCloudVersion(mContext) > 1) {
-                mPopup.show(PopupType.CONFIRM, getString(R.string.info),   getString(R.string.user_create_success)+"\n"+getString(R.string.add_credential), mNextSuccess, getString(android.R.string.yes), getString(android.R.string.no));
-            } else {
-                mPopup.show(PopupType.CONFIRM, getString(R.string.info), getString(R.string.user_create_success), mPopupSucess, null,null);
-            }
-        }
-    };
-    private Popup.OnPopupClickListener popupFail = new Popup.OnPopupClickListener() {
-        @Override
-        public void OnNegative() {
-        }
-
-        @Override
-        public void OnPositive() {
-            if (mIsNewUser) {
-                mUserDataProvider.createUser(TAG, mUserInfo, mCreateUserListener, mCreateUserErrorListener, null);
-            } else {
-                mUserDataProvider.modifyUser(TAG, mUserInfo, mModifyUserListener, mCreateUserErrorListener, null);
-            }
-        }
-    };
-    private Response.ErrorListener mCreateUserErrorListener = new Response.ErrorListener() {
-        @Override
-        public void onErrorResponse(VolleyError error, Object deliverParam) {
-            if (isInValidCheck(error)) {
-                return;
-            }
-            mPopup.dismissWiat();
-            mPopup.show(Popup.PopupType.ALERT, getString(R.string.fail_retry), Setting.getErrorMessage(error, mContext), popupFail, getString(R.string.ok), getString(R.string.cancel));
         }
     };
     private OnDateSetListener mStartDateListener = new OnDateSetListener() {
@@ -387,7 +201,7 @@ public class UserModifyFragment extends BaseFragment {
             if (Build.VERSION.SDK_INT >= 23) {
                 String permissionLabel = "";
                 try {
-                    PackageManager pm = mContext.getPackageManager();
+                    PackageManager pm = mActivity.getPackageManager();
                     PermissionGroupInfo pg = pm.getPermissionGroupInfo(Manifest.permission_group.STORAGE, PackageManager.GET_META_DATA);
                     permissionLabel = pg.loadLabel(pm).toString();
                 } catch (Exception e) {
@@ -405,8 +219,8 @@ public class UserModifyFragment extends BaseFragment {
                             public void onClick(View view) {
                                 Intent intent = new Intent();
                                 intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                                intent.setData(Uri.parse("package:" + mContext.getPackageName()));
-                                mContext.startActivity(intent);
+                                intent.setData(Uri.parse("package:" + mActivity.getPackageName()));
+                                mActivity.startActivity(intent);
                             }
                         });
                 //snackbar.setActionTextColor(Color.MAGENTA);
@@ -417,67 +231,59 @@ public class UserModifyFragment extends BaseFragment {
             }
         }
     };
+    private Callback<User> mLoginListener = new Callback<User>() {
+        @Override
+        public void onFailure(Call<User> call, Throwable t) {
+            if (isIgnoreCallback(call, false)) {
+                return;
+            }
+        }
 
-    private OnCancelListener mCancelLoginListener = new OnCancelListener() {
         @Override
-        public void onCancel(DialogInterface dialog) {
-            if (mCommonDataProvider != null) {
-                mCommonDataProvider.cancelAll(TAG);
+        public void onResponse(Call<User> call, Response<User> response) {
+            if (isIgnoreCallback(call, response, false)) {
+                return;
             }
+            if (isInvalidResponse(response, false, false)) {
+                return;
+            }
+            LocalBroadcastManager.getInstance(mActivity).sendBroadcast(new Intent(Setting.BROADCAST_REROGIN));
         }
     };
+    private Callback<BioStarSetting> mSettingListener = new Callback<BioStarSetting>() {
+        @Override
+        public void onFailure(Call<BioStarSetting> call, Throwable t) {
+            if (isIgnoreCallback(call, true)) {
+                return;
+            }
+            showPasswodPopup();
+        }
 
-    private Response.Listener<User> mLoginListener = new Response.Listener<User>() {
         @Override
-        public void onResponse(User response, Object deliverParam) {
-            if (isInValidCheck(null)) {
+        public void onResponse(Call<BioStarSetting> call, Response<BioStarSetting> response) {
+            if (isIgnoreCallback(call, response, true)) {
                 return;
             }
-            LocalBroadcastManager.getInstance(mContext).sendBroadcast(new Intent(Setting.BROADCAST_REROGIN));
-            mPopup.dismissWiat();
-        }
-    };
-    private Response.ErrorListener mSimpleLoginErrorListener = new Response.ErrorListener() {
-        @Override
-        public void onErrorResponse(VolleyError volleyError, Object deliverParam) {
-            if (isInValidCheck(null)) {
-                return;
-            }
-            LocalBroadcastManager.getInstance(mContext).sendBroadcast(new Intent(Setting.BROADCAST_REROGIN));
-            mPopup.dismissWiat();
-        }
-    };
-    private Response.Listener<BioStarSetting> mSettingListener = new Response.Listener<BioStarSetting>() {
-        @Override
-        public void onResponse(BioStarSetting response, Object deliverParam) {
-            if (isInValidCheck(null)) {
-                return;
-            }
-            mPopup.dismissWiat();
             showPasswodPopup();
         }
     };
-    private Response.ErrorListener mSettingErrorListener = new Response.ErrorListener() {
+    private Callback<User> mSettingListener2 = new Callback<User>() {
         @Override
-        public void onErrorResponse(VolleyError volleyError, Object deliverParam) {
-            if (isInValidCheck(null)) {
+        public void onFailure(Call<User> call, Throwable t) {
+            if (isIgnoreCallback(call, true)) {
                 return;
             }
-            mPopup.dismissWiat();
             showPasswodPopup();
         }
-    };
-    private Response.Listener<User> mSettingListener2 = new Response.Listener<User>() {
-        @Override
-        public void onResponse(User response, Object deliverParam) {
-            if (isInValidCheck(null)) {
-                return;
-            }
-            mPopup.dismissWiat();
-            showPasswodPopup();
-        }
-    };
 
+        @Override
+        public void onResponse(Call<User> call, Response<User> response) {
+            if (isIgnoreCallback(call, response, true)) {
+                return;
+            }
+            showPasswodPopup();
+        }
+    };
     private OnSingleClickListener mClickListener = new OnSingleClickListener() {
         @Override
         public void onSingleClick(View v) {
@@ -497,6 +303,7 @@ public class UserModifyFragment extends BaseFragment {
                 case R.id.telephone:  // intent miss break
                 case R.id.login_id:  // intent miss break
                 case R.id.user_name: {
+                    Log.e(TAG, "onClick use edit");
                     DetailEditItemView view = (DetailEditItemView) v;
                     view.content.setSelection(view.content.toString2().length());
                     showIme(view.content);
@@ -507,11 +314,11 @@ public class UserModifyFragment extends BaseFragment {
                     break;
                 }
                 case R.id.login_password: {
-                    mPopup.showWait(mCancelLoginListener);
-                    if (VersionData.getCloudVersion(mContext) > 1) {
-                        mCommonDataProvider.getBioStarSetting(mSettingListener, mSettingErrorListener, null);
+                    mPopup.showWait(mCancelStayListener);
+                    if (VersionData.getCloudVersion(mActivity) > 1) {
+                        request(mCommonDataProvider.getBioStarSetting(mSettingListener));
                     } else {
-                        mCommonDataProvider.simpleLogin(mSettingListener2, mSettingErrorListener, null);
+                        request(mCommonDataProvider.simpleLogin(mSettingListener2));
                     }
                     break;
                 }
@@ -548,11 +355,180 @@ public class UserModifyFragment extends BaseFragment {
                     editCard();
                     break;
                 }
+                case R.id.face: {
+                    editFace();
+                    break;
+                }
                 case R.id.pin: {
-                    showPinPasswodPopup();
+                    mPinSwitch.setSwitch(!mPinSwitch.getOn());
                     break;
                 }
             }
+        }
+    };
+    private Callback<User> mUpdateUserListener = new Callback<User>() {
+        @Override
+        public void onFailure(Call<User> call, Throwable t) {
+            if (isIgnoreCallback(call, true)) {
+                return;
+            }
+            try {
+                sendLocalBroadcast(Setting.BROADCAST_USER, mUserInfo.clone());
+            } catch (CloneNotSupportedException e) {
+                showErrorPopup(e.getMessage(), false);
+                return;
+            }
+            mPopup.show(PopupType.CONFIRM, getString(R.string.info), getString(R.string.user_modify_success), mPopupSucess, null, null);
+        }
+
+        @Override
+        public void onResponse(Call<User> call, Response<User> response) {
+            if (isIgnoreCallback(call, response, true)) {
+                return;
+            }
+            if (isInvalidResponse(response, true, false)) {
+                return;
+            }
+            try {
+                mUserInfo = response.body().clone();
+                if (mUserInfo.fingerprint_templates != null) {
+                    mUserInfo.fingerprint_count = mUserInfo.fingerprint_templates.size();
+                }
+                if (mUserInfo.cards != null) {
+                    mUserInfo.fingerprint_count = mUserInfo.cards.size();
+                    mUserInfo.card_count = mUserInfo.cards.size();
+                }
+                if (mUserInfo.photo != null && !mUserInfo.photo.isEmpty()) {
+                    mUserInfo.photo_exist = true;
+                }
+                setView();
+            } catch (Exception e) {
+            }
+            try {
+                sendLocalBroadcast(Setting.BROADCAST_USER, mUserInfo.clone());
+            } catch (CloneNotSupportedException e) {
+                showErrorPopup(e.getMessage(), false);
+                return;
+            }
+            mPopup.show(PopupType.CONFIRM, getString(R.string.info), getString(R.string.user_modify_success), mPopupSucess, null, null);
+        }
+    };
+    private Popup.OnPopupClickListener mNextSuccess = new Popup.OnPopupClickListener() {
+        @Override
+        public void OnNegative() {
+            sendLocalBroadcast(Setting.BROADCAST_USER, null);
+            mScreenControl.backScreen();
+        }
+
+        @Override
+        public void OnPositive() {
+            mIsNewUser = false;
+            mCardView.setVisibility(View.VISIBLE);
+            mFingerPrintView.setVisibility(View.VISIBLE);
+            mFaceView.setVisibility(View.VISIBLE);
+            sendLocalBroadcast(Setting.BROADCAST_USER, null);
+            setView();
+            initActionbar(mUserInfo.name, R.drawable.action_bar_bg);
+            mHandler.post(new Runnable() {
+                @Override
+                public void run() {
+                    ScrollView sv = (ScrollView) mRootView.findViewById(R.id.scroll_container);
+                    if (sv != null) {
+                        sv.fullScroll(View.FOCUS_DOWN);
+                    }
+                }
+            });
+        }
+    };
+
+    private Callback<ResponseStatus> mCreateUserListener = new Callback<ResponseStatus>() {
+        @Override
+        public void onFailure(Call<ResponseStatus> call, Throwable t) {
+            if (isIgnoreCallback(call, true)) {
+                return;
+            }
+            showErrorPopup(t.getMessage(), false);
+        }
+
+        @Override
+        public void onResponse(Call<ResponseStatus> call, Response<ResponseStatus> response) {
+            if (isIgnoreCallback(call, response, true)) {
+                return;
+            }
+            if (isInvalidResponse(response, true, false)) {
+                return;
+            }
+            mUserInfo.photo = mBackupPhoto;
+            if (mPhotoStatus == PhotoStatus.DELETE) {
+                mBackupPhoto = null;
+                mUserInfo.photo = null;
+            }
+            sendLocalBroadcast(Setting.BROADCAST_USER_COUNT, null);
+            if (VersionData.getCloudVersion(mActivity) > 1) {
+                mPopup.show(PopupType.CONFIRM, getString(R.string.info), getString(R.string.user_create_success) + "\n" + getString(R.string.add_credential), mNextSuccess, getString(android.R.string.yes), getString(android.R.string.no));
+            } else {
+                mPopup.show(PopupType.CONFIRM, getString(R.string.info), getString(R.string.user_create_success), mPopupSucess, null, null);
+            }
+        }
+    };
+
+    private Callback<ResponseStatus> mModifyUserListener = new Callback<ResponseStatus>() {
+        @Override
+        public void onFailure(Call<ResponseStatus> call, Throwable t) {
+            if (isIgnoreCallback(call, true)) {
+                return;
+            }
+            showErrorPopup(t.getMessage(), false);
+        }
+
+        @Override
+        public void onResponse(Call<ResponseStatus> call, Response<ResponseStatus> response) {
+            if (isIgnoreCallback(call, response, true)) {
+                return;
+            }
+            if (isInvalidResponse(response, true, false)) {
+                return;
+            }
+            mUserInfo.photo = mBackupPhoto;
+            if (mPhotoStatus == PhotoStatus.DELETE) {
+                mBackupPhoto = null;
+                mUserInfo.photo = null;
+            }
+            if (mUserDataProvider.getLoginUserInfo().user_id.equals(mUserInfo.user_id)) {
+                try {
+                    mUserDataProvider.setLoginUserInfo(mUserInfo.clone());
+                } catch (Exception e) {
+                    Log.e(TAG, " " + e.getMessage());
+                }
+                mCommonDataProvider.simpleLogin(mLoginListener);
+            }
+            if (mLoginPasswordView.getVisibility() == View.VISIBLE) {
+                if (mPasswordData != null) {
+                    mUserInfo.password_exist = true;
+                }
+            }
+            mPopup.showWait(mCancelStayListener);
+            request(mUserDataProvider.getUser(mUserInfo.user_id, mUpdateUserListener));
+        }
+    };
+    private Callback<BioStarSetting> mSaveListener = new Callback<BioStarSetting>() {
+        @Override
+        public void onFailure(Call<BioStarSetting> call, Throwable t) {
+            if (isIgnoreCallback(call, true)) {
+                return;
+            }
+            showErrorPopup(t.getMessage(), false);
+        }
+
+        @Override
+        public void onResponse(Call<BioStarSetting> call, Response<BioStarSetting> response) {
+            if (isIgnoreCallback(call, response, true)) {
+                return;
+            }
+            if (isInvalidResponse(response, true, false)) {
+                return;
+            }
+            save();
         }
     };
 
@@ -562,9 +538,63 @@ public class UserModifyFragment extends BaseFragment {
         TAG = getClass().getSimpleName() + String.valueOf(System.currentTimeMillis());
     }
 
+    private void save() {
+        if (mInvalidChecker.isEmptyString(getString(R.string.info), getString(R.string.user_create_empty), mUserIDView.content.toString2())) {
+            mPopup.dismissWiat();
+            return;
+        }
+        if (mCommonDataProvider.isAlphaNumericUserID() == false) {
+            try {
+                long userId = Long.valueOf(mUserIDView.content.toString2());
+
+                if (userId < 1 || userId > 4294967294L || mUserIDView.content.toString2().startsWith("0")) {
+                    mPopup.show(PopupType.ALERT, getString(R.string.info), getString(R.string.invalid_userid), null, null, null);
+                    resetUserIDFilter();
+                    return;
+                }
+            } catch (Exception e) {
+                mPopup.show(PopupType.ALERT, getString(R.string.info), getString(R.string.invalid_userid), null, null, null);
+                resetUserIDFilter();
+                return;
+            }
+        }
+        if (mLoginIDView.getVisibility() == View.VISIBLE) {
+            if (mInvalidChecker.isEmptyString(getString(R.string.info), getString(R.string.user_create_empty_idpassword), mLoginIDView.content.toString2())) {
+                mPopup.dismissWiat();
+                return;
+            }
+            if (!mUserInfo.password_exist) {
+                if (mPasswordData == null) {
+                    mPopup.dismissWiat();
+                    mPopup.show(PopupType.ALERT, getString(R.string.info), getString(R.string.user_create_empty_idpassword), null, null, null);
+                    return;
+                }
+            }
+        }
+
+        if (mInvalidChecker.isInvalidEmail(getString(R.string.info), getString(R.string.invalid_email), mEmailView.content.toString2())) {
+            mPopup.dismissWiat();
+            return;
+        }
+
+        if (mPinData != null && mPinData.length() > 0 && mPinData.length() < 4) {
+            mPopup.dismissWiat();
+            mPopup.show(PopupType.ALERT, getString(R.string.info), getString(R.string.pincount), null, null, null);
+            return;
+        }
+
+        UpdateClone();
+        mPopup.showWait(mCancelStayListener);
+        if (mIsNewUser) {
+            request(mUserDataProvider.createUser(mUserInfo, mCreateUserListener));
+        } else {
+            request(mUserDataProvider.modifyUser(mUserInfo, mModifyUserListener));
+        }
+    }
+
     private void UpdateClone() {
         mUserInfo.user_id = mUserIDView.content.toString2();
-        if (VersionData.getCloudVersion(mContext) > 1) {
+        if (VersionData.getCloudVersion(mActivity) > 1) {
             if (mUserInfo.permission != null) {
                 mUserInfo.password = mPasswordData;
                 if (mLoginIDView.content.toString2().equals("")) {
@@ -611,8 +641,8 @@ public class UserModifyFragment extends BaseFragment {
             mUserInfo.pin = "";
         }
 
-        mUserInfo.setTimeFormmat(mTimeConvertProvider, User.UserTimeType.start_datetime, TimeConvertProvider.DATE_TYPE.FORMAT_DATE, mDateStartView.toString2());
-        mUserInfo.setTimeFormmat(mTimeConvertProvider, User.UserTimeType.expiry_datetime, TimeConvertProvider.DATE_TYPE.FORMAT_DATE, mDateEndView.toString2());
+        mUserInfo.setTimeFormmat(mDateTimeDataProvider, User.UserTimeType.start_datetime, DateTimeDataProvider.DATE_TYPE.FORMAT_DATE, mDateStartView.toString2());
+        mUserInfo.setTimeFormmat(mDateTimeDataProvider, User.UserTimeType.expiry_datetime, DateTimeDataProvider.DATE_TYPE.FORMAT_DATE, mDateEndView.toString2());
 
         switch (mPhotoStatus) {
             case NOT_MODIFY:
@@ -651,40 +681,40 @@ public class UserModifyFragment extends BaseFragment {
             cal.set(Calendar.YEAR, mStartYear);
             cal.set(Calendar.MONTH, mStartMonth);
             cal.set(Calendar.DAY_OF_MONTH, mStartDay);
-            mUserInfo.setTimeCalendar(mTimeConvertProvider, User.UserTimeType.start_datetime, cal);
+            mUserInfo.setTimeCalendar(mDateTimeDataProvider, User.UserTimeType.start_datetime, cal);
 
             cal.set(Calendar.YEAR, mEndYear);
             cal.set(Calendar.MONTH, mEndMonth);
             cal.set(Calendar.DAY_OF_MONTH, mEndDay);
 
-            mUserInfo.setTimeCalendar(mTimeConvertProvider, User.UserTimeType.expiry_datetime, cal);
+            mUserInfo.setTimeCalendar(mDateTimeDataProvider, User.UserTimeType.expiry_datetime, cal);
             if (mInitUserGroup != null) {
                 mUserInfo.user_group = mInitUserGroup;
             }
         } else {
 
-            Calendar cal = mUserInfo.getTimeCalendar(mTimeConvertProvider, User.UserTimeType.expiry_datetime);
+            Calendar cal = mUserInfo.getTimeCalendar(mDateTimeDataProvider, User.UserTimeType.expiry_datetime);
             if (cal == null) {
                 cal = Calendar.getInstance();
             }
             int year = cal.get(Calendar.YEAR);
             if (year > 2030) {
                 cal.set(Calendar.YEAR, 2030);
-                mUserInfo.setTimeCalendar(mTimeConvertProvider, User.UserTimeType.expiry_datetime, cal);
+                mUserInfo.setTimeCalendar(mDateTimeDataProvider, User.UserTimeType.expiry_datetime, cal);
             }
 
             mEndYear = cal.get(Calendar.YEAR);
             mEndMonth = cal.get(Calendar.MONTH);
             mEndDay = cal.get(Calendar.DAY_OF_MONTH);
 
-            cal = mUserInfo.getTimeCalendar(mTimeConvertProvider, User.UserTimeType.start_datetime);
+            cal = mUserInfo.getTimeCalendar(mDateTimeDataProvider, User.UserTimeType.start_datetime);
             if (cal == null) {
                 cal = Calendar.getInstance();
             }
             year = cal.get(Calendar.YEAR);
             if (year < 2000) {
                 cal.set(Calendar.YEAR, 2000);
-                mUserInfo.setTimeCalendar(mTimeConvertProvider, User.UserTimeType.start_datetime, cal);
+                mUserInfo.setTimeCalendar(mDateTimeDataProvider, User.UserTimeType.start_datetime, cal);
             }
 
             mStartYear = cal.get(Calendar.YEAR);
@@ -720,6 +750,20 @@ public class UserModifyFragment extends BaseFragment {
         mScreenControl.addScreen(ScreenType.CARD, bundle);
     }
 
+    private void editFace() {
+        if (VersionData.getCloudVersion(mActivity) > 1) {
+            Bundle bundle = new Bundle();
+            try {
+                bundle.putSerializable(User.TAG, mUserInfo.clone());
+                bundle.putSerializable(Setting.DISABLE_MODIFY, false);
+            } catch (CloneNotSupportedException e) {
+                e.printStackTrace();
+                return;
+            }
+            mScreenControl.addScreen(ScreenType.FACE, bundle);
+        }
+    }
+
     private void editFingerPrint() {
         Bundle bundle = new Bundle();
         try {
@@ -742,13 +786,13 @@ public class UserModifyFragment extends BaseFragment {
 //            return;
 //        }
 //        mScreenControl.addScreen(ScreenType.USER_PERMISSION, bundle);
-        if (VersionData.getCloudVersion(mContext) > 1) {
+        if (VersionData.getCloudVersion(mActivity) > 1) {
             //TODO
-            SelectPopup<UserPermission> selectCloudRolePopup = new SelectPopup<UserPermission>(mContext, mPopup);
+            SelectPopup<UserPermission> selectCloudRolePopup = new SelectPopup<UserPermission>(mActivity, mPopup);
             selectCloudRolePopup.show(SelectPopup.SelectType.V2_CLOUD_ROLE, new SelectPopup.OnSelectResultListener<UserPermission>() {
                 @Override
                 public void OnResult(ArrayList<UserPermission> selectedItem, boolean isPositive) {
-                    if (isInValidCheck(null)) {
+                    if (isInValidCheck()) {
                         return;
                     }
                     if (selectedItem == null || selectedItem.size() < 1) {
@@ -769,11 +813,11 @@ public class UserModifyFragment extends BaseFragment {
                 }
             }, null, getString(R.string.select) + " " + getString(R.string.operator), false);
         } else {
-            SelectPopup<CloudRole> selectCloudRolePopup = new SelectPopup<CloudRole>(mContext, mPopup);
+            SelectPopup<CloudRole> selectCloudRolePopup = new SelectPopup<CloudRole>(mActivity, mPopup);
             selectCloudRolePopup.show(SelectPopup.SelectType.CLOUD_ROLE, new SelectPopup.OnSelectResultListener<CloudRole>() {
                 @Override
                 public void OnResult(ArrayList<CloudRole> selectedItem, boolean isPositive) {
-                    if (isInValidCheck(null)) {
+                    if (isInValidCheck()) {
                         return;
                     }
                     if (selectedItem == null || selectedItem.size() < 1) {
@@ -793,11 +837,11 @@ public class UserModifyFragment extends BaseFragment {
     }
 
     private void editUserGroup() {
-        SelectPopup<UserGroup> selectPopup = new SelectPopup<UserGroup>(mContext, mPopup);
+        SelectPopup<UserGroup> selectPopup = new SelectPopup<UserGroup>(mActivity, mPopup);
         selectPopup.show(SelectPopup.SelectType.USER_GROUPS, new SelectPopup.OnSelectResultListener<UserGroup>() {
             @Override
-            public void OnResult(ArrayList<UserGroup> selectedItem,boolean isPositive) {
-                if (isInValidCheck(null)) {
+            public void OnResult(ArrayList<UserGroup> selectedItem, boolean isPositive) {
+                if (isInValidCheck()) {
                     return;
                 }
                 if (selectedItem == null) {
@@ -807,7 +851,7 @@ public class UserModifyFragment extends BaseFragment {
                 mUserGroupView.content.setText(userGroup.name);
                 mUserGroupView.content.setTag(userGroup.id);
             }
-        }, null, getString(R.string.select_user_group), false);
+        }, null, getString(R.string.select_user_group), false, true);
     }
 
     @Override
@@ -830,24 +874,24 @@ public class UserModifyFragment extends BaseFragment {
 
     private void editUserImage() {
         if (Build.VERSION.SDK_INT >= 23) {
-            if ((ActivityCompat.checkSelfPermission(mContext, Manifest.permission.READ_EXTERNAL_STORAGE)
-                    != PackageManager.PERMISSION_GRANTED) || (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+            if ((ActivityCompat.checkSelfPermission(mActivity, Manifest.permission.READ_EXTERNAL_STORAGE)
+                    != PackageManager.PERMISSION_GRANTED) || (ActivityCompat.checkSelfPermission(mActivity, Manifest.permission.WRITE_EXTERNAL_STORAGE)
                     != PackageManager.PERMISSION_GRANTED)) {
-                ActivityCompat.requestPermissions(mContext, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE},
+                ActivityCompat.requestPermissions(mActivity, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE},
                         Setting.REQUEST_EXTERNAL_STORAGE);
                 return;
             }
         }
 
-        SelectPopup<SelectCustomData> selectPopup = new SelectPopup<SelectCustomData>(mContext, mPopup);
+        SelectPopup<SelectCustomData> selectPopup = new SelectPopup<SelectCustomData>(mActivity, mPopup);
         ArrayList<SelectCustomData> linkType = new ArrayList<SelectCustomData>();
         linkType.add(new SelectCustomData(getString(R.string.take_picture), TAKE_PICTURE, false));
         linkType.add(new SelectCustomData(getString(R.string.from_gallery), FROM_GALLERY, false));
         linkType.add(new SelectCustomData(getString(R.string.delete_picture), DELETE_PICTURE, false));
         selectPopup.show(SelectPopup.SelectType.CUSTOM, new SelectPopup.OnSelectResultListener<SelectCustomData>() {
             @Override
-            public void OnResult(ArrayList<SelectCustomData> selectedItem,boolean isPositive) {
-                if (isInValidCheck(null)) {
+            public void OnResult(ArrayList<SelectCustomData> selectedItem, boolean isPositive) {
+                if (isInValidCheck()) {
                     return;
                 }
                 if (selectedItem == null) {
@@ -872,17 +916,13 @@ public class UserModifyFragment extends BaseFragment {
                         mSummaryUserView.setUserPhotoDefault();
                         mSummaryUserView.setBlurBackGroudDefault();
                         mBackupPhoto = null;
-                        if (bmp != null) {
-                            bmp.recycle();
-                            bmp = null;
+                        if (mBmpBlur != null) {
+                            mBmpBlur.recycle();
+                            mBmpBlur = null;
                         }
-                        if (mBlurBmp != null) {
-                            mBlurBmp.recycle();
-                            mBlurBmp = null;
-                        }
-                        if (mRbmp != null) {
-                            mRbmp.recycle();
-                            mRbmp = null;
+                        if (mBmpRound != null) {
+                            mBmpRound.recycle();
+                            mBmpRound = null;
                         }
                         break;
                     }
@@ -898,7 +938,7 @@ public class UserModifyFragment extends BaseFragment {
         InputStream is = null;
         if (uri.getAuthority() != null) {
             try {
-                is = mContext.getContentResolver().openInputStream(uri);
+                is = mActivity.getContentResolver().openInputStream(uri);
                 Bitmap bmp = BitmapFactory.decodeStream(is);
                 setImage(ImageUtil.resizeBitmap(bmp, Setting.USER_PROFILE_IMAGE_SIZE, true));
             } catch (FileNotFoundException e) {
@@ -922,7 +962,7 @@ public class UserModifyFragment extends BaseFragment {
             }
         }
         if (mTextInputFilter == null) {
-            mTextInputFilter = new TextInputFilter(mToastPopup);
+            mTextInputFilter = new TextInputFilter(mImm, mToastPopup);
         }
         if (mInitUserGroup == null) {
             mInitUserGroup = getExtraData(UserGroup.TAG, savedInstanceState);
@@ -942,12 +982,14 @@ public class UserModifyFragment extends BaseFragment {
         mSummaryUserView.init(mSummaryUserViewListener);
         mUserIDView = (DetailEditItemView) mRootView.findViewById(R.id.user_id);
         mUserNameView = (DetailEditItemView) mRootView.findViewById(R.id.user_name);
-        mTextInputFilter.setFilter( mUserNameView.content, TextInputFilter.EDIT_TYPE.USER_NAME);
+        mTextInputFilter.setFilter(mUserNameView.content, TextInputFilter.EDIT_TYPE.USER_NAME);
         mEmailView = (DetailEditItemView) mRootView.findViewById(R.id.email);
-        mTextInputFilter.setFilter( mEmailView.content, TextInputFilter.EDIT_TYPE.EMAIL);
+//        mTextInputFilter.setFilter( mEmailView.content, TextInputFilter.EDIT_TYPE.EMAIL);
         mTelephoneView = (DetailEditItemView) mRootView.findViewById(R.id.telephone);
+        mTextInputFilter.setFilter(mTelephoneView.content, TextInputFilter.EDIT_TYPE.TELEPHONE);
         mOperatorView = (DetailTextItemView) mRootView.findViewById(R.id.operator);
         mLoginIDView = (DetailEditItemView) mRootView.findViewById(R.id.login_id);
+        mTextInputFilter.setFilter(mLoginIDView.content, TextInputFilter.EDIT_TYPE.LOGIN_ID);
         mLoginPasswordView = (DetailTextItemView) mRootView.findViewById(R.id.login_password);
         mDateStartView = (StyledTextView) mRootView.findViewById(R.id.date_start);
         mDateEndView = (StyledTextView) mRootView.findViewById(R.id.date_end);
@@ -957,14 +999,16 @@ public class UserModifyFragment extends BaseFragment {
         mAccessGroupView = (DetailTextItemView) mRootView.findViewById(R.id.access_group);
         mFingerPrintView = (DetailTextItemView) mRootView.findViewById(R.id.fingerprint);
         mCardView = (DetailTextItemView) mRootView.findViewById(R.id.card);
+        mFaceView = (DetailTextItemView) mRootView.findViewById(R.id.face);
         mPinView = (DetailSwitchItemView) mRootView.findViewById(R.id.pin);
 
         createUser();
         setView();
         if (mIsNewUser) {
-            if (VersionData.getCloudVersion(mContext) > 1) {
+            if (VersionData.getCloudVersion(mActivity) > 1) {
                 mCardView.setVisibility(View.GONE);
                 mFingerPrintView.setVisibility(View.GONE);
+                mFaceView.setVisibility(View.GONE);
             }
         }
     }
@@ -975,18 +1019,10 @@ public class UserModifyFragment extends BaseFragment {
             return false;
         }
 
-        if (bmp != null) {
-            bmp.recycle();
-            bmp = null;
-        }
-        bmp = BitmapFactory.decodeFile(ImageUtil.getTempFilePath());
+        Bitmap bmp = BitmapFactory.decodeFile(ImageUtil.getTempFilePath());
         if (null == bmp) {
             cropFile.delete();
             return false;
-        }
-        if (mBlurBmp != null) {
-            mBlurBmp.recycle();
-            mBlurBmp = null;
         }
         cropFile.delete();
         setImage(bmp);
@@ -1069,101 +1105,42 @@ public class UserModifyFragment extends BaseFragment {
 
     @Override
     public void onDestroy() {
+        if (mTextInputFilter != null && mLoginIDView != null) {
+            mTextInputFilter.setFilter(mLoginIDView.content, TextInputFilter.EDIT_TYPE.NONE);
+        }
+        if (mTextInputFilter != null && mUserIDView != null) {
+            mTextInputFilter.setFilter(mUserIDView.content, TextInputFilter.EDIT_TYPE.NONE);
+        }
         super.onDestroy();
-        if (bmp != null) {
-            bmp.recycle();
-            bmp = null;
+        if (mBmpBlur != null) {
+            mBmpBlur.recycle();
+            mBmpBlur = null;
         }
-        if (mBlurBmp != null) {
-            mBlurBmp.recycle();
-            mBlurBmp = null;
-        }
-        if (mRbmp != null) {
-            mRbmp.recycle();
-            mRbmp = null;
+        if (mBmpRound != null) {
+            mBmpRound.recycle();
+            mBmpRound = null;
         }
     }
 
     private void resetUserIDFilter() {
         if (mIsNewUser) {
-            mUserIDView.content.removeTextChangedListener(mUserIDViewTextWatcherFilter32);
-            mUserIDView.content.removeTextChangedListener(mUserIDViewTextWatcherFilter10);
-            if (VersionData.getCloudVersion(mContext) > 1) {
-                if (mUserDataProvider.isAlphaNumericUserID()) {
+            mUserIDView.enableEdit(true);
+            if (VersionData.getCloudVersion(mActivity) > 1) {
+                if (mCommonDataProvider.isAlphaNumericUserID()) {
                     mUserIDView.setInputType(InputType.TYPE_CLASS_TEXT);
-                    mUserIDView.content.addTextChangedListener(mUserIDViewTextWatcherFilter32);
                 } else {
                     mUserIDView.setInputType(InputType.TYPE_CLASS_NUMBER);
-                    mUserIDView.content.addTextChangedListener(mUserIDViewTextWatcherFilter10);
                 }
             } else {
-                mUserIDView.content.addTextChangedListener(mUserIDViewTextWatcherFilter10);
                 mUserIDView.setInputType(InputType.TYPE_CLASS_NUMBER);
             }
+            mTextInputFilter.setFilter(mUserIDView.content, TextInputFilter.EDIT_TYPE.USER_ID);
+            mUserIDView.setOnClickListener(mClickListener);
+        } else {
+            mUserIDView.enableEdit(false);
+            mUserIDView.setOnClickListener(null);
         }
     }
-    private Response.Listener<BioStarSetting> mSaveListener = new Response.Listener<BioStarSetting>() {
-        @Override
-        public void onResponse(BioStarSetting response, Object deliverParam) {
-            if (isInValidCheck(null)) {
-                return;
-            }
-            if (mInvalidChecker.isEmptyString(getString(R.string.info), getString(R.string.user_create_empty), mUserIDView.content.toString2())) {
-                mPopup.dismissWiat();
-                return ;
-            }
-            if (mUserDataProvider.isAlphaNumericUserID() == false) {
-                try {
-                    long userId = Long.valueOf(mUserIDView.content.toString2());
-
-                    if (userId < 1 || userId > 4294967294L || mUserIDView.content.toString2().startsWith("0")) {
-                        mPopup.dismissWiat();
-                        mPopup.show(PopupType.ALERT, getString(R.string.info), getString(R.string.invalid_userid), null, null, null);
-                        resetUserIDFilter();
-                        return ;
-                    }
-                } catch (Exception e) {
-                    mPopup.dismissWiat();
-                    mPopup.show(PopupType.ALERT, getString(R.string.info), getString(R.string.invalid_userid), null, null, null);
-                    resetUserIDFilter();
-                    return ;
-                }
-            }
-
-            if (mLoginIDView.getVisibility() == View.VISIBLE) {
-                if (mInvalidChecker.isEmptyString(getString(R.string.info), getString(R.string.user_create_empty_idpassword), mLoginIDView.content.toString2())) {
-                    mPopup.dismissWiat();
-                    return ;
-                }
-                if (!mUserInfo.password_exist) {
-                    if (mPasswordData == null) {
-                        mPopup.dismissWiat();
-                        mPopup.show(PopupType.ALERT, getString(R.string.info), getString(R.string.user_create_empty_idpassword), null, null, null);
-                        return ;
-                    }
-                }
-            }
-
-            if (mInvalidChecker.isInvalidEmail(getString(R.string.info), getString(R.string.invalid_email), mEmailView.content.toString2())) {
-                mPopup.dismissWiat();
-                return ;
-            }
-
-            if (mPinData != null && mPinData.length() > 0 && mPinData.length() < 4) {
-                mPopup.dismissWiat();
-                mPopup.show(PopupType.ALERT, getString(R.string.info), getString(R.string.pincount), null, null, null);
-                return ;
-            }
-
-            UpdateClone();
-//            mPopup.showWait(true);
-            if (mIsNewUser) {
-                mUserDataProvider.createUser(TAG, mUserInfo, mCreateUserListener, mCreateUserErrorListener, null);
-            } else {
-                mUserDataProvider.modifyUser(TAG, mUserInfo, mModifyUserListener, mCreateUserErrorListener, null);
-            }
-        }
-    };
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -1172,11 +1149,11 @@ public class UserModifyFragment extends BaseFragment {
         }
         switch (item.getItemId()) {
             case R.id.action_save:
-                if (VersionData.getCloudVersion(mContext) > 1) {
-                    mPopup.showWait(true);
-                    mCommonDataProvider.getBioStarSetting(mSaveListener, mErrorStayListener, null);
+                if (VersionData.getCloudVersion(mActivity) > 1) {
+                    mPopup.showWait(mCancelStayListener);
+                    request(mCommonDataProvider.getBioStarSetting(mSaveListener));
                 } else {
-                    mSaveListener.onResponse(null,null);
+                    save();
                 }
                 return true;
             default:
@@ -1184,6 +1161,30 @@ public class UserModifyFragment extends BaseFragment {
         }
 
         return false;
+    }
+
+    private void setProfileImage() {
+        mSummaryUserView.setBlurBackGroudDefault();
+        mSummaryUserView.setUserPhotoDefault();
+        if (mUserInfo.photo != null && !mUserInfo.photo.isEmpty()) {
+            if (mBmpRound != null) {
+                mBmpRound.recycle();
+                mBmpRound = null;
+            }
+            if (mBmpBlur != null) {
+                mBmpBlur.recycle();
+                mBmpBlur = null;
+            }
+            byte[] photoByte = Base64.decode(mUserInfo.photo, 0);
+            Bitmap bmp = ImageUtil.byteArrayToBitmap(photoByte);
+
+            if (bmp != null) {
+                mBmpBlur = ImageUtil.fastBlur(bmp, 32);
+                mSummaryUserView.setBlurBackGroud(mBmpBlur);
+                mBmpRound = ImageUtil.getRoundedBitmap(bmp, true);
+                mSummaryUserView.setUserPhoto(mBmpRound);
+            }
+        }
     }
 
     @Override
@@ -1196,6 +1197,7 @@ public class UserModifyFragment extends BaseFragment {
                     if (mIsDestroy) {
                         return;
                     }
+
                     if (action.equals(Setting.BROADCAST_UPDATE_FINGER)) {
                         User user = getExtraData(Setting.BROADCAST_UPDATE_FINGER, intent);
                         if (user == null || user.fingerprint_templates == null) {
@@ -1223,6 +1225,28 @@ public class UserModifyFragment extends BaseFragment {
                         return;
                     }
 
+                    if (action.equals(Setting.BROADCAST_UPDATE_FACE)) {
+                        User user = getExtraData(Setting.BROADCAST_UPDATE_FACE, intent);
+                        if (user == null) {
+                            return;
+                        }
+                        if (mUserInfo != null) {
+                            mUserInfo.face_template_count = user.face_template_count;
+                        }
+                        setFaceCount();
+
+                        if (mUserInfo.last_modify != null && !mUserInfo.last_modify.equals(user.last_modify)) {
+                            if (user.photo != null && !user.photo.isEmpty()) {
+                                mPhotoStatus = PhotoStatus.MODIFY;
+                                mUserInfo.photo = user.photo;
+                                mUserInfo.photo_exist = true;
+                                mBackupPhoto = user.photo;
+                                setProfileImage();
+                            }
+                        }
+                        return;
+                    }
+
                     if (action.equals(Setting.BROADCAST_UPDATE_USER_ACCESS_GROUP)) {
                         ArrayList<ListAccessGroup> accessGroups = getExtraData(Setting.BROADCAST_UPDATE_USER_ACCESS_GROUP, intent);
                         if (accessGroups == null) {
@@ -1236,11 +1260,11 @@ public class UserModifyFragment extends BaseFragment {
                     }
 
                     if (action.equals(Setting.BROADCAST_PREFRENCE_REFRESH)) {
-                        if (mContext == null) {
+                        if (mActivity == null) {
                             return;
                         }
-                        mDateStartView.setText(mUserInfo.getTimeFormmat(mTimeConvertProvider, User.UserTimeType.start_datetime, TimeConvertProvider.DATE_TYPE.FORMAT_DATE));
-                        mDateEndView.setText(mUserInfo.getTimeFormmat(mTimeConvertProvider, User.UserTimeType.expiry_datetime, TimeConvertProvider.DATE_TYPE.FORMAT_DATE));
+                        mDateStartView.setText(mUserInfo.getTimeFormmat(mDateTimeDataProvider, User.UserTimeType.start_datetime, DateTimeDataProvider.DATE_TYPE.FORMAT_DATE));
+                        mDateEndView.setText(mUserInfo.getTimeFormmat(mDateTimeDataProvider, User.UserTimeType.expiry_datetime, DateTimeDataProvider.DATE_TYPE.FORMAT_DATE));
                         return;
                     }
 
@@ -1261,22 +1285,24 @@ public class UserModifyFragment extends BaseFragment {
             IntentFilter intentFilter = new IntentFilter();
             intentFilter.addAction(Setting.BROADCAST_UPDATE_FINGER);
             intentFilter.addAction(Setting.BROADCAST_UPDATE_CARD);
+            intentFilter.addAction(Setting.BROADCAST_UPDATE_FACE);
             intentFilter.addAction(Setting.BROADCAST_UPDATE_USER_ACCESS_GROUP);
             intentFilter.addAction(Setting.BROADCAST_PREFRENCE_REFRESH);
             intentFilter.addAction(Setting.BROADCAST_UPDATE_PERMISSION);
+
             LocalBroadcastManager.getInstance(getActivity()).registerReceiver(mReceiver, intentFilter);
         }
     }
 
     private void selectDatePicker() {
-        SelectPopup<SelectCustomData> selectPopup = new SelectPopup<SelectCustomData>(mContext, mPopup);
+        SelectPopup<SelectCustomData> selectPopup = new SelectPopup<SelectCustomData>(mActivity, mPopup);
         ArrayList<SelectCustomData> linkType = new ArrayList<SelectCustomData>();
-        linkType.add(new SelectCustomData(mContext.getString(R.string.start_date), 1, false));
-        linkType.add(new SelectCustomData(mContext.getString(R.string.end_date), 2, false));
+        linkType.add(new SelectCustomData(mActivity.getString(R.string.start_date), 1, false));
+        linkType.add(new SelectCustomData(mActivity.getString(R.string.end_date), 2, false));
         selectPopup.show(SelectPopup.SelectType.CUSTOM, new SelectPopup.OnSelectResultListener<SelectCustomData>() {
             @Override
-            public void OnResult(ArrayList<SelectCustomData> selectedItem,boolean isPositive) {
-                if (isInValidCheck(null)) {
+            public void OnResult(ArrayList<SelectCustomData> selectedItem, boolean isPositive) {
+                if (isInValidCheck()) {
                     return;
                 }
                 if (selectedItem == null) {
@@ -1295,7 +1321,7 @@ public class UserModifyFragment extends BaseFragment {
                         break;
                 }
             }
-        }, linkType, mContext.getString(R.string.select_link), false, false);
+        }, linkType, mActivity.getString(R.string.select_link), false, false);
     }
 
     private void setAccessGroupCount() {
@@ -1308,7 +1334,7 @@ public class UserModifyFragment extends BaseFragment {
 
     private void setCardCount() {
         int count = 0;
-        if (VersionData.getCloudVersion(mContext) > 1) {
+        if (VersionData.getCloudVersion(mActivity) > 1) {
             count = mUserInfo.card_count;
         } else {
             if (mUserInfo.cards != null) {
@@ -1319,9 +1345,15 @@ public class UserModifyFragment extends BaseFragment {
         mSummaryUserView.setCardCount(String.valueOf(count));
     }
 
+    private void setFaceCount() {
+        int count = mUserInfo.face_template_count;
+        mFaceView.content.setText(String.valueOf(count));
+        mSummaryUserView.setFaceCount(String.valueOf(count));
+    }
+
     private void setFingerCount() {
         int count = 0;
-        if (VersionData.getCloudVersion(mContext) < 2) {
+        if (VersionData.getCloudVersion(mActivity) < 2) {
             if (mUserInfo.fingerprint_templates != null) {
                 count = mUserInfo.fingerprint_templates.size();
             }
@@ -1336,11 +1368,18 @@ public class UserModifyFragment extends BaseFragment {
         if (bmp == null) {
             return;
         }
-        mBlurBmp = ImageUtil.fastBlur(bmp, 32);
-        mSummaryUserView.setBlurBackGroud(mBlurBmp);
-        mRbmp = ImageUtil.getRoundedBitmap(bmp, false);
-        mSummaryUserView.setUserPhoto(mRbmp);
-
+        mSummaryUserView.setBlurBackGroudDefault();
+        mSummaryUserView.setUserPhotoDefault();
+        if (mBmpRound != null) {
+            mBmpRound.recycle();
+            mBmpRound = null;
+        }
+        if (mBmpBlur != null) {
+            mBmpBlur.recycle();
+            mBmpBlur = null;
+        }
+        mBmpBlur = ImageUtil.fastBlur(bmp, 32);
+        mSummaryUserView.setBlurBackGroud(mBmpBlur);
         mPhotoStatus = PhotoStatus.MODIFY;
         Bitmap bmp2 = null;
         byte[] reSizeByte = ImageUtil.bitmapToByteArray(bmp, 20);
@@ -1359,6 +1398,8 @@ public class UserModifyFragment extends BaseFragment {
         mUserInfo.photo = Base64.encodeToString(reSizeByte, 0);
         mUserInfo.photo = mUserInfo.photo.replaceAll("\n", "");
         mBackupPhoto = mUserInfo.photo;
+        mBmpRound = ImageUtil.getRoundedBitmap(bmp, true);
+        mSummaryUserView.setUserPhoto(mBmpRound);
         if (bmp2 != null) {
             bmp2.recycle();
             bmp2 = null;
@@ -1366,7 +1407,7 @@ public class UserModifyFragment extends BaseFragment {
     }
 
     private void setPermission() {
-        if (VersionData.getCloudVersion(mContext) > 1) {
+        if (VersionData.getCloudVersion(mActivity) > 1) {
             if (mUserInfo.permission != null) {
                 mLoginIDView.setVisibility(View.VISIBLE);
                 mLoginPasswordView.setVisibility(View.VISIBLE);
@@ -1414,73 +1455,17 @@ public class UserModifyFragment extends BaseFragment {
         mSummaryUserView.setUserID(mUserInfo.user_id);
         mSummaryUserView.setUserName(mUserInfo.name);
         mSummaryUserView.showPin(mUserInfo.pin_exist);
-
-        mUserIDView.content.setText(mUserInfo.user_id);
-        if (mUserIDViewTextWatcherFilter32 == null) {
-            mUserIDViewTextWatcherFilter32 = new TextWatcherFilter(mUserIDView.content, TextWatcherFilter.EDIT_TYPE.USER_ID, getActivity(), 32);
-        }
-        if (mUserIDViewTextWatcherFilter10 == null) {
-            mUserIDViewTextWatcherFilter10 = new TextWatcherFilter(mUserIDView.content, TextWatcherFilter.EDIT_TYPE.USER_ID, getActivity(), 10);
-        }
-        mUserIDView.content.removeTextChangedListener(mUserIDViewTextWatcherFilter32);
-        mUserIDView.content.removeTextChangedListener(mUserIDViewTextWatcherFilter10);
-
-        if (mIsNewUser) {
-            mUserIDView.enableEdit(true);
-            if (VersionData.getCloudVersion(mContext) > 1) {
-                if (mUserDataProvider.isAlphaNumericUserID()) {
-                    mUserIDView.setInputType(InputType.TYPE_CLASS_TEXT);
-                    mUserIDView.content.addTextChangedListener(mUserIDViewTextWatcherFilter32);
-                } else {
-                    mUserIDView.setInputType(InputType.TYPE_CLASS_NUMBER);
-                    mUserIDView.content.addTextChangedListener(mUserIDViewTextWatcherFilter10);
-                }
-            } else {
-                mUserIDView.content.addTextChangedListener(mUserIDViewTextWatcherFilter10);
-                mUserIDView.setInputType(InputType.TYPE_CLASS_NUMBER);
-            }
-            mUserIDView.setOnClickListener(mClickListener);
-        } else {
-            mUserIDView.enableEdit(false);
-            mUserIDView.setOnClickListener(null);
-            if (mPermissionDataProvider.getPermission(PermissionModule.MONITORING, false)) {
-                mSummaryUserView.showUserViewLog(true);
-            } else {
-                mSummaryUserView.showUserViewLog(false);
-            }
-        }
-        if (mUserInfo.getName() != null) {
-            mUserNameView.content.setText(mUserInfo.getName());
-        }
-//        if (mUserNameViewTextWatcherFilter == null) {
-//            mUserNameViewTextWatcherFilter  = new TextWatcherFilter(mUserNameView.content, TextWatcherFilter.EDIT_TYPE.USER_NAME, getActivity(), 48);
-//        }
-//        mUserNameView.content.removeTextChangedListener(mUserNameViewTextWatcherFilter);
-//        mUserNameView.content.addTextChangedListener(mUserNameViewTextWatcherFilter);
+        mUserIDView.setContentText(mUserInfo.user_id);
+        resetUserIDFilter();
+        mUserNameView.setContentText(mUserInfo.name);
         mUserNameView.setOnClickListener(mClickListener);
-        mEmailView.content.setText(mUserInfo.email);
-//        if (mEmailViewTextWatcherFilter == null) {
-//            mEmailViewTextWatcherFilter = new TextWatcherFilter(mEmailView.content, TextWatcherFilter.EDIT_TYPE.EMAIL, getActivity(), 320);
-//        }
-//        mEmailView.content.removeTextChangedListener(mEmailViewTextWatcherFilter);
-//        mEmailView.content.addTextChangedListener(mEmailViewTextWatcherFilter);
+        mEmailView.setContentText(mUserInfo.email);
         mEmailView.setOnClickListener(mClickListener);
-        mTelephoneView.content.setText(mUserInfo.phone_number);
-        if (mTelephoneViewTextWatcherFilter == null) {
-            mTelephoneViewTextWatcherFilter = new TextWatcherFilter(mTelephoneView.content, TextWatcherFilter.EDIT_TYPE.TELEPHONE, getActivity(), 32);
-        }
-
-        mTelephoneView.content.removeTextChangedListener(mTelephoneViewTextWatcherFilter );
-        mTelephoneView.content.addTextChangedListener(mTelephoneViewTextWatcherFilter  );
+        mTelephoneView.setContentText(mUserInfo.phone_number);
         mTelephoneView.setOnClickListener(mClickListener);
         mOperatorView.enableLink(true, mClickListener);
         setPermission();
-        mLoginIDView.content.setText(mUserInfo.login_id);
-        if (mLoginIDViewTextWatcherFilter == null) {
-            mLoginIDViewTextWatcherFilter = new TextWatcherFilter(mLoginIDView.content, TextWatcherFilter.EDIT_TYPE.LOGIN_ID, getActivity(), 32);
-        }
-        mLoginIDView.content.removeTextChangedListener(mLoginIDViewTextWatcherFilter);
-        mLoginIDView.content.addTextChangedListener(mLoginIDViewTextWatcherFilter);
+        mLoginIDView.setContentText(mUserInfo.login_id);
         mLoginIDView.setOnClickListener(mClickListener);
         mLoginPasswordView.enableLink(true, mClickListener);
 
@@ -1504,7 +1489,7 @@ public class UserModifyFragment extends BaseFragment {
         mStatusSwitch = mStatusView.mSwitchView;
         mStatusSwitch.init(getActivity(), new SwitchView.OnChangeListener() {
             @Override
-            public void onChange(boolean on) {
+            public boolean onChange(boolean on) {
                 if (BuildConfig.DEBUG) {
                     Log.e(TAG, "status :" + on);
                 }
@@ -1515,6 +1500,7 @@ public class UserModifyFragment extends BaseFragment {
                     mUserInfo.setActive(false);
                     mStatusView.mIndex.setText(getString(R.string.status) + " " + getString(R.string.inactive));
                 }
+                return true;
             }
         }, mUserInfo.isActive());
         mStatusSwitch.setSwitch(mUserInfo.isActive());
@@ -1522,14 +1508,16 @@ public class UserModifyFragment extends BaseFragment {
         mRootView.findViewById(R.id.date_arrow).setOnClickListener(mClickListener);
         mDateStartView.setOnClickListener(mClickListener);
         mDateEndView.setOnClickListener(mClickListener);
-        mDateStartView.setText(mUserInfo.getTimeFormmat(mTimeConvertProvider, User.UserTimeType.start_datetime, TimeConvertProvider.DATE_TYPE.FORMAT_DATE));
-        mDateEndView.setText(mUserInfo.getTimeFormmat(mTimeConvertProvider, User.UserTimeType.expiry_datetime, TimeConvertProvider.DATE_TYPE.FORMAT_DATE));
+        mDateStartView.setText(mUserInfo.getTimeFormmat(mDateTimeDataProvider, User.UserTimeType.start_datetime, DateTimeDataProvider.DATE_TYPE.FORMAT_DATE));
+        mDateEndView.setText(mUserInfo.getTimeFormmat(mDateTimeDataProvider, User.UserTimeType.expiry_datetime, DateTimeDataProvider.DATE_TYPE.FORMAT_DATE));
         mAccessGroupView.enableLink(true, mClickListener);
         mFingerPrintView.enableLink(true, mClickListener);
         mCardView.enableLink(true, mClickListener);
+        mFaceView.enableLink(true, mClickListener);
         setAccessGroupCount();
         setFingerCount();
         setCardCount();
+        setFaceCount();
 
         mPinView.setOnClickListener(mClickListener);
         mPinSwitch = mPinView.mSwitchView;
@@ -1541,47 +1529,42 @@ public class UserModifyFragment extends BaseFragment {
         }
         mPinSwitch.init(getActivity(), new SwitchView.OnChangeListener() {
             @Override
-            public void onChange(boolean on) {
+            public boolean onChange(boolean on) {
                 if (BuildConfig.DEBUG) {
                     Log.e(TAG, "pin :" + on);
                 }
                 if (on) {
-                    showPinPasswodPopup();
+                    mHandler.post(new Runnable() {
+                        @Override
+                        public void run() {
+                            showPinPasswodPopup();
+                        }
+                    });
+
                 } else {
                     mPinView.mContent.setText("");
                     mPinData = "";
                 }
+                return true;
             }
         }, (mUserInfo.pin_exist || (mPinData != null && !mPinData.isEmpty())));
         mPinSwitch.setSwitch((mUserInfo.pin_exist || (mPinData != null && !mPinData.isEmpty())));
 
         mSummaryUserView.setUserPhotoDefault();
-        if (mRbmp != null) {
-            mSummaryUserView.setUserPhoto(mRbmp);
-        } else if (bmp != null) {
-            mRbmp = ImageUtil.getRoundedBitmap(bmp, false);
-            mSummaryUserView.setUserPhoto(mRbmp);
+        if (mBmpRound != null) {
+            mSummaryUserView.setUserPhoto(mBmpRound);
         } else {
-            if (mUserInfo.photo != null && !mUserInfo.photo.isEmpty()) {
-                byte[] photoByte = Base64.decode(mUserInfo.photo, 0);
-                bmp = ImageUtil.byteArrayToBitmap(photoByte);
-                if (bmp != null) {
-                    mBlurBmp = ImageUtil.fastBlur(bmp, 32);
-                    mSummaryUserView.setBlurBackGroud(mBlurBmp);
-                    mRbmp = ImageUtil.getRoundedBitmap(bmp, false);
-                    mSummaryUserView.setUserPhoto(mRbmp);
-                }
-            }
+            setProfileImage();
         }
         isExistImageCheck();
     }
 
     private void showPasswodPopup() {
-        PasswordPopup passwordPopup = new PasswordPopup(mContext);
+        PasswordPopup passwordPopup = new PasswordPopup(mActivity);
         passwordPopup.show(false, getString(R.string.password), new PasswordPopup.OnPasswordResult() {
             @Override
             public void OnResult(String data) {
-                if (isInValidCheck(null)) {
+                if (isInValidCheck()) {
                     return;
                 }
                 if (data == null) {
@@ -1599,11 +1582,11 @@ public class UserModifyFragment extends BaseFragment {
     }
 
     private void showPinPasswodPopup() {
-        PasswordPopup passwordPopup = new PasswordPopup(mContext);
+        PasswordPopup passwordPopup = new PasswordPopup(mActivity);
         passwordPopup.show(true, getString(R.string.pin_upper), new PasswordPopup.OnPasswordResult() {
             @Override
             public void OnResult(String data) {
-                if (isInValidCheck(null)) {
+                if (isInValidCheck()) {
                     return;
                 }
                 if (data == null) {

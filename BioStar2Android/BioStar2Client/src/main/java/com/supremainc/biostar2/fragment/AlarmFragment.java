@@ -15,8 +15,6 @@
  */
 package com.supremainc.biostar2.fragment;
 
-import android.content.DialogInterface;
-import android.content.DialogInterface.OnCancelListener;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
@@ -27,36 +25,33 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 
-import com.supremainc.biostar2.BuildConfig;
 import com.supremainc.biostar2.R;
 import com.supremainc.biostar2.adapter.DetailAdapter;
 import com.supremainc.biostar2.datatype.DoorDetailData;
 import com.supremainc.biostar2.datatype.DoorDetailData.DoorDetailType;
-import com.supremainc.biostar2.meta.Setting;
-import com.supremainc.biostar2.sdk.datatype.v2.Common.ResponseStatus;
-import com.supremainc.biostar2.sdk.datatype.v2.Common.VersionData;
-import com.supremainc.biostar2.sdk.datatype.v2.Device.Device;
-import com.supremainc.biostar2.sdk.datatype.v2.Door.Door;
-import com.supremainc.biostar2.sdk.datatype.v2.Login.NotificationType;
-import com.supremainc.biostar2.sdk.datatype.v2.Login.PushNotification;
-import com.supremainc.biostar2.sdk.datatype.v2.Permission.PermissionModule;
-import com.supremainc.biostar2.sdk.datatype.v2.User.User;
-import com.supremainc.biostar2.sdk.provider.TimeConvertProvider;
-import com.supremainc.biostar2.sdk.volley.Response;
-import com.supremainc.biostar2.sdk.volley.Response.Listener;
-import com.supremainc.biostar2.sdk.volley.VolleyError;
+import com.supremainc.biostar2.sdk.models.v2.common.ResponseStatus;
+import com.supremainc.biostar2.sdk.models.v2.common.VersionData;
+import com.supremainc.biostar2.sdk.models.v2.device.Device;
+import com.supremainc.biostar2.sdk.models.v2.door.Door;
+import com.supremainc.biostar2.sdk.models.v2.login.NotificationType;
+import com.supremainc.biostar2.sdk.models.v2.login.PushNotification;
+import com.supremainc.biostar2.sdk.models.v2.permission.PermissionModule;
+import com.supremainc.biostar2.sdk.models.v2.user.User;
+import com.supremainc.biostar2.sdk.provider.DateTimeDataProvider;
 import com.supremainc.biostar2.view.SummaryDoorView;
-import com.supremainc.biostar2.widget.ScreenControl;
 import com.supremainc.biostar2.widget.ScreenControl.ScreenType;
 import com.supremainc.biostar2.widget.popup.Popup;
 import com.supremainc.biostar2.widget.popup.SelectCustomData;
 import com.supremainc.biostar2.widget.popup.SelectPopup;
 import com.supremainc.biostar2.widget.popup.SelectPopup.OnSelectResultListener;
 import com.supremainc.biostar2.widget.popup.SelectPopup.SelectType;
-import com.supremainc.biostar2.widget.popup.ToastPopup;
 
 import java.util.ArrayList;
 import java.util.Calendar;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class AlarmFragment extends BaseFragment {
     private Device mDevice;
@@ -65,33 +60,86 @@ public class AlarmFragment extends BaseFragment {
     private SummaryDoorView mSummaryDoorView;
     private DetailAdapter mDetailAdapter;
     private ArrayList<DoorDetailData.DoorDetail> mListData;
-
-    private OnCancelListener mCancelListener = new OnCancelListener() {
+    private String mActionTitle = "";
+    private Callback<User> mUserListener = new Callback<User>() {
         @Override
-        public void onCancel(DialogInterface dialog) {
-            if (mCommonDataProvider != null) {
-                mCommonDataProvider.cancelAll(TAG);
+        public void onFailure(Call<User> call, Throwable t) {
+            if (isIgnoreCallback(call, true)) {
+                return;
             }
-            if (mToastPopup != null) {
-                mToastPopup.show(getString(R.string.canceled), null);
+            showErrorPopup(t.getMessage(),false);
+        }
+
+        @Override
+        public void onResponse(Call<User> call, Response<User> response) {
+            if (isIgnoreCallback(call, response, true)) {
+                return;
             }
-            ScreenControl.getInstance().backScreen();
+            if (isInvalidResponse(response, true, false)) {
+                return;
+            }
+            try {
+                User arg = response.body().clone();
+                Bundle bundle = new Bundle();
+                bundle.putSerializable(User.TAG, arg);
+                mScreenControl.addScreen(ScreenType.USER_INQURIY, bundle);
+            } catch (Exception e) {
+                showErrorPopup(e.getMessage(),false);
+            }
+        }
+    };
+    private Callback<Device> mDeviceListener = new Callback<Device>() {
+        @Override
+        public void onFailure(Call<Device> call, Throwable t) {
+            if (isIgnoreCallback(call, true)) {
+                return;
+            }
+        }
+
+        @Override
+        public void onResponse(Call<Device> call, Response<Device> response) {
+            if (isIgnoreCallback(call,response,true)) {
+                return;
+            }
+            if (isInvalidResponse(response, false, false)) {
+                return;
+            }
+            mDevice = response.body();
+            mSummaryDoorView.setTitle(mDevice.getName());
         }
     };
 
-    private Response.ErrorListener mActionErrorListener = new Response.ErrorListener() {
+    private Callback<Door> mDoorListener = new Callback<Door>() {
         @Override
-        public void onErrorResponse(VolleyError volleyError, Object deliverParam) {
-            if (isInValidCheck(volleyError)) {
+        public void onFailure(Call<Door> call, Throwable t) {
+            if (isIgnoreCallback(call, true)) {
                 return;
             }
-            mPopup.dismissWiat();
-            if (BuildConfig.DEBUG) {
-                Log.e(TAG, "get openErrorListener:" + volleyError.getMessage());
+            mSummaryDoorView.showActionBtn(true, false);
+        }
+
+        @Override
+        public void onResponse(Call<Door> call, Response<Door> response) {
+            if (isIgnoreCallback(call,response,true)) {
+                return;
             }
-            String errorDetail = volleyError.getMessage();
-            String title = (String) deliverParam + " " + getString(R.string.fail);
-            String date = mTimeConvertProvider.convertCalendarToFormatter(Calendar.getInstance(), TimeConvertProvider.DATE_TYPE.FORMAT_DATE_HOUR_MIN_SEC);
+            if (isInvalidResponse(response, false, false)) {
+                return;
+            }
+            mDoor = response.body();
+            mSummaryDoorView.setTitle(mDoor.getName());
+        }
+    };
+
+    private Callback<ResponseStatus> mActionListener = new Callback<ResponseStatus>() {
+        @Override
+        public void onFailure(Call<ResponseStatus> call, Throwable t) {
+            if (isIgnoreCallback(call, true)) {
+                return;
+            }
+            String errorDetail = t.getMessage();
+            String title = getString(R.string.fail)+". "+mActionTitle;
+            String date = mDateTimeDataProvider.convertCalendarToFormatter(Calendar.getInstance(), DateTimeDataProvider.DATE_TYPE.FORMAT_DATE_HOUR_MIN_SEC);
 
             String doorName = "";
             if (mDoor != null) {
@@ -99,235 +147,45 @@ public class AlarmFragment extends BaseFragment {
             } else if (mPushData.door != null) {
                 doorName = mPushData.door.name;
             }
+            String body = "";
             if (errorDetail != null && !errorDetail.isEmpty()) {
-                mToastPopup.show(ToastPopup.TYPE_DOOR, title, date + " / " + doorName + "\n" + errorDetail);
+                body = mDoor.name + " / " + mDoor.id + "\n" + date + "\n" + errorDetail;
             } else {
-                mToastPopup.show(ToastPopup.TYPE_DOOR, title, date + " / " + doorName);
+                body = mDoor.name + " / " + mDoor.id + "\n" + date + "\n";
             }
+            mPopup.show(Popup.PopupType.DOOR, title, body, null, null, null);
         }
-    };
-    private Response.Listener<User> mUserListener = new Response.Listener<User>() {
-        @Override
-        public void onResponse(User response, Object deliverParam) {
-            if (isInValidCheck(null)) {
-                return;
-            }
-            mPopup.dismissWiat();
-            if (response == null) {
-                // TODO
-                return;
-            }
 
-            ScreenControl screenControl = ScreenControl.getInstance();
-            User arg = null;
-            try {
-                arg = response.clone();
-            } catch (CloneNotSupportedException e) {
-                Log.e(TAG, "selected user clone fail");
-                e.printStackTrace();
-                return;
-            }
-            Bundle bundle = new Bundle();
-            bundle.putSerializable(User.TAG, arg);
-            screenControl.addScreen(ScreenType.USER_INQURIY, bundle);
-        }
-    };
-    private Response.ErrorListener mUserErrorListener = new Response.ErrorListener() {
         @Override
-        public void onErrorResponse(VolleyError error, Object deliverParam) {
-            if (isInValidCheck(error)) {
+        public void onResponse(Call<ResponseStatus> call, Response<ResponseStatus> response) {
+            if (isIgnoreCallback(call,response,true)) {
                 return;
             }
-            mPopup.dismissWiat();
-            mPopup.show(Popup.PopupType.ALERT, mContext.getString(R.string.fail), Setting.getErrorMessage(error, mContext), new Popup.OnPopupClickListener() {
-                @Override
-                public void OnNegative() {
-
-                }
-
-                @Override
-                public void OnPositive() {
-
-                }
-            }, mContext.getString(R.string.ok),null);
-
-        }
-    };
-    private Response.Listener<Device> mDeviceListener = new Response.Listener<Device>() {
-        @Override
-        public void onResponse(Device response, Object deliverParam) {
-            if (isInValidCheck(null)) {
+            if (isInvalidResponse(response, true, false)) {
                 return;
             }
-            mPopup.dismissWiat();
-            if (response == null) {
-                mDeviceErrorListener.onErrorResponse(new VolleyError("Server response is NUll"), null);
-                return;
-            }
-            mDevice = response;
-            mSummaryDoorView.setTitle(mDevice.getName());
-        }
-    };
-    private Response.ErrorListener mDeviceErrorListener = new Response.ErrorListener() {
-        @Override
-        public void onErrorResponse(VolleyError error, Object deliverParam) {
-            if (isInValidCheck(error)) {
-                return;
-            }
-            mPopup.dismissWiat();
-            mSummaryDoorView.showGoLogBtn(false);
-//            mPopup.show(PopupType.ALERT, mContext.getString(R.string.fail_retry), Setting.getErrorMessage(error, mContext), new OnPopupClickListener() {
-//                @Override
-//                public void OnPositive() {
-//                    mHandler.post(new Runnable() {
-//                        @Override
-//                        public void run() {
-//                            mPopup.showWait(true);
-//                            mDeviceDataProvider.getDevic(TAG, mPushData.device.id, mDeviceListener, mDeviceErrorListener, null);
-//                        }
-//                    });
-//                }
-//
-//                @Override
-//                public void OnNegative() {
-//                    mSummaryDoorView.showGoLogBtn(false);
-//                }
-//            }, mContext.getString(R.string.ok), mContext.getString(R.string.cancel));
-        }
-    };
-    private Response.Listener<Door> mDoorListener = new Response.Listener<Door>() {
-        @Override
-        public void onResponse(Door response, Object deliverParam) {
-            if (isInValidCheck(null)) {
-                return;
-            }
-            if (response == null) {
-                mDoorErrorListener.onErrorResponse(new VolleyError("Server response is NUll"), null);
-                return;
-            }
-            mPopup.dismissWiat();
-            mDoor = response;
-            mSummaryDoorView.setTitle(mDoor.getName());
-        }
-    };
-    private Response.ErrorListener mDoorErrorListener = new Response.ErrorListener() {
-        @Override
-        public void onErrorResponse(VolleyError error, Object deliverParam) {
-            if (isInValidCheck(error)) {
-                return;
-            }
-            mPopup.dismissWiat();
-            mSummaryDoorView.showGoLogBtn(false);
-            mSummaryDoorView.showActionBtn(true, false);
-//            mPopup.show(PopupType.ALERT, mContext.getString(R.string.fail_retry), Setting.getErrorMessage(error, mContext), new OnPopupClickListener() {
-//                @Override
-//                public void OnPositive() {
-//                    mHandler.post(new Runnable() {
-//                        @Override
-//                        public void run() {
-//                            mPopup.showWait(true);
-//                            mDoorDataProvider.getDoor(TAG, mPushData.door.id, mDoorListener, mDoorErrorListener, null);
-//                        }
-//                    });
-//                }
-//
-//                @Override
-//                public void OnNegative() {
-//                    mSummaryDoorView.showGoLogBtn(false);
-//                    mSummaryDoorView.showActionBtn(true, false);
-//                }
-//            }, mContext.getString(R.string.ok), mContext.getString(R.string.cancel));
-        }
-    };
-    private Listener<ResponseStatus> mActionListener = new Response.Listener<ResponseStatus>() {
-        @Override
-        public void onResponse(ResponseStatus response, Object deliverParam) {
-            if (isInValidCheck(null)) {
-                return;
-            }
-            mPopup.dismissWiat();
-            String title = (String) deliverParam;
-            String date = mTimeConvertProvider.convertCalendarToFormatter(Calendar.getInstance(), TimeConvertProvider.DATE_TYPE.FORMAT_DATE_HOUR_MIN_SEC);
+            String date = mDateTimeDataProvider.convertCalendarToFormatter(Calendar.getInstance(), DateTimeDataProvider.DATE_TYPE.FORMAT_DATE_HOUR_MIN_SEC);
+            String body = "";
             if (mDoor != null) {
-                mToastPopup.show(ToastPopup.TYPE_DOOR, title, date + " / " + mDoor.name);
+                body = mDoor.name + " / " + mDoor.id + "\n" + date;
             } else if (mPushData.door != null) {
-                mToastPopup.show(ToastPopup.TYPE_DOOR, title, date + " / " + mPushData.door.name);
+                body = mPushData.door.name + " / " + mPushData.door.id + "\n" + date;
             }
+
+            mPopup.show(Popup.PopupType.DOOR, mActionTitle, body, null, null, null);
         }
     };
+
+
     private SummaryDoorView.SummaryDoorViewListener mSummaryDoorViewListener = new SummaryDoorView.SummaryDoorViewListener() {
         @Override
         public void onDoorAction() {
-            if (mDoor != null ||  (mPushData.door != null && mPushData.door.id != null && !mPushData.door.id.isEmpty()) ) {
+            if (mDoor != null || (mPushData.door != null && mPushData.door.id != null && !mPushData.door.id.isEmpty())) {
                 openMenu();
             } else {
                 mToastPopup.show(getString(R.string.none_door), null);
             }
 
-        }
-
-        @Override
-        public void onGoLog() {
-            String code = mPushData.code;
-            if (code.equals(NotificationType.DEVICE_REBOOT.mName) || code.equals(NotificationType.DEVICE_RS485_DISCONNECT.mName) || code.equals(NotificationType.DEVICE_TAMPERING.mName)) {
-                if (mDevice == null) {
-                    mToastPopup.show(getString(R.string.none_device), null);
-                    return;
-                }
-                Device bundleItem = null;
-                try {
-                    bundleItem = (Device) mDevice.clone();
-                } catch (CloneNotSupportedException e) {
-                    e.printStackTrace();
-                    return;
-                }
-                Bundle bundle = new Bundle();
-                bundle.putSerializable(Device.TAG, bundleItem);
-                mScreenControl.addScreen(ScreenType.MONITOR, bundle);
-                return;
-            } else if (code.equals(NotificationType.DOOR_FORCED_OPEN.mName) || code.equals(NotificationType.DOOR_HELD_OPEN.mName) || code.equals(NotificationType.DOOR_OPEN_REQUEST.mName)) {
-                if (mDoor == null) {
-                    mToastPopup.show(getString(R.string.none_door), null);
-                    return;
-                }
-                Door bundleItem = null;
-                try {
-                    bundleItem = (Door) mDoor.clone();
-                } catch (CloneNotSupportedException e) {
-                    e.printStackTrace();
-                    return;
-                }
-                Bundle bundle = new Bundle();
-                bundle.putSerializable(Door.TAG, bundleItem);
-                mScreenControl.addScreen(ScreenType.MONITOR, bundle);
-                return;
-            }
-            if (mDoor != null) {
-                Door bundleItem = null;
-                try {
-                    bundleItem = (Door) mDoor.clone();
-                } catch (CloneNotSupportedException e) {
-                    e.printStackTrace();
-                    return;
-                }
-                Bundle bundle = new Bundle();
-                bundle.putSerializable(Door.TAG, bundleItem);
-                mScreenControl.addScreen(ScreenType.MONITOR, bundle);
-                return;
-            }
-            if (mDevice != null) {
-                Device bundleItem = null;
-                try {
-                    bundleItem = (Device) mDevice.clone();
-                } catch (CloneNotSupportedException e) {
-                    e.printStackTrace();
-                    return;
-                }
-                Bundle bundle = new Bundle();
-                bundle.putSerializable(Device.TAG, bundleItem);
-                mScreenControl.addScreen(ScreenType.MONITOR, bundle);
-                return;
-            }
         }
 
         @Override
@@ -353,28 +211,34 @@ public class AlarmFragment extends BaseFragment {
         }
         switch (id) {
             case R.id.action_open:
-                mPopup.showWait(mCancelListener);
-                mDoorDataProvider.openDoor(TAG, doorID, mActionListener, mActionErrorListener, getString(R.string.open));
+                mPopup.showWait(mCancelExitListener);
+                mActionTitle = getString(R.string.door_is_open);
+                request(mDoorDataProvider.openDoor(doorID, mActionListener));
                 break;
             case R.id.action_lock:
-                mPopup.showWait(mCancelListener);
-                mDoorDataProvider.lockDoor(TAG, doorID, mActionListener, mActionErrorListener, getString(R.string.manual_lock));
+                mPopup.showWait(mCancelExitListener);
+                mActionTitle = getString(R.string.manual_lock);
+                request(mDoorDataProvider.lockDoor(doorID, mActionListener));
                 break;
             case R.id.action_unlock:
-                mPopup.showWait(mCancelListener);
-                mDoorDataProvider.unlockDoor(TAG, doorID, mActionListener, mActionErrorListener, getString(R.string.manual_unlock));
+                mPopup.showWait(mCancelExitListener);
+                mActionTitle = getString(R.string.manual_unlock);
+                request(mDoorDataProvider.unlockDoor(doorID, mActionListener));
                 break;
             case R.id.action_release:
-                mPopup.showWait(mCancelListener);
-                mDoorDataProvider.releaseDoor(TAG, doorID, mActionListener, mActionErrorListener, getString(R.string.release));
+                mPopup.showWait(mCancelExitListener);
+                mActionTitle = getString(R.string.release);
+                request(mDoorDataProvider.releaseDoor(doorID, mActionListener));
                 break;
             case R.id.action_clear_apb:
-                mPopup.showWait(mCancelListener);
-                mDoorDataProvider.clearAntiPassback(TAG, doorID, mActionListener, mActionErrorListener, getString(R.string.clear_apb));
+                mPopup.showWait(mCancelExitListener);
+                mActionTitle = getString(R.string.clear_apb);
+                request(mDoorDataProvider.clearAntiPassback(doorID, mActionListener));
                 break;
             case R.id.action_clear_alarm:
-                mPopup.showWait(mCancelListener);
-                mDoorDataProvider.clearAlarm(TAG, doorID, mActionListener, mActionErrorListener, getString(R.string.clear_alarm));
+                mPopup.showWait(mCancelExitListener);
+                mActionTitle = getString(R.string.clear_alarm);
+                request(mDoorDataProvider.clearAlarm(doorID, mActionListener));
                 break;
             default:
                 break;
@@ -398,7 +262,7 @@ public class AlarmFragment extends BaseFragment {
             mSummaryDoorView.init(mSummaryDoorViewListener);
         }
         if (mDetailAdapter == null) {
-            mDetailAdapter = new DetailAdapter(mContext, null, getListView(), new AdapterView.OnItemClickListener() {
+            mDetailAdapter = new DetailAdapter(mActivity, null, getListView(), new AdapterView.OnItemClickListener() {
                 @Override
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                     DoorDetailData.DoorDetail data = (DoorDetailData.DoorDetail) mDetailAdapter.getItem(position);
@@ -407,7 +271,7 @@ public class AlarmFragment extends BaseFragment {
                             case USER:
                                 mPopup.showWait(true);
                                 if (mPushData.code.equals(NotificationType.DOOR_OPEN_REQUEST.mName)) {
-                                    mUserDataProvider.getUser(TAG, mPushData.user.user_id, mUserListener, mUserErrorListener, null);
+                                    mUserDataProvider.getUser(mPushData.user.user_id, mUserListener);
                                 }
                                 break;
                             case TELEPHONE:
@@ -422,7 +286,7 @@ public class AlarmFragment extends BaseFragment {
                 }
             }, mPopup, null);
         }
-        String date = mPushData.getTimeFormmat(mTimeConvertProvider, PushNotification.PushNotificationTimeType.request_timestamp, TimeConvertProvider.DATE_TYPE.FORMAT_DATE_HOUR_MIN_SEC);
+        String date = mPushData.getTimeFormmat(mDateTimeDataProvider, PushNotification.PushNotificationTimeType.request_timestamp, DateTimeDataProvider.DATE_TYPE.FORMAT_DATE_HOUR_MIN_SEC);
         if (date == null) {
             return false;
         }
@@ -438,7 +302,7 @@ public class AlarmFragment extends BaseFragment {
                 } else {
                     name = name + " / " + mPushData.user.name;
                 }
-                if (VersionData.getCloudVersion(mContext) > 1) {
+                if (VersionData.getCloudVersion(mActivity) > 1) {
                     if (mPermissionDataProvider.getPermission(PermissionModule.USER, false)) {
                         mListData.add(new DoorDetailData.DoorDetail(getString(R.string.user), name, true, DoorDetailType.USER));
                     } else {
@@ -464,51 +328,45 @@ public class AlarmFragment extends BaseFragment {
             if (mPushData.door != null) {
                 mSummaryDoorView.setTitle(mPushData.door.name);
             }
-            if (VersionData.getCloudVersion(mContext) > 1) {
-                if ( mPermissionDataProvider.getPermission(PermissionModule.DOOR, true)) {
-                    mSummaryDoorView.showActionBtn(true,true);
+            if (VersionData.getCloudVersion(mActivity) > 1) {
+                if (mPermissionDataProvider.getPermission(PermissionModule.DOOR, true)) {
+                    mSummaryDoorView.showActionBtn(true, true);
                 } else if (mPermissionDataProvider.getPermission(PermissionModule.MONITORING, true) && mPermissionDataProvider.getPermission(PermissionModule.DOOR, false)) {
-                    mSummaryDoorView.showActionBtn(true,true);
+                    mSummaryDoorView.showActionBtn(true, true);
                 } else {
-                    mSummaryDoorView.showActionBtn(true,false);
+                    mSummaryDoorView.showActionBtn(true, false);
                 }
                 if (mPermissionDataProvider.getPermission(PermissionModule.DOOR, false)) {
-                    mSummaryDoorView.showGoLogBtn(true);
-                    mPopup.showWait(mCancelListener);
-                    mDoorDataProvider.getDoor(TAG, mPushData.door.id, mDoorListener, mDoorErrorListener, null);
-                } else {
-                    mSummaryDoorView.showGoLogBtn(false);
+                    mPopup.showWait(mCancelExitListener);
+                    request(mDoorDataProvider.getDoor(mPushData.door.id, mDoorListener));
                 }
                 return true;
             }
             mSummaryDoorView.showActionBtn(true);
-            mSummaryDoorView.showGoLogBtn(true);
-            mPopup.showWait(mCancelListener);
-            mDoorDataProvider.getDoor(TAG, mPushData.door.id, mDoorListener, mDoorErrorListener, null);
+            mPopup.showWait(mCancelExitListener);
+            request(mDoorDataProvider.getDoor(mPushData.door.id, mDoorListener));
         } else if (isLinkDevice(code)) {
             if (mPushData.device != null) {
                 mSummaryDoorView.setTitle(mPushData.device.name);
             }
-            if (VersionData.getCloudVersion(mContext) > 1) {
+            if (VersionData.getCloudVersion(mActivity) > 1) {
                 if (!mPermissionDataProvider.getPermission(PermissionModule.DEVICE, false)) {
                     mSummaryDoorView.showActionBtn(false);
-                    mSummaryDoorView.showGoLogBtn(false);
                     return true;
                 } else {
-                    mPopup.showWait(mCancelListener);
-                    mDeviceDataProvider.getDevice(TAG, mPushData.device.id, mDeviceListener, mDeviceErrorListener, null);
+                    mPopup.showWait(mCancelExitListener);
+                    request(mDeviceDataProvider.getDevice(mPushData.device.id, mDeviceListener));
                 }
             }
             mSummaryDoorView.showActionBtn(false);
-            mSummaryDoorView.showGoLogBtn(true);
-            mPopup.showWait(mCancelListener);
-            mDeviceDataProvider.getDevice(TAG, mPushData.device.id, mDeviceListener, mDeviceErrorListener, null);
+            mPopup.showWait(mCancelExitListener);
+            request(mDeviceDataProvider.getDevice(mPushData.device.id, mDeviceListener));
         } else {
             mSummaryDoorView.showActionBtn(false);
-            mSummaryDoorView.showGoLogBtn(false);
         }
         return true;
     }
+
 
     private boolean isLinkDevice(String code) {
         if (mPushData.device == null || mPushData.device.id == null || mPushData.device.id.isEmpty()) {
@@ -577,7 +435,7 @@ public class AlarmFragment extends BaseFragment {
     }
 
     public void openMenu() {
-        SelectPopup<SelectCustomData> selectPopup = new SelectPopup<SelectCustomData>(mContext, mPopup);
+        SelectPopup<SelectCustomData> selectPopup = new SelectPopup<SelectCustomData>(mActivity, mPopup);
         ArrayList<SelectCustomData> linkType = new ArrayList<SelectCustomData>();
         linkType.add(new SelectCustomData(getString(R.string.open), R.id.action_open, false));
         linkType.add(new SelectCustomData(getString(R.string.manual_lock), R.id.action_lock, false));
@@ -587,8 +445,8 @@ public class AlarmFragment extends BaseFragment {
         linkType.add(new SelectCustomData(getString(R.string.clear_alarm), R.id.action_clear_alarm, false));
         selectPopup.show(SelectType.CUSTOM, new OnSelectResultListener<SelectCustomData>() {
             @Override
-            public void OnResult(ArrayList<SelectCustomData> selectedItem,boolean isPositive) {
-                if (isInValidCheck(null)) {
+            public void OnResult(ArrayList<SelectCustomData> selectedItem, boolean isPositive) {
+                if (isInValidCheck()) {
                     return;
                 }
                 if (selectedItem == null) {

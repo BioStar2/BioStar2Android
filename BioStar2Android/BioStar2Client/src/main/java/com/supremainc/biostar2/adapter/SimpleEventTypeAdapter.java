@@ -25,15 +25,13 @@ import android.widget.ListView;
 import com.supremainc.biostar2.R;
 import com.supremainc.biostar2.adapter.base.BaseEventTypeAdapter;
 import com.supremainc.biostar2.adapter.base.BaseListAdapter;
-import com.supremainc.biostar2.sdk.datatype.v2.Common.VersionData;
-import com.supremainc.biostar2.sdk.datatype.v2.EventLog.EventType;
-import com.supremainc.biostar2.sdk.provider.EventDataProvider;
+import com.supremainc.biostar2.sdk.models.v2.common.VersionData;
+import com.supremainc.biostar2.sdk.models.v2.eventlog.EventType;
 import com.supremainc.biostar2.widget.popup.Popup;
 
 import java.util.ArrayList;
 
 public class SimpleEventTypeAdapter extends BaseEventTypeAdapter {
-    protected EventDataProvider mEventDataProvider;
 
 
     public SimpleEventTypeAdapter(Activity context, ArrayList<EventType> items, ListView listView, OnItemClickListener listener, Popup popup, BaseListAdapter.OnItemsListener onItemsListener) {

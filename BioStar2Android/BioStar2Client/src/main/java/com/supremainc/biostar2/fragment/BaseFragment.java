@@ -37,26 +37,27 @@ import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ListView;
 
+import com.google.gson.Gson;
 import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayout;
 import com.supremainc.biostar2.BuildConfig;
 import com.supremainc.biostar2.R;
-import com.supremainc.biostar2.meta.Setting;
 import com.supremainc.biostar2.db.NotificationDBProvider;
 import com.supremainc.biostar2.impl.OnSingleClickListener;
+import com.supremainc.biostar2.meta.Setting;
 import com.supremainc.biostar2.provider.AppDataProvider;
-import com.supremainc.biostar2.sdk.provider.AccessGroupDataProvider;
-import com.supremainc.biostar2.sdk.provider.AccessLevelDataProvider;
+import com.supremainc.biostar2.provider.MobileCardDataProvider;
+import com.supremainc.biostar2.sdk.models.v2.common.ResponseStatus;
+import com.supremainc.biostar2.sdk.models.v2.user.User;
+import com.supremainc.biostar2.sdk.provider.AccessControlDataProvider;
 import com.supremainc.biostar2.sdk.provider.CardDataProvider;
 import com.supremainc.biostar2.sdk.provider.CommonDataProvider;
+import com.supremainc.biostar2.sdk.provider.DateTimeDataProvider;
 import com.supremainc.biostar2.sdk.provider.DeviceDataProvider;
 import com.supremainc.biostar2.sdk.provider.DoorDataProvider;
-import com.supremainc.biostar2.sdk.provider.EventDataProvider;
+import com.supremainc.biostar2.sdk.provider.MonitoringDataProvider;
 import com.supremainc.biostar2.sdk.provider.PermissionDataProvider;
 import com.supremainc.biostar2.sdk.provider.PushDataProvider;
-import com.supremainc.biostar2.sdk.provider.TimeConvertProvider;
 import com.supremainc.biostar2.sdk.provider.UserDataProvider;
-import com.supremainc.biostar2.sdk.volley.Response;
-import com.supremainc.biostar2.sdk.volley.VolleyError;
 import com.supremainc.biostar2.view.StyledTextView;
 import com.supremainc.biostar2.widget.ActionbarTitle;
 import com.supremainc.biostar2.widget.ScreenControl;
@@ -68,48 +69,94 @@ import com.supremainc.biostar2.widget.popup.ToastPopup;
 import com.tekinarslan.material.sample.FloatingActionButton;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Iterator;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public class BaseFragment extends Fragment {
     protected static final int MODE_NORMAL = 0;
+    protected static Gson mGson = new Gson();
     protected String TAG;
-    protected Activity mContext; //TODO mActivity로 고칠것
+    protected Activity mActivity;
     protected Handler mHandler = new Handler();
     protected LayoutInflater mInflater;
     protected Resources mResouce;
     protected ViewGroup mRootView;
     //data provider
-    protected AccessGroupDataProvider mAccessGroupDataProvider;
-    protected AccessLevelDataProvider mAccessLevelDataProvider;
+    protected AppDataProvider mAppDataProvider;
+    protected AccessControlDataProvider mAccessControlDataProvider;
     protected CardDataProvider mCardDataProvider;
     protected CommonDataProvider mCommonDataProvider;
     protected DeviceDataProvider mDeviceDataProvider;
     protected DoorDataProvider mDoorDataProvider;
-    protected EventDataProvider mEventDataProvider;
+    protected MonitoringDataProvider mMonitoringDataProvider;
     protected PermissionDataProvider mPermissionDataProvider;
     protected PushDataProvider mPushDataProvider;
     protected UserDataProvider mUserDataProvider;
-    protected TimeConvertProvider mTimeConvertProvider;
-    protected AppDataProvider mAppDataProvider;
-
+    protected DateTimeDataProvider mDateTimeDataProvider;
+    protected MobileCardDataProvider mMobileCardDataProvider;
     protected NotificationDBProvider mNotificationDBProvider;
     protected Popup mPopup;
     protected BroadcastReceiver mReceiver;
     protected ScreenControl mScreenControl;
     protected ToastPopup mToastPopup;
+    protected boolean mIsStoped;
     //
     protected boolean mIsDataReceived = false;
     protected boolean mIsDestroy = false;
     protected int mSubMode = MODE_NORMAL;
     protected ScreenType mType = ScreenType.INIT;
     protected boolean mIsReUsed;
+    protected InputMethodManager mImm;
+    protected OnPopupClickListener mOnBackPopupClickListener = new OnPopupClickListener() {
+        @Override
+        public void OnPositive() {
+            if (mScreenControl != null) {
+                mScreenControl.backScreen();
+            }
+        }
+
+        @Override
+        public void OnNegative() {
+            if (mScreenControl != null) {
+                mScreenControl.backScreen();
+            }
+        }
+    };
+    private ArrayList<Call<?>> mRequestList = new ArrayList<Call<?>>();
     protected OnCancelListener mCancelExitListener = new OnCancelListener() {
         @Override
         public void onCancel(DialogInterface dialog) {
-            CommonDataProvider.getInstance(mContext).cancelAll(TAG);
-            ScreenControl.getInstance().backScreen();
+            if (mActivity != null && !mActivity.isFinishing()) {
+                clearRequest();
+                ScreenControl.getInstance().backScreen();
+            }
         }
     };
-    private InputMethodManager mImm;
+    protected OnCancelListener mCancelStayListener = new OnCancelListener() {
+        @Override
+        public void onCancel(DialogInterface dialog) {
+            if (mActivity != null && !mActivity.isFinishing()) {
+                clearRequest();
+            }
+        }
+    };
+    protected OnPopupClickListener mClearOnPopupClickListener = new OnPopupClickListener() {
+        @Override
+        public void OnPositive() {
+            clearRequest();
+            LocalBroadcastManager.getInstance(mActivity).sendBroadcast(new Intent(Setting.BROADCAST_CLEAR));
+        }
+
+        @Override
+        public void OnNegative() {
+            clearRequest();
+            LocalBroadcastManager.getInstance(mActivity).sendBroadcast(new Intent(Setting.BROADCAST_CLEAR));
+        }
+    };
     // OBJECT
     private ActionbarTitle mActionbarTitle;
     private Toolbar mToolbar;
@@ -122,56 +169,50 @@ public class BaseFragment extends Fragment {
         }
     };
 
-    protected Response.ErrorListener mErrorStayListener = new Response.ErrorListener() {
-        @Override
-        public void onErrorResponse(VolleyError error, Object deliverParam) {
-            if (isInValidCheck(error)) {
-                return;
-            }
-            mPopup.dismiss();
-            mPopup.show(PopupType.ALERT, getString(R.string.fail), Setting.getErrorMessage(error, mContext), new OnPopupClickListener() {
-                @Override
-                public void OnNegative() {
-
-                }
-
-                @Override
-                public void OnPositive() {
-
-                }
-            }, getString(R.string.ok), null, false);
-        }
-    };
-
-    protected Response.ErrorListener mErrorBackListener = new Response.ErrorListener() {
-        @Override
-        public void onErrorResponse(VolleyError error, Object deliverParam) {
-            if (isInValidCheck(error)) {
-                return;
-            }
-            mPopup.dismiss();
-            mPopup.show(PopupType.ALERT, getString(R.string.fail), Setting.getErrorMessage(error, mContext), new OnPopupClickListener() {
-                @Override
-                public void OnNegative() {
-
-                }
-
-                @Override
-                public void OnPositive() {
-                    mScreenControl.backScreen();
-                }
-
-
-            }, getString(R.string.ok), null, false);
-        }
-    };
-
     public BaseFragment() {
         super();
     }
 
+    private void clearRequest() {
+        if (mRequestList != null) {
+            Iterator<Call<?>> iterator = mRequestList.iterator();
+            while (iterator.hasNext()) {
+                Call<?> call = iterator.next();
+                if (!(call.isCanceled() || call.isExecuted())) {
+                    call.cancel();
+                }
+                iterator.remove();
+            }
+            mRequestList.clear();
+        }
+    }
+
+    private void verifyRequest() {
+        if (mRequestList != null) {
+            Iterator<Call<?>> iterator = mRequestList.iterator();
+            while (iterator.hasNext()) {
+                Call<?> call = iterator.next();
+                if (call.isCanceled() || call.isExecuted()) {
+                    iterator.remove();
+                }
+            }
+        }
+    }
+
+    protected boolean request(Call<?> call) {
+        if (call == null || mRequestList == null) {
+            return false;
+        }
+        verifyRequest();
+        mRequestList.add(call);
+        return true;
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        if (BuildConfig.DEBUG) {
+            Log.i(TAG, "onCreateView");
+        }
         if (mRootView != null) {
             mIsReUsed = true;
             ViewGroup rootView = (ViewGroup) mRootView.getParent();
@@ -183,7 +224,7 @@ public class BaseFragment extends Fragment {
             }
         } else {
             mIsReUsed = false;
-            mRootView = (ViewGroup)inflater.inflate(mResID, container, false);
+            mRootView = (ViewGroup) inflater.inflate(mResID, container, false);
         }
         initBaseValue();
         return mRootView;
@@ -295,6 +336,9 @@ public class BaseFragment extends Fragment {
         if (mToolbar == null) {
             return;
         }
+        if (title == null) {
+            title = "";
+        }
         if (mActionbarTitle == null) {
             ActionBarActivity activity = (ActionBarActivity) getActivity();
             mActionbarTitle = new ActionbarTitle(activity, mToolbar, ScreenControl.getInstance(), homeResId, title, backgroundRes, mHomeListener);
@@ -326,15 +370,15 @@ public class BaseFragment extends Fragment {
             mInflater = (LayoutInflater) getActivity().getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         }
         mToolbar = (Toolbar) mRootView.findViewById(R.id.toolbar);
-
+        if (mActivity == null) {
+            mActivity = getActivity();
+        }
         if (mReceiver == null) {
             registerBroadcast();
         }
-        if (mContext == null) {
-            mContext = getActivity();
-        }
+
         if (mResouce == null) {
-            mResouce = mContext.getResources();
+            mResouce = mActivity.getResources();
         }
         if (mScreenControl == null) {
             mScreenControl = ScreenControl.getInstance();
@@ -345,8 +389,17 @@ public class BaseFragment extends Fragment {
         if (mToastPopup == null) {
             mToastPopup = new ToastPopup(getActivity());
         }
-        if (mUserDataProvider == null) {
-            mUserDataProvider = UserDataProvider.getInstance(getActivity());
+        if (mAppDataProvider == null) {
+            mAppDataProvider = AppDataProvider.getInstance(getActivity());
+        }
+        if (mAccessControlDataProvider == null) {
+            mAccessControlDataProvider = AccessControlDataProvider.getInstance(getActivity());
+        }
+        if (mCardDataProvider == null) {
+            mCardDataProvider = CardDataProvider.getInstance(getActivity());
+        }
+        if (mCommonDataProvider == null) {
+            mCommonDataProvider = CommonDataProvider.getInstance(getActivity());
         }
         if (mDeviceDataProvider == null) {
             mDeviceDataProvider = DeviceDataProvider.getInstance(getActivity());
@@ -354,70 +407,150 @@ public class BaseFragment extends Fragment {
         if (mDoorDataProvider == null) {
             mDoorDataProvider = DoorDataProvider.getInstance(getActivity());
         }
-        if (mEventDataProvider == null) {
-            mEventDataProvider = EventDataProvider.getInstance(getActivity());
-        }
-        if (mAccessGroupDataProvider == null) {
-            mAccessGroupDataProvider = AccessGroupDataProvider.getInstance(getActivity());
-        }
-        if (mAccessLevelDataProvider == null) {
-            mAccessLevelDataProvider = AccessLevelDataProvider.getInstance(getActivity());
+        if (mMonitoringDataProvider == null) {
+            mMonitoringDataProvider = MonitoringDataProvider.getInstance(getActivity());
         }
         if (mPermissionDataProvider == null) {
             mPermissionDataProvider = PermissionDataProvider.getInstance(getActivity());
         }
-        if (mCommonDataProvider == null) {
-            mCommonDataProvider = CommonDataProvider.getInstance(getActivity());
-        }
         if (mPushDataProvider == null) {
             mPushDataProvider = PushDataProvider.getInstance(getActivity());
         }
-        if (mTimeConvertProvider == null) {
-            mTimeConvertProvider = TimeConvertProvider.getInstance(getActivity());
+        if (mUserDataProvider == null) {
+            mUserDataProvider = UserDataProvider.getInstance(getActivity());
         }
         if (mNotificationDBProvider == null) {
             mNotificationDBProvider = NotificationDBProvider.getInstance(getActivity());
         }
-        if (mAppDataProvider == null) {
-            mAppDataProvider = AppDataProvider.getInstance(getActivity());
+        if (mDateTimeDataProvider == null) {
+            mDateTimeDataProvider = DateTimeDataProvider.getInstance(getActivity());
         }
-        if (mCardDataProvider == null) {
-            mCardDataProvider = CardDataProvider.getInstance(getActivity());
+        if (mMobileCardDataProvider == null) {
+            mMobileCardDataProvider = new MobileCardDataProvider();
         }
 
         if (mImm == null) {
-            mImm = (InputMethodManager) mContext.getSystemService(mContext.INPUT_METHOD_SERVICE);
+            mImm = (InputMethodManager) mActivity.getSystemService(mActivity.INPUT_METHOD_SERVICE);
         }
     }
 
-    protected boolean isInValidCheck(VolleyError error) {
-        if (mIsDestroy || !isAdded()) {
+    protected boolean isInValidCheck() {
+        if (mActivity == null) {
             return true;
         }
-        if (error == null) {
-            return false;
-        }
-        if (error.getSessionExpire()) {
-            mContext = getActivity();
-            if (mPopup == null) {
-                mPopup = new Popup(mContext);
-            } else {
-                mPopup.dismiss();
-            }
-            mPopup.show(PopupType.ALERT, getString(R.string.info), getString(R.string.login_expire), new OnPopupClickListener() {
-                @Override
-                public void OnNegative() {
-
-                }
-
-                @Override
-                public void OnPositive() {
-                    LocalBroadcastManager.getInstance(mContext).sendBroadcast(new Intent(Setting.BROADCAST_CLEAR));
-                }
-            }, getString(R.string.ok), null, false);
+        if (!isAdded() || mIsDestroy || mActivity.isFinishing()) {
             return true;
         }
         return false;
+    }
+
+
+    protected boolean isIgnoreCallback(Call<?> call, boolean dismissPopup) {
+        if (isInValidCheck()) {
+            return true;
+        }
+        if (dismissPopup && mPopup != null) {
+            mPopup.dismiss();
+        }
+        if (call != null && call.isCanceled()) {
+            return true;
+        }
+        return false;
+    }
+
+    protected boolean isIgnoreCallback(Call<?> call, Response<?> response, boolean dismissPopup) {
+        if (isInValidCheck()) {
+            return true;
+        }
+        if (dismissPopup && mPopup != null) {
+            mPopup.dismiss();
+        }
+        if (call != null && call.isCanceled()) {
+            return true;
+        }
+        if (response != null && !response.isSuccessful()) {
+            if (response.code() == 401) {
+                if (mCommonDataProvider != null) {
+                    mCommonDataProvider.removeCookie();
+                }
+                mPopup.show(PopupType.ALERT, getString(R.string.info), getString(R.string.login_expire), mClearOnPopupClickListener, getString(R.string.ok), null, false);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    protected String getResponseErrorMessage(Response<?> response) {
+        if (response == null || response.errorBody() == null) {
+            return getString(R.string.fail) + "\nhcode:" + response.code();
+        }
+        String error = "";
+        try {
+            ResponseStatus responseClass = (ResponseStatus) mGson.fromJson(response.errorBody().string(), ResponseStatus.class);
+            error = responseClass.message + "\n" + "scode: " + responseClass.status_code;
+        } catch (Exception e) {
+
+        }
+        error = error + "\n" + "hcode: " + response.code();
+        return error;
+    }
+
+    protected boolean isInvalidResponse(Response<?> response, boolean showError, boolean showErrorOnBack) {
+        if (response == null) {
+            if (showError) {
+                showErrorPopup(getResponseErrorMessage(response), showErrorOnBack);
+            }
+            return true;
+        }
+        if (response.isSuccessful() && response.body() != null) {
+            return false;
+        } else {
+            if (response.code() == 503) {
+                mCommonDataProvider.simpleLogin(new Callback<User>(){
+                    @Override
+                    public void onFailure(Call<User> call, Throwable t) {
+
+                    }
+
+                    @Override
+                    public void onResponse(Call<User> call, Response<User> response) {
+                        LocalBroadcastManager.getInstance(mActivity).sendBroadcast(new Intent(Setting.BROADCAST_REROGIN));
+                    }
+                });
+            }
+            if (showError) {
+                showErrorPopup(getResponseErrorMessage(response), showErrorOnBack);
+            }
+            return true;
+        }
+    }
+
+    protected void showRetryPopup(String msg, OnPopupClickListener listener) {
+        mPopup.dismiss();
+        mPopup.show(PopupType.ALERT, getString(R.string.fail_retry), msg, listener, getString(R.string.ok), getString(R.string.cancel), false);
+    }
+
+    protected void showErrorPopup(String msg, boolean onBack) {
+        mPopup.dismiss();
+        if (msg == null || msg.isEmpty()) {
+            msg = getString(R.string.fail);
+        }
+        if (mPopup == null) {
+            return;
+        }
+        if (msg.contains("scode: 10") || msg.contains("hcode: 401")) {
+            if (mCommonDataProvider != null) {
+                mCommonDataProvider.removeCookie();
+            }
+            mPopup.show(PopupType.ALERT, getString(R.string.info), getString(R.string.login_expire), mClearOnPopupClickListener, getString(R.string.ok), null, false);
+        } else {
+            if (onBack) {
+                mPopup.show(PopupType.ALERT, getString(R.string.info), msg, mOnBackPopupClickListener, getString(R.string.ok), null, true);
+            } else {
+                mPopup.show(PopupType.ALERT, getString(R.string.info), msg, null, getString(R.string.ok), null, true);
+            }
+        }
+
     }
 
     @Override
@@ -432,9 +565,9 @@ public class BaseFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         if (BuildConfig.DEBUG) {
             if (savedInstanceState == null) {
-                Log.e(TAG, "onCreate savedInstanceState is null");
+                Log.i(TAG, "onCreate savedInstanceState is null");
             } else {
-                Log.e(TAG, "onCreate savedInstanceState is not null");
+                Log.i(TAG, "onCreate savedInstanceState is not null");
             }
         }
         super.onCreate(savedInstanceState);
@@ -458,7 +591,20 @@ public class BaseFragment extends Fragment {
         if (mActionbarTitle != null) {
             mActionbarTitle.start();
         }
+        mIsStoped = false;
         super.onStart();
+        if (mScreenControl != null) {
+            mScreenControl.onResume(this);
+        }
+    }
+
+    @Override
+    public void onStop() {
+        if (BuildConfig.DEBUG) {
+            Log.i(TAG, "onStop");
+        }
+        super.onStop();
+        mIsStoped = true;
     }
 
     @Override
@@ -470,6 +616,7 @@ public class BaseFragment extends Fragment {
             mScreenControl.onResume(this);
         }
         super.onResume();
+        mIsStoped = false;
     }
 
     @Override
@@ -485,15 +632,20 @@ public class BaseFragment extends Fragment {
         if (BuildConfig.DEBUG) {
             Log.i(TAG, "onDestroy");
         }
-        if (mCommonDataProvider != null) {
-            mCommonDataProvider.cancelAll(TAG);
-        }
         if (mPopup != null) {
             mPopup.dismiss();
         }
         mIsDestroy = true;
+        mIsStoped = true;
+        clearRequest();
         unRegisterBroadcast();
         super.onDestroy();
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        outState.putBoolean("bug:fix", true);
+        super.onSaveInstanceState(outState);
     }
 
     @Override
@@ -516,7 +668,7 @@ public class BaseFragment extends Fragment {
     public boolean onBack() {
         if (mSubMode != MODE_NORMAL) {
             mSubMode = MODE_NORMAL;
-            mContext.invalidateOptionsMenu();
+            mActivity.invalidateOptionsMenu();
             setSubMode(MODE_NORMAL);
             return true;
         }
@@ -536,7 +688,7 @@ public class BaseFragment extends Fragment {
         if (BuildConfig.DEBUG) {
             Log.i(TAG, "onSearch:" + query);
         }
-        if (isInValidCheck(null)) {
+        if (mIsDestroy || !isAdded()) {
             return true;
         }
         return false;

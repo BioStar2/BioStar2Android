@@ -16,28 +16,25 @@
 package com.supremainc.biostar2.adapter.base;
 
 import android.app.Activity;
-import android.util.Log;
 import android.widget.AbsListView;
 import android.widget.AbsListView.OnScrollListener;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ListView;
 
+import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutDirection;
 import com.supremainc.biostar2.R;
-import com.supremainc.biostar2.meta.Setting;
-import com.supremainc.biostar2.sdk.BuildConfig;
-import com.supremainc.biostar2.sdk.datatype.v2.Card.Card;
-import com.supremainc.biostar2.sdk.datatype.v2.Card.Cards;
-import com.supremainc.biostar2.sdk.datatype.v2.Card.ListCard;
+import com.supremainc.biostar2.sdk.models.v2.card.Card;
+import com.supremainc.biostar2.sdk.models.v2.card.Cards;
+import com.supremainc.biostar2.sdk.models.v2.card.ListCard;
 import com.supremainc.biostar2.sdk.provider.CardDataProvider;
-import com.supremainc.biostar2.sdk.provider.DeviceDataProvider;
-import com.supremainc.biostar2.sdk.volley.Response;
-import com.supremainc.biostar2.sdk.volley.Response.Listener;
-import com.supremainc.biostar2.sdk.volley.VolleyError;
 import com.supremainc.biostar2.widget.popup.Popup;
 import com.supremainc.biostar2.widget.popup.Popup.OnPopupClickListener;
-import com.supremainc.biostar2.widget.popup.Popup.PopupType;
 
 import java.util.ArrayList;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 public abstract class BaseCardAdapter extends BaseListAdapter<ListCard> {
     protected static final int FIRST_LIMIT = 50;
@@ -45,29 +42,46 @@ public abstract class BaseCardAdapter extends BaseListAdapter<ListCard> {
     protected boolean mIsLastItemVisible = false;
     protected int mLimit = FIRST_LIMIT;
     protected int mOffset = 0;
-    private ShowType mType=ShowType.CARD;
-    private int mAddedCount =0;
-    private int mRemovedCount =0;
-    public enum ShowType {
-        CARD, CARD_CSN, CARD_WIEGAND, CARD_SMARTCARD
-    }
-    Listener<Cards> mItemListener = new Response.Listener<Cards>() {
+    private ShowType mType = ShowType.CARD;
+    private int mAddedCount = 0;
+    private int mRemovedCount = 0;
+    private Callback<Cards> mItemListener = new Callback<Cards>() {
         @Override
-        public void onResponse(Cards response, Object deliverParam) {
-            if (mPopup != null) {
-                mPopup.dismiss();
-            }
-            if (isDestroy()) {
+        public void onFailure(Call<Cards> call, Throwable t) {
+            if (isIgnoreCallback(call, true)) {
                 return;
             }
-            if (mSwipyRefreshLayout != null) {
-                mSwipyRefreshLayout.setRefreshing(false);
+
+            showRetryPopup(t.getMessage(), new OnPopupClickListener() {
+                @Override
+                public void OnNegative() {
+
+                }
+
+                @Override
+                public void OnPositive() {
+                    showWait(null);
+                    mHandler.removeCallbacks(mRunGetItems);
+                    mHandler.post(mRunGetItems);
+                }
+            });
+        }
+
+        @Override
+        public void onResponse(Call<Cards> call, Response<Cards> response) {
+            if (isIgnoreCallback(call, response, true)) {
+                return;
             }
-            if (response == null || response.records == null || response.records.size() < 1) {
+            if (isInvalidResponse(response, false, false)) {
+                mItemListener.onFailure(call, new Throwable(getResponseErrorMessage(response)));
+                return;
+            }
+            Cards cards = response.body();
+            if (cards.records == null || cards.records.size() < 1) {
                 if (mOnItemsListener != null) {
                     if (mItems == null || mItems.size() < 1) {
-                        mTotal =0;
-                        mOnItemsListener.onNoMoreData();
+                        mTotal = 0;
+                        mOnItemsListener.onNoneData();
                     } else {
                         mTotal = mItems.size();
                         mOnItemsListener.onSuccessNull(mItems.size());
@@ -78,29 +92,28 @@ public abstract class BaseCardAdapter extends BaseListAdapter<ListCard> {
             if (mItems == null) {
                 mItems = new ArrayList<ListCard>();
             }
-            int i = response.records.size() - 1;
-            mOffset = mOffset + response.records.size();
+            int i = cards.records.size() - 1;
+            mOffset = mOffset + cards.records.size();
             for (; i >= 0; i--) {
-                ListCard card = response.records.get(i);
-//                Log.e(TAG,"card:"+card.type);
+                ListCard card = cards.records.get(i);
                 switch (mType) {
                     case CARD_CSN:
                         if (!Card.CSN.equals(card.type)) {
-                            response.records.remove(i);
+                            cards.records.remove(i);
                             mRemovedCount++;
                             continue;
                         }
                         break;
                     case CARD_WIEGAND:
                         if (!(Card.WIEGAND.equals(card.type) || Card.CSN_WIEGAND.equals(card.type))) {
-                            response.records.remove(i);
+                            cards.records.remove(i);
                             mRemovedCount++;
                             continue;
                         }
                         break;
                     case CARD_SMARTCARD:
                         if (!(Card.SECURE_CREDENTIAL.equals(card.type) || Card.ACCESS_ON.equals(card.type))) {
-                            response.records.remove(i);
+                            cards.records.remove(i);
                             mRemovedCount++;
                             continue;
                         }
@@ -108,22 +121,21 @@ public abstract class BaseCardAdapter extends BaseListAdapter<ListCard> {
                 }
             }
 
-            for (ListCard card : response.records) {
+            for (ListCard card : cards.records) {
                 mItems.add(card);
                 mAddedCount++;
             }
             setData(mItems);
-            mTotal = response.total-mRemovedCount;
-//            Log.e(TAG,"mRemovedCount:"+mRemovedCount+" mTotal:"+mTotal+" mAddedCount:"+mAddedCount);
+            mTotal = cards.total - mRemovedCount;
             if (mTotal < 0) {
                 mTotal = 0;
             }
             if (mTotal < mItems.size()) {
                 mTotal = mItems.size();
             }
-            if (mAddedCount < mLimit && mTotal !=0) {
+            if (mAddedCount < mLimit && mTotal != 0) {
                 if (mPopup != null) {
-                    mPopup.showWait(mCancelExitListener);
+                    mPopup.showWait(mCancelStayListener);
                 }
                 mHandler.removeCallbacks(mRunGetItems);
                 mHandler.postDelayed(mRunGetItems, 100);
@@ -133,54 +145,21 @@ public abstract class BaseCardAdapter extends BaseListAdapter<ListCard> {
             }
         }
     };
-    Response.ErrorListener mItemErrorListener = new Response.ErrorListener() {
-        @Override
-        public void onErrorResponse(VolleyError error, Object deliverParam) {
-            if (mPopup != null) {
-                mPopup.dismiss();
-            }
-            if (isDestroy(error)) {
-                return;
-            }
-            if (mSwipyRefreshLayout != null) {
-                mSwipyRefreshLayout.setRefreshing(false);
-            }
-            if (mPopup != null) {
-                mPopup.show(PopupType.ALERT, mActivity.getString(R.string.fail_retry), Setting.getErrorMessage(error, mActivity), new OnPopupClickListener() {
-                    @Override
-                    public void OnNegative() {
-                        mCancelExitListener.onCancel(null);
-                    }
-
-                    @Override
-                    public void OnPositive() {
-                        mHandler.removeCallbacks(mRunGetItems);
-                        mHandler.post(mRunGetItems);
-                    }
-                }, mActivity.getString(R.string.ok), mActivity.getString(R.string.cancel), false);
-            }
-        }
-    };
-
-    Runnable mRunGetItems = new Runnable() {
+    private Runnable mRunGetItems = new Runnable() {
         @Override
         public void run() {
-            if (isDestroy()) {
+            if (isInValidCheck()) {
                 return;
             }
             if (isMemoryPoor()) {
-                if (mPopup != null) {
-                    mPopup.dismiss();
-                }
-                if (mSwipyRefreshLayout != null) {
-                    mSwipyRefreshLayout.setRefreshing(false);
-                }
+                dismissWait();
                 mToastPopup.show(mActivity.getString(R.string.memory_poor), null);
                 return;
             }
-            mCardDataProvider.getUnassignedCards(TAG, mItemListener, mItemErrorListener, mOffset, mLimit,  mQuery, null);
+            request(mCardDataProvider.getUnassignedCards(mOffset, mLimit, mQuery, mItemListener));
         }
     };
+
 
     public BaseCardAdapter(Activity context, ArrayList<ListCard> items, ListView listView, OnItemClickListener itemClickListener, Popup popup, OnItemsListener onItemsListener) {
         super(context, items, listView, itemClickListener, popup, onItemsListener);
@@ -189,15 +168,11 @@ public abstract class BaseCardAdapter extends BaseListAdapter<ListCard> {
             @Override
             public void onScrollStateChanged(AbsListView view, int scrollState) {
                 if (scrollState == OnScrollListener.SCROLL_STATE_IDLE && mIsLastItemVisible && mTotal - 1 > mOffset) {
-                    if (mPopup != null) {
-                        mPopup.showWait(mCancelExitListener);
-                    }
+                    showWait(SwipyRefreshLayoutDirection.BOTTOM);
                     mHandler.removeCallbacks(mRunGetItems);
                     mHandler.postDelayed(mRunGetItems, 100);
                 } else {
-                    if (mPopup != null) {
-                        mPopup.dismissWiat();
-                    }
+                    dismissWait();
                 }
             }
 
@@ -214,13 +189,11 @@ public abstract class BaseCardAdapter extends BaseListAdapter<ListCard> {
         mOffset = 0;
         mTotal = 0;
         mAddedCount = 0;
-        mRemovedCount =0;
+        mRemovedCount = 0;
         mLimit = FIRST_LIMIT;
         mHandler.removeCallbacks(mRunGetItems);
-        mCardDataProvider.cancelAll(TAG);
-        if (mPopup != null) {
-            mPopup.showWait(mCancelExitListener);
-        }
+        clearRequest();
+        showWait(SwipyRefreshLayoutDirection.TOP);
         if (mItems != null) {
             mItems.clear();
             notifyDataSetChanged();
@@ -233,13 +206,13 @@ public abstract class BaseCardAdapter extends BaseListAdapter<ListCard> {
         if (mListView == null) {
             return false;
         }
-        ListCard card=null;
+        ListCard card = null;
         if (mListView.getChoiceMode() == ListView.CHOICE_MODE_NONE) {
             return false;
         }
         for (int i = 0; i < getCount(); i++) {
             if (mItems != null) {
-                card =  mItems.get(i);
+                card = mItems.get(i);
                 if (card != null && Card.ACCESS_ON.equals(card.type) && !card.is_blocked) {
                     mListView.setItemChecked(i, false);
                     continue;
@@ -252,7 +225,31 @@ public abstract class BaseCardAdapter extends BaseListAdapter<ListCard> {
         // mListView.invalidate();
     }
 
+    public int getAvailableTotal() {
+        if (mListView == null) {
+            return -1;
+        }
+        ListCard card = null;
+        if (mListView.getChoiceMode() == ListView.CHOICE_MODE_NONE) {
+            return -1;
+        }
+        int total = getCount();
+        for (int i = 0; i < getCount(); i++) {
+            if (mItems != null) {
+                card = mItems.get(i);
+                if (card != null && Card.ACCESS_ON.equals(card.type) && !card.is_blocked) {
+                    total--;
+                }
+            }
+        }
+        return total;
+    }
+
     public void setShowType(ShowType type) {
         mType = type;
+    }
+
+    public enum ShowType {
+        CARD, CARD_CSN, CARD_WIEGAND, CARD_SMARTCARD
     }
 }

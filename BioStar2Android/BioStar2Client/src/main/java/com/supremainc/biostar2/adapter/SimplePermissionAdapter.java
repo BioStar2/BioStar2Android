@@ -24,7 +24,7 @@ import android.widget.ListView;
 
 import com.supremainc.biostar2.R;
 import com.supremainc.biostar2.adapter.base.BasePermissionAdapter;
-import com.supremainc.biostar2.sdk.datatype.v1.Permission.CloudRole;
+import com.supremainc.biostar2.sdk.models.v1.permission.CloudRole;
 import com.supremainc.biostar2.widget.popup.Popup;
 
 import java.util.ArrayList;

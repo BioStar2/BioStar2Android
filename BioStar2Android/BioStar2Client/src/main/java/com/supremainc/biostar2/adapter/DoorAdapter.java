@@ -25,7 +25,7 @@ import android.widget.ListView;
 
 import com.supremainc.biostar2.R;
 import com.supremainc.biostar2.adapter.base.BaseDoorAdapter;
-import com.supremainc.biostar2.sdk.datatype.v2.Door.ListDoor;
+import com.supremainc.biostar2.sdk.models.v2.door.ListDoor;
 import com.supremainc.biostar2.view.StyledTextView;
 import com.supremainc.biostar2.widget.popup.Popup;
 

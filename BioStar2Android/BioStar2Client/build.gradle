@@ -1,8 +1,8 @@
 apply plugin: 'com.android.application'
 
 android {
-    compileSdkVersion 23
-    buildToolsVersion "23.0.2"
+    compileSdkVersion 25
+    buildToolsVersion "25.0.1"
     compileOptions.encoding = 'UTF-8'
     repositories {
         jcenter()
@@ -14,8 +14,14 @@ android {
     defaultConfig {
         applicationId "com.supremainc.biostar2"
         minSdkVersion 14
-        targetSdkVersion 23
+        targetSdkVersion 25
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        externalNativeBuild {
+            cmake {
+                arguments '-DANDROID_TOOLCHAIN=clang'
+//                cppFlags "-fvisibility=hidden"
+            }
+        }
     }
     packagingOptions {
         exclude 'LICENSE.txt'
@@ -24,7 +30,40 @@ android {
     buildTypes {
         release {
             minifyEnabled false
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.txt'
+            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    externalNativeBuild {
+        cmake {
+            path "CMakeLists.txt"
+        }
+    }
+    productFlavors {
+        arm7 {
+            // in the future, ndk.abiFilter might also work
+            ndk {
+                abiFilter 'armeabi-v7a'
+            }
+        }
+        arm8 {
+            ndk {
+                abiFilters 'arm64-v8a'
+            }
+        }
+        arm {
+            ndk {
+                abiFilter 'armeabi'
+            }
+        }
+        mips {
+            ndk {
+                abiFilters 'mips', 'mips64'
+            }
+        }
+        all {
+            ndk {
+                abiFilters 'mips', 'mips64'
+            }
         }
     }
 }
@@ -35,19 +74,20 @@ dependencies {
     //compile 'com.github.bumptech.glide:volley-integration:1.3.1@aar'
     compile fileTree(include: ['*.jar'], dir: 'libs')
     // App's dependencies, including test
-    androidTestCompile 'com.android.support:support-annotations:23.1.0'
-    androidTestCompile 'junit:junit:4.12'
-    androidTestCompile 'com.android.support.test:runner:0.3'
-    androidTestCompile 'com.android.support.test.espresso:espresso-core:2.2'
-    androidTestCompile 'com.android.support.test:rules:0.3'
-    androidTestCompile 'com.android.support.test.espresso:espresso-intents:2.2'
+    compile 'com.airbnb.android:lottie:2.0.0-beta4'
+    androidTestCompile 'com.android.support.test.espresso:espresso-core:2.2.2'
+    androidTestCompile 'com.android.support.test:runner:0.5'
+    androidTestCompile 'com.android.support.test:rules:0.5'
+    androidTestCompile 'com.android.support.test.espresso:espresso-intents:2.2.2'
+    androidTestCompile 'com.android.support:support-annotations:25.3.1'
+    compile 'com.android.support:appcompat-v7:25.3.1'
+    compile 'com.android.support:design:25.3.1'
+    testCompile 'junit:junit:4.12'
     compile 'com.github.bumptech.glide:glide:3.6.1'
-    compile 'com.github.bumptech.glide:okhttp-integration:1.3.1@aar'
+    compile 'com.github.bumptech.glide:okhttp3-integration:1.4.0@aar'
     compile 'com.google.android.gms:play-services-gcm:9.4.0'
-    compile 'com.google.code.gson:gson:1.7.1'
-    compile 'com.squareup.okhttp:okhttp-android-support:2.4.0'
-    compile 'com.android.support:appcompat-v7:23.1.0'
-    compile 'com.android.support:design:23.1.0'
     compile 'com.appyvet:materialrangebar:1.3'
-    compile (name:'libBioMini',ext:'aar')
+    compile 'com.facebook.stetho:stetho:1.4.2'
+    compile 'com.facebook.stetho:stetho-okhttp3:1.4.2'
+    compile(name: 'libBioMini', ext: 'aar')
 }

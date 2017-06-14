@@ -24,9 +24,7 @@ import android.widget.ListView;
 
 import com.supremainc.biostar2.R;
 import com.supremainc.biostar2.adapter.base.BaseSmartCardLayoutAdapter;
-import com.supremainc.biostar2.adapter.base.BaseWiegandFormatAdapter;
-import com.supremainc.biostar2.sdk.datatype.v2.Card.SmartCardLayout;
-import com.supremainc.biostar2.sdk.datatype.v2.Card.WiegandFormat;
+import com.supremainc.biostar2.sdk.models.v2.card.SmartCardLayout;
 import com.supremainc.biostar2.widget.popup.Popup;
 
 import java.util.ArrayList;

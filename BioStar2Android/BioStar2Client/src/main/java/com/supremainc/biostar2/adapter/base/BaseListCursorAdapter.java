@@ -17,8 +17,6 @@ package com.supremainc.biostar2.adapter.base;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.DialogInterface;
-import android.content.DialogInterface.OnCancelListener;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.os.AsyncTask;
@@ -38,9 +36,7 @@ import com.orangegangsters.github.swipyrefreshlayout.library.SwipyRefreshLayoutD
 import com.supremainc.biostar2.BuildConfig;
 import com.supremainc.biostar2.R;
 import com.supremainc.biostar2.db.NotificationDBProvider;
-import com.supremainc.biostar2.sdk.datatype.v2.Login.PushNotification;
-import com.supremainc.biostar2.sdk.provider.CommonDataProvider;
-import com.supremainc.biostar2.widget.ScreenControl;
+import com.supremainc.biostar2.sdk.models.v2.login.PushNotification;
 import com.supremainc.biostar2.widget.popup.Popup;
 import com.supremainc.biostar2.widget.popup.ToastPopup;
 
@@ -59,13 +55,6 @@ public abstract class BaseListCursorAdapter<T> extends CursorAdapter implements 
     protected int mTotal = 0;
     protected OnItemsListener mOnItemsListener;
     protected int mDefaultSelectColor = Color.WHITE;
-    protected OnCancelListener mCancelExitListener = new OnCancelListener() {
-        @Override
-        public void onCancel(DialogInterface dialog) {
-            CommonDataProvider.getInstance(mContext).cancelAll(TAG);
-            ScreenControl.getInstance().backScreen();
-        }
-    };
     private NotificationDBProvider mDBProvider;
     private int mLastClickItemPosition = -1;
 
@@ -85,13 +74,6 @@ public abstract class BaseListCursorAdapter<T> extends CursorAdapter implements 
         listView.setAdapter(this);
         setOnItemClickListener(itemClickListener);
         mOnItemsListener = onItemsListener;
-    }
-
-    public void cacelRequest() {
-        if (BuildConfig.DEBUG) {
-            Log.e(TAG, "cancel SelectPopup Request");
-        }
-        CommonDataProvider.getInstance(mContext).cancelAll(TAG);
     }
 
     public boolean clearChoices() {

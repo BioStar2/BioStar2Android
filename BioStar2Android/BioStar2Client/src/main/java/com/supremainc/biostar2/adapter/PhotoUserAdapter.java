@@ -16,7 +16,6 @@
 package com.supremainc.biostar2.adapter;
 
 import android.app.Activity;
-import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -25,48 +24,62 @@ import android.widget.ImageView;
 import android.widget.ListView;
 
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.integration.okhttp.OkHttpUrlLoader;
+import com.bumptech.glide.integration.okhttp3.OkHttpUrlLoader;
 import com.bumptech.glide.load.model.GlideUrl;
 import com.supremainc.biostar2.R;
-import com.supremainc.biostar2.meta.Setting;
 import com.supremainc.biostar2.adapter.base.BaseListAdapter;
 import com.supremainc.biostar2.adapter.base.BaseUserAdapter;
 import com.supremainc.biostar2.datatype.GlidePhotoData;
-import com.supremainc.biostar2.provider.AppDataProvider;
-import com.supremainc.biostar2.sdk.datatype.v2.Common.VersionData;
-import com.supremainc.biostar2.sdk.datatype.v2.User.ListUser;
+import com.supremainc.biostar2.meta.Setting;
+import com.supremainc.biostar2.sdk.models.v2.user.ListUser;
 import com.supremainc.biostar2.sdk.provider.ConfigDataProvider;
+import com.supremainc.biostar2.sdk.provider.PermissionDataProvider;
 import com.supremainc.biostar2.view.StyledTextView;
 import com.supremainc.biostar2.widget.popup.Popup;
 
 import java.io.InputStream;
 import java.util.ArrayList;
 
+
+
 public class PhotoUserAdapter extends BaseUserAdapter {
     private OkHttpUrlLoader.Factory mFactory;
     private String mSubDomain;
-
+    private PermissionDataProvider mPermissionDataProvider;
+    private String mLoginedUserID;
 
     public PhotoUserAdapter(Activity context, ArrayList<ListUser> items, ListView listView, OnItemClickListener onItemClickListener, Popup popup, BaseListAdapter.OnItemsListener onUsersListener) {
         super(context, items, listView, onItemClickListener, popup, onUsersListener);
+        mPermissionDataProvider = PermissionDataProvider.getInstance(context);
+
         mSubDomain = ConfigDataProvider.getLatestDomain(context);
         if (mFactory == null) {
-            mFactory = new OkHttpUrlLoader.Factory(mUserDataProvider.getRequestQueue().getOkHttpClient());
+            mFactory = new OkHttpUrlLoader.Factory(mUserDataProvider.getOkHttpClient());
             Glide.get(mActivity).register(GlideUrl.class, InputStream.class,
                     mFactory);
         }
+        if (mPermissionDataProvider.getLoginUserInfo() == null) {
+            return;
+        }
+        mLoginedUserID = mPermissionDataProvider.getLoginUserInfo().user_id;
     }
 
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        ListUser user=null;
+        ListUser user = null;
         if (mItems != null) {
-            user =  mItems.get(position);
-        }
-        if (user != null && user.user_id.equals("1")) {
-            mListView.setItemChecked(position,false);
+            user = mItems.get(position);
         }
         ItemViewHolder viewHolder = (ItemViewHolder) view.getTag();
+        if (mListView.getChoiceMode() != ListView.CHOICE_MODE_NONE) {
+            if (mLoginedUserID == null) {
+                mLoginedUserID = mPermissionDataProvider.getLoginUserInfo().user_id;
+            }
+            if (!mPermissionDataProvider.isEnableModifyUser(user) || mLoginedUserID.equals(user.user_id)) {
+                mListView.setItemChecked(position, false);
+                return;
+            }
+        }
         setSelector(view, viewHolder.mLink, position);
         super.onItemClick(parent, view, position, id);
     }
@@ -82,6 +95,7 @@ public class PhotoUserAdapter extends BaseUserAdapter {
         } else {
             lastModify = user.last_modify;
         }
+
         getUserPhoto(mActivity, user.user_id, picture, R.drawable.user_06, Setting.USER_PROFILE_IMAGE_SIZE, lastModify);
     }
 
@@ -90,15 +104,20 @@ public class PhotoUserAdapter extends BaseUserAdapter {
             return;
         }
         if (mFactory == null) {
-            mFactory = new OkHttpUrlLoader.Factory(mUserDataProvider.getRequestQueue().getOkHttpClient());
+            mFactory = new OkHttpUrlLoader.Factory(mUserDataProvider.getOkHttpClient());
             Glide.get(mActivity).register(GlideUrl.class, InputStream.class,
                     mFactory);
         }
         String url = mUserDataProvider.getUserPhotoUrl(userID);
         if (url != null) {
-            new GlidePhotoData(activity, view, defaultResID, lastModify, maxSize, mSubDomain, url);
+            if (view.getTag() == null) {
+                new GlidePhotoData(activity, view, defaultResID, lastModify, maxSize, mSubDomain, url);
+            } else {
+                new GlidePhotoData(activity, view, lastModify, maxSize, mSubDomain, url);
+            }
         }
     }
+
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
@@ -123,7 +142,7 @@ public class PhotoUserAdapter extends BaseUserAdapter {
             if (user.pin_exist) {
                 vh.mPinImage.setVisibility(View.VISIBLE);
             } else {
-                vh.mPinImage.setVisibility(View.INVISIBLE);
+                vh.mPinImage.setVisibility(View.GONE);
             }
 
             if (user.photo_exist) {
@@ -141,13 +160,32 @@ public class PhotoUserAdapter extends BaseUserAdapter {
             // String sd = user.getStartDate(mActivity, DATE_TYPE.FORMAT_DATE);
             // String ed = user.getExpireDate(mActivity, DATE_TYPE.FORMAT_DATE);
             // date.setText(sd + " - " + ed);
-            if (VersionData.getCloudVersion(mActivity) < 2) {
-                vh.mFinger.setText(String.valueOf(user.fingerprint_count));
+            if (user.fingerprint_count > 0 || user.fingerprint_template_count > 0) {
+                vh.mFingerImage.setVisibility(View.VISIBLE);
             } else {
-                vh.mFinger.setText(String.valueOf(user.fingerprint_template_count));
+                vh.mFingerImage.setVisibility(View.GONE);
             }
-            vh.mCard.setText(String.valueOf(user.card_count));
+            if (user.card_count > 0) {
+                vh.mCardImage.setVisibility(View.VISIBLE);
+            } else {
+                vh.mCardImage.setVisibility(View.GONE);
+            }
+            if (user.face_template_count > 0) {
+                vh.mFaceImage.setVisibility(View.VISIBLE);
+            } else {
+                vh.mFaceImage.setVisibility(View.GONE);
+            }
             setSelector(vh.mRoot, vh.mLink, position);
+
+            if (mListView.getChoiceMode() != ListView.CHOICE_MODE_NONE) {
+                if (mLoginedUserID == null) {
+                    mLoginedUserID = mPermissionDataProvider.getLoginUserInfo().user_id;
+                }
+                if (!mPermissionDataProvider.isEnableModifyUser(user) || mLoginedUserID.equals(user.user_id)) {
+                    vh.mRoot.setBackgroundResource(R.drawable.selector_list_gray);
+                }
+            }
+
         }
         return convertView;
 
@@ -155,12 +193,13 @@ public class PhotoUserAdapter extends BaseUserAdapter {
 
     public class ItemViewHolder {
         public View mRoot;
-        public StyledTextView mCard;
         public StyledTextView mID;
-        public StyledTextView mFinger;
         public StyledTextView mName;
         public ImageView mPicture;
         public ImageView mPinImage;
+        public ImageView mFaceImage;
+        public ImageView mCardImage;
+        public ImageView mFingerImage;
         public ImageView mLink;
 
         public ItemViewHolder(View root) {
@@ -168,8 +207,9 @@ public class PhotoUserAdapter extends BaseUserAdapter {
             mPicture = (ImageView) root.findViewById(R.id.user_picture);
             mName = (StyledTextView) root.findViewById(R.id.user_name);
             mID = (StyledTextView) root.findViewById(R.id.user_id);
-            mFinger = (StyledTextView) root.findViewById(R.id.user_finger);
-            mCard = (StyledTextView) root.findViewById(R.id.user_card);
+            mFaceImage = (ImageView) root.findViewById(R.id.user_ic_face);
+            mCardImage = (ImageView) root.findViewById(R.id.user_ic_card);
+            mFingerImage = (ImageView) root.findViewById(R.id.user_ic_fingerprint);
             mPinImage = (ImageView) root.findViewById(R.id.user_ic_pin);
             mLink = (ImageView) root.findViewById(R.id.info);
         }

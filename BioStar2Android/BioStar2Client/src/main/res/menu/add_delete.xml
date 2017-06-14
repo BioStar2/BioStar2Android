@@ -1,5 +1,5 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
+      xmlns:app="http://schemas.android.com/apk/res-auto"
     >
 
     <item
@@ -7,12 +7,12 @@
         android:icon="@drawable/selector_btn_add"
         android:orderInCategory="100"
         android:title="@string/add"
-        app:showAsAction="always" />
+        app:showAsAction="always"/>
     <item
         android:id="@+id/action_delete"
         android:icon="@drawable/selector_btn_delete"
         android:orderInCategory="101"
         android:title="@string/delete"
-        app:showAsAction="always" />
+        app:showAsAction="always"/>
 
 </menu>

@@ -41,21 +41,27 @@ public class BioMiniTemplate {
     public byte[] getmImage() {
         return mImage;
     }
+
     public void setmImage(byte[] mImage) {
         this.mImage = mImage;
     }
+
     public byte[] getTemplate() {
         return mTemplate;
     }
-    public int[] getTemplateSize() {
-        return mTemplateSize;
-    }
-    public void setTemplateSize(int[] templateSize) {
-        this.mTemplateSize = templateSize;
-    }
+
     public void setTemplate(byte[] template) {
         this.mTemplate = template;
     }
+
+    public int[] getTemplateSize() {
+        return mTemplateSize;
+    }
+
+    public void setTemplateSize(int[] templateSize) {
+        this.mTemplateSize = templateSize;
+    }
+
     public int[] getQuality() {
         return mQuality;
     }

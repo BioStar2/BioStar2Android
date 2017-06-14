@@ -12,12 +12,13 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical">
+
         <com.supremainc.biostar2.view.DetailTextItemView
             android:id="@+id/card_type"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:index="@string/card_type"
-            app:link="true" />
+            app:link="true"/>
 
         <!-- csn,wiegand -->
         <com.supremainc.biostar2.view.DetailTextItemView
@@ -25,7 +26,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:index="@string/register_method"
-            app:link="true" />
+            app:link="true"/>
 
 
         <com.supremainc.biostar2.view.DetailTextItemView
@@ -33,7 +34,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:index="@string/device"
-            app:link="true" />
+            app:link="true"/>
 
         <!-- wiegand -->
         <com.supremainc.biostar2.view.DetailTextItemView
@@ -41,7 +42,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:index="@string/card_data_format"
-            app:link="false" />
+            app:link="false"/>
 
 
         <!-- smartcard -->
@@ -50,7 +51,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:index="@string/card_layout_format"
-            app:link="true" />
+            app:link="true"/>
 
         <!-- smartcard -->
         <com.supremainc.biostar2.view.DetailTextItemView
@@ -58,14 +59,14 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:index="@string/smartcard_type"
-            app:link="true" />
+            app:link="true"/>
 
         <com.supremainc.biostar2.view.DetailTextItemView
             android:id="@+id/card_action"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:index="@string/read_card"
-            app:link="true" />
+            app:link="true"/>
 
         <!-- info -->
         <com.supremainc.biostar2.view.StyledTextView
@@ -80,8 +81,7 @@
             android:text="@string/info"
             android:textColor="@color/user_total"
             android:textSize="14dp"
-            app:typeface="roboto_bold.ttf" />
-
+            app:typeface="roboto_bold.ttf"/>
 
 
         <com.supremainc.biostar2.view.DetailEditItemView
@@ -101,6 +101,7 @@
             app:index="@string/card_id"
             app:inputType="numberDecimal"
             />
+
         <com.supremainc.biostar2.view.DetailEditItemView
             android:id="@+id/wigand_card_id2"
             android:layout_width="match_parent"
@@ -109,6 +110,7 @@
             app:index="@string/card_id"
             app:inputType="numberDecimal"
             />
+
         <com.supremainc.biostar2.view.DetailEditItemView
             android:id="@+id/wigand_card_id3"
             android:layout_width="match_parent"
@@ -117,6 +119,7 @@
             app:index="@string/card_id"
             app:inputType="numberDecimal"
             />
+
         <com.supremainc.biostar2.view.DetailEditItemView
             android:id="@+id/wigand_card_id4"
             android:layout_width="match_parent"
@@ -131,7 +134,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:index="@string/fingerprint"
-            app:link="true" />
+            app:link="true"/>
 
         <!-- smartcard -->
         <com.supremainc.biostar2.view.DetailTextItemView
@@ -139,7 +142,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:index="@string/pin_upper"
-            app:link="false" />
+            app:link="false"/>
 
         <!-- smartcard -->
         <com.supremainc.biostar2.view.DetailTextItemView
@@ -147,7 +150,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:index="@string/access_group"
-            app:link="false" />
+            app:link="false"/>
 
         <!-- smartcard -->
         <com.supremainc.biostar2.view.DetailTextItemView
@@ -155,10 +158,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:index="@string/period"
-            app:link="false" />
-
-
-
+            app:link="false"/>
 
 
     </LinearLayout>

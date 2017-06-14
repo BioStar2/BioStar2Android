@@ -3,33 +3,33 @@
 
     <declare-styleable name="DetailtemView">
         <attr name="inputType">
-            <enum name="textPersonName" value="0" />
-            <enum name="textEmailAddress" value="1" />
-            <enum name="numberDecimal" value="2" />
-            <enum name="textPassword" value="3" />
-            <enum name="phone" value="4" />
+            <enum name="textPersonName" value="0"/>
+            <enum name="textEmailAddress" value="1"/>
+            <enum name="numberDecimal" value="2"/>
+            <enum name="textPassword" value="3"/>
+            <enum name="phone" value="4"/>
         </attr>
-        <attr name="index" format="string" />
-        <attr name="edit" format="boolean" />
-        <attr name="link" format="boolean" />
+        <attr name="index" format="string"/>
+        <attr name="edit" format="boolean"/>
+        <attr name="link" format="boolean"/>
     </declare-styleable>
     <declare-styleable name="StyledTextView">
-        <attr name="typeface" format="string" />
+        <attr name="typeface" format="string"/>
     </declare-styleable>
     <declare-styleable name="StyledTextViewEx">
         <attr name="theme_color">
             <!-- the switch moves only on the x-axis(horizontally) -->
-            <enum name="dark" value="1" />
+            <enum name="dark" value="1"/>
             <!-- the switch moves only on the y-axis(vertically) -->
-            <enum name="light" value="2" />
+            <enum name="light" value="2"/>
         </attr>
     </declare-styleable>
 
     <declare-styleable name="SwipyRefreshLayout">
         <attr name="direction">
-            <enum name="top" value="0" />
-            <enum name="bottom" value="1" />
-            <enum name="both" value="2" />
+            <enum name="top" value="0"/>
+            <enum name="bottom" value="1"/>
+            <enum name="both" value="2"/>
         </attr>
     </declare-styleable>
 </resources>

@@ -36,18 +36,16 @@ import android.widget.ListView;
 
 import com.supremainc.biostar2.BuildConfig;
 import com.supremainc.biostar2.R;
-import com.supremainc.biostar2.meta.Setting;
 import com.supremainc.biostar2.adapter.AlarmAdapter;
 import com.supremainc.biostar2.adapter.base.BaseListCursorAdapter.OnGetCheckedItem;
 import com.supremainc.biostar2.adapter.base.BaseListCursorAdapter.OnItemsListener;
-import com.supremainc.biostar2.db.NotificationDBProvider;
 import com.supremainc.biostar2.db.NotificationDBProvider.OnTaskFinish;
-import com.supremainc.biostar2.sdk.datatype.v2.Device.BaseDevice;
-import com.supremainc.biostar2.sdk.datatype.v2.Door.BaseDoor;
-import com.supremainc.biostar2.sdk.datatype.v2.Login.NotificationType;
-import com.supremainc.biostar2.sdk.datatype.v2.Login.PushNotification;
-import com.supremainc.biostar2.sdk.datatype.v2.Permission.PermissionModule;
-import com.supremainc.biostar2.sdk.datatype.v2.User.BaseUser;
+import com.supremainc.biostar2.meta.Setting;
+import com.supremainc.biostar2.sdk.models.v2.device.BaseDevice;
+import com.supremainc.biostar2.sdk.models.v2.door.BaseDoor;
+import com.supremainc.biostar2.sdk.models.v2.login.NotificationType;
+import com.supremainc.biostar2.sdk.models.v2.login.PushNotification;
+import com.supremainc.biostar2.sdk.models.v2.user.BaseUser;
 import com.supremainc.biostar2.view.SubToolbar;
 import com.supremainc.biostar2.widget.ScreenControl;
 import com.supremainc.biostar2.widget.ScreenControl.ScreenType;
@@ -61,12 +59,11 @@ public class AlarmListFragment extends BaseFragment {
     protected static final int MODE_DELETE = 1;
     private AlarmAdapter mAlarmAdapter;
     private SubToolbar mSubToolbar;
-    private NotificationDBProvider mNotificationDBProvider;
     private int mTotal = 0;
     private OnTaskFinish mOnTaskFinish = new OnTaskFinish() {
         @Override
         public void onDeleteFinish(int count) {
-            if (isInValidCheck(null)) {
+            if (isInValidCheck()) {
                 return;
             }
             refresh();
@@ -77,7 +74,7 @@ public class AlarmListFragment extends BaseFragment {
     private OnGetCheckedItem mOnGetCheckedItemIds = new OnGetCheckedItem() {
         @Override
         public void onReceive(ArrayList<Integer> selectedItem) {
-            if (isInValidCheck(null)) {
+            if (isInValidCheck()) {
                 return;
             }
             if (selectedItem != null) {
@@ -95,7 +92,13 @@ public class AlarmListFragment extends BaseFragment {
             }
             if (mSubMode == MODE_DELETE) {
                 mSubToolbar.setSelectAllViewOff();
-                mSubToolbar.setSelectedCount(mAlarmAdapter.getCheckedItemCount());
+                int count = mAlarmAdapter.getCheckedItemCount();
+                mSubToolbar.setSelectedCount(count);
+                if (count == mTotal) {
+                    if (!mSubToolbar.getSelectAll()) {
+                        mSubToolbar.showReverseSelectAll();
+                    }
+                }
             } else {
                 ScreenControl screenControl = ScreenControl.getInstance();
                 Bundle bundle = new Bundle();
@@ -119,7 +122,7 @@ public class AlarmListFragment extends BaseFragment {
     private OnItemsListener mOnItemsListener = new OnItemsListener() {
         @Override
         public void onSuccessNull() {
-            if (mTotal == 0 ) {
+            if (mTotal == 0) {
                 mToastPopup.show(getString(R.string.none_data), null);
             }
             mIsDataReceived = true;
@@ -182,17 +185,14 @@ public class AlarmListFragment extends BaseFragment {
     }
 
     private void initValue() {
-        if (mNotificationDBProvider == null) {
-            mNotificationDBProvider = NotificationDBProvider.getInstance(mContext.getApplicationContext());
-        }
         if (mSubToolbar == null) {
             mSubToolbar = (SubToolbar) mRootView.findViewById(R.id.subtoolbar);
-            mSubToolbar.init(mSubToolBarEvent,getActivity());
+            mSubToolbar.init(mSubToolBarEvent, getActivity());
             mSubToolbar.setVisibleSearch(false, null);
             mSubToolbar.showMultipleSelectInfo(false, 0);
         }
         if (mAlarmAdapter == null) {
-            mAlarmAdapter = new AlarmAdapter(mContext, getListView(), mOnItemClickListener, mPopup, mOnItemsListener);
+            mAlarmAdapter = new AlarmAdapter(mActivity, getListView(), mOnItemClickListener, mPopup, mOnItemsListener);
             mAlarmAdapter.setSwipyRefreshLayout(getSwipeyLayout(), getFab());
         }
     }
@@ -292,13 +292,13 @@ public class AlarmListFragment extends BaseFragment {
                                 noti.device = new BaseDevice();
                                 noti.device.id = "302039949";
                                 noti.device.name = "testDevice";
-                                noti.request_timestamp = mTimeConvertProvider.convertCalendarToServerTime(Calendar.getInstance(), true);
+                                noti.request_timestamp = mDateTimeDataProvider.convertCalendarToServerTime(Calendar.getInstance(), true);
                                 mNotificationDBProvider.insert(noti);
                             }
                             if (BuildConfig.DEBUG) {
                                 Log.i(TAG, "end IS_FAKE_PUSH_DATA:" + ((System.currentTimeMillis() - start) / 1000));
                             }
-                            mContext.runOnUiThread(new Runnable() {
+                            mActivity.runOnUiThread(new Runnable() {
                                 @Override
                                 public void run() {
                                     if (mAlarmAdapter != null) {
@@ -392,7 +392,7 @@ public class AlarmListFragment extends BaseFragment {
     @Override
     public void onPrepareOptionsMenu(Menu menu) {
         menu.clear();
-        MenuInflater inflater = mContext.getMenuInflater();
+        MenuInflater inflater = mActivity.getMenuInflater();
 
         switch (mSubMode) {
             default:

@@ -14,12 +14,12 @@
 package com.supremainc.biostar2.view;
 
 import android.content.Context;
+import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.AttributeSet;
 import android.util.SparseArray;
 import android.view.LayoutInflater;
 import android.widget.LinearLayout;
-import android.os.Parcel;
 
 public class BaseView extends LinearLayout {
     protected Context mContext;
@@ -85,6 +85,21 @@ public class BaseView extends LinearLayout {
     }
 
     static class CustomSavedState extends BaseSavedState {
+        public static final ClassLoaderCreator<CustomSavedState> CREATOR = new ClassLoaderCreator<CustomSavedState>() {
+            @Override
+            public CustomSavedState createFromParcel(Parcel source, ClassLoader loader) {
+                return new CustomSavedState(source, loader);
+            }
+
+            @Override
+            public CustomSavedState createFromParcel(Parcel source) {
+                return createFromParcel(null);
+            }
+
+            public CustomSavedState[] newArray(int count) {
+                return new CustomSavedState[count];
+            }
+        };
         public SparseArray childStates;
 
         CustomSavedState(Parcelable superState) {
@@ -101,21 +116,5 @@ public class BaseView extends LinearLayout {
             super.writeToParcel(write, flags);
             write.writeSparseArray(childStates);
         }
-
-        public static final ClassLoaderCreator<CustomSavedState> CREATOR = new ClassLoaderCreator<CustomSavedState>() {
-            @Override
-            public CustomSavedState createFromParcel(Parcel source, ClassLoader loader) {
-                return new CustomSavedState(source, loader);
-            }
-
-            @Override
-            public CustomSavedState createFromParcel(Parcel source) {
-                return createFromParcel(null);
-            }
-
-            public CustomSavedState[] newArray(int count) {
-                return new CustomSavedState[count];
-            }
-        };
     }
 }

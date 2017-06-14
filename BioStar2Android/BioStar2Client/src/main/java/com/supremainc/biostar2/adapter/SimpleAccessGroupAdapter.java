@@ -25,7 +25,7 @@ import android.widget.ListView;
 import com.supremainc.biostar2.R;
 import com.supremainc.biostar2.adapter.base.BaseAccessGroupAdapter;
 import com.supremainc.biostar2.adapter.base.BaseListAdapter;
-import com.supremainc.biostar2.sdk.datatype.v2.AccessControl.ListAccessGroup;
+import com.supremainc.biostar2.sdk.models.v2.accesscontrol.ListAccessGroup;
 import com.supremainc.biostar2.widget.popup.Popup;
 
 import java.util.ArrayList;

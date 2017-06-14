@@ -1,10 +1,10 @@
 <!-- <~SCREEN NAME)> {Popup} </~SCREEN NAME> -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:androidfont="http://schemas.android.com/apk/res-auto"
-    android:layout_width="match_parent"
-    android:layout_height="wrap_content"
-    android:gravity="center"
-    android:orientation="vertical">
+              xmlns:androidfont="http://schemas.android.com/apk/res-auto"
+              android:layout_width="match_parent"
+              android:layout_height="wrap_content"
+              android:gravity="center"
+              android:orientation="vertical">
 
     <LinearLayout
         android:id="@+id/popup_bg"
@@ -30,7 +30,7 @@
             android:contentDescription="@string/image"
             android:gravity="center_vertical|left"
             android:scaleType="fitXY"
-            android:src="@drawable/toast_popup7" />
+            android:src="@drawable/toast_popup7"/>
 
         <LinearLayout
             android:layout_width="0dp"
@@ -46,19 +46,21 @@
                 android:id="@+id/popup_title"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginRight="5dp"
                 android:gravity="left|center"
                 android:textColor="@color/white"
                 android:textSize="16dp"
-                androidfont:typeface="roboto_bold.ttf" />
+                androidfont:typeface="roboto_bold.ttf"/>
 
             <com.supremainc.biostar2.view.StyledTextView
                 android:id="@+id/popup_content"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:layout_marginRight="5dp"
                 android:gravity="left|center"
                 android:textColor="@color/white"
                 android:textSize="13.33dp"
-                androidfont:typeface="roboto_bold.ttf" />
+                androidfont:typeface="roboto_bold.ttf"/>
         </LinearLayout>
     </LinearLayout>
 

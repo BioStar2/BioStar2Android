@@ -67,6 +67,8 @@ public class DetailSwitchItemView extends BaseView {
             if (!TextUtils.isEmpty(index)) {
                 mIndex.setText(index);
             }
+            enableEdit(arr.getBoolean(R.styleable.DetailtemView_edit, false));
+            arr.recycle();
         }
     }
 

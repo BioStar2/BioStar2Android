@@ -15,49 +15,97 @@
  */
 package com.supremainc.biostar2.provider;
 
+
 import android.content.Context;
 
-import com.supremainc.biostar2.datatype.MobileCardData;
-import com.supremainc.biostar2.sdk.datatype.v2.AccessControl.ListAccessGroup;
-import com.supremainc.biostar2.sdk.datatype.v2.User.User;
-import com.supremainc.biostar2.sdk.provider.BaseDataProvider;
-import com.supremainc.biostar2.sdk.provider.NetWork;
-import com.supremainc.biostar2.sdk.provider.TimeConvertProvider;
-import com.supremainc.biostar2.sdk.volley.Request;
-import com.supremainc.biostar2.sdk.volley.Response;
+import com.supremainc.biostar2.sdk.models.v2.card.MobileCard;
+import com.supremainc.biostar2.sdk.models.v2.card.MobileCardRaw;
+import com.supremainc.biostar2.sdk.models.v2.card.MobileCards;
+import com.supremainc.biostar2.sdk.provider.UserDataProvider;
+
+import java.security.KeyStore;
+import java.security.PrivateKey;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
 
 
-import java.util.ArrayList;
+// contact to ts team
+public class MobileCardDataProvider {
+    private final static String TAG = "MobileCardDataProvider";
+    private static final byte[] FAIL = {(byte) 0x6F, (byte) 0x00};
+    private static KeyStore.PrivateKeyEntry mPrivateKeyEntry;
 
-
-public class MobileCardDataProvider extends BaseDataProvider {
-    private static MobileCardDataProvider mSelf = null;
-
-    private MobileCardDataProvider(Context context) {
-        super(context);
+    static {
+        System.loadLibrary("native-lib");
     }
 
-    public static MobileCardDataProvider getInstance(Context context) {
-        if (mSelf == null) {
-            mSelf = new MobileCardDataProvider(context);
-        }
-        return mSelf;
+    private native byte[] nProcessCommandApduNFC(byte[] cmd, Context context, PrivateKey privateKey);
+
+
+    public boolean setCard(String key, String data, Context context) {
+        return false;
     }
 
-    public static MobileCardDataProvider getInstance() {
-        if (mSelf != null) {
-            return mSelf;
-        }
-        if (mContext != null) {
-            mSelf = new MobileCardDataProvider(mContext);
-            return mSelf;
-        }
-        return null;
+    public byte[] processCommandApduNFC(byte[] cmd, Context context) {
+        return FAIL;
     }
 
-    public void getServerMobileCard(String tag, Response.Listener<MobileCardData.MobileCards> listener,
-                                    Response.ErrorListener errorListener,String userID, Object deliverParam) {
-        String url  = createUrl(NetWork.PARAM_USERS,userID,NetWork.PARAM_CARDS_MOBILE_CREDENTIAL);
-        sendRequest(tag, MobileCardData.MobileCards.class, Request.Method.GET, url, null, null, null, listener, errorListener, deliverParam);
+    public byte[] processCommandApduBLE(byte[] cmd, Context context) {
+        return FAIL;
+    }
+
+    private boolean getPrivateKey(Context context) {
+        return false;
+    }
+
+    public boolean createNewKey(Context context) {
+        return false;
+    }
+
+    public boolean deleteCard(Context context) {
+        return false;
+    }
+
+    public CARD_VERIFY Verify(Context context) {
+        return CARD_VERIFY.INVALID;
+    }
+
+    public void registerMobileCard(Context context, String cardID, Callback<MobileCardRaw> callback) {
+        if (context == null || cardID == null) {
+            return ;
+        }
+        UserDataProvider userDataProvider = UserDataProvider.getInstance(context);
+        userDataProvider.registerMobileCard(cardID, callback);
+    }
+
+    public void getMobileCards(final Context context, final Callback<MobileCards> callback) {
+        UserDataProvider userDataProvider = UserDataProvider.getInstance(context);
+        userDataProvider.getMobileCards(new Callback<MobileCards>() {
+            @Override
+            public void onResponse(Call<MobileCards> call, Response<MobileCards> response) {
+                if (!call.isCanceled() && response.isSuccessful() && response.body() != null) {
+                    MobileCards cards = response.body();
+                    if (cards.records != null && cards.records.size() > 0) {
+                        MobileCard card = cards.records.get(0);
+                    }
+                }
+                if (callback != null) {
+                    callback.onResponse(call, response);
+                }
+            }
+
+            @Override
+            public void onFailure(Call<MobileCards> call, Throwable t) {
+                if (callback != null) {
+                    callback.onFailure(call, t);
+                }
+            }
+        });
+    }
+
+    public enum CARD_VERIFY {
+        VALID, INVALID, NONE
     }
 }
