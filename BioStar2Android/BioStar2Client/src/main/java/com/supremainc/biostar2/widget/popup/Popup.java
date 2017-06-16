@@ -243,6 +243,7 @@ public class Popup {
                 break;
             case CARD_CONFIRM:
                 isRunHeight = false;
+                break;
             case NONE:
                 popupType.setVisibility(View.GONE);
                 break;

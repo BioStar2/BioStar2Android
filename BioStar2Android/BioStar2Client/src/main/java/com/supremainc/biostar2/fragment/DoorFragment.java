@@ -207,9 +207,9 @@ public class DoorFragment extends BaseFragment {
             mListData = new ArrayList<DoorDetailData.DoorDetail>();
         } else {
             mListData.clear();
-            if (mDetailAdapter != null) {
-                mDetailAdapter.notifyDataSetChanged();
-            }
+        }
+        if (mDetailAdapter != null) {
+            mDetailAdapter.notifyDataSetChanged();
         }
         if (mDetailAdapter == null) {
             mDetailAdapter = new DetailAdapter(mActivity, null, getListView(), null, mPopup, null);

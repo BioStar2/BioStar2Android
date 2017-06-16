@@ -291,9 +291,9 @@ public class CardFragment extends BaseFragment {
                         }
                         if (mSubMode == MODE_DELETE) {
                             mSubToolbar.setSelectAllViewOff();
-                            int count = mItemAdapter.getCheckedItemCount();
+                            int count = mOldItemAdapter.getCheckedItemCount();
                             mSubToolbar.setSelectedCount(count);
-                            if (count == mItemAdapter.getCount()) {
+                            if (count == mOldItemAdapter.getCount()) {
                                 if (!mSubToolbar.getSelectAll()) {
                                     mSubToolbar.showReverseSelectAll();
                                 }

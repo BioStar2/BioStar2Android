@@ -215,44 +215,60 @@ public class UserListFragment extends BaseFragment {
         TAG = getClass().getSimpleName() + String.valueOf(System.currentTimeMillis());
     }
 
+    private void selectUserGroups() {
+        mSelectUserGroupsPopup.show(SelectType.USER_GROUPS, new OnSelectResultListener<UserGroup>() {
+            @Override
+            public void OnResult(ArrayList<UserGroup> selectedItem, boolean isPositive) {
+                if (isInValidCheck()) {
+                    return;
+                }
+                if (selectedItem == null) {
+                    return;
+                }
+                Bundle bundle = new Bundle();
+                bundle.putSerializable(UserGroup.TAG, selectedItem.get(0));
+                mScreenControl.addScreen(ScreenType.USER_MODIFY, bundle);
+            }
+        }, null, getString(R.string.select_user_group), false, true);
+    }
+
+    private void launchDefaultUserGroup() {
+        UserGroup userGroup = new UserGroup(getString(R.string.all_users), "1");
+        Bundle bundle = new Bundle();
+        bundle.putSerializable(UserGroup.TAG, userGroup);
+        mScreenControl.addScreen(ScreenType.USER_MODIFY, bundle);
+    }
+
     private void addUser() {
         UserGroup userGroup = null;
+        if (VersionData.getCloudVersion(mActivity) < 2) {
+            launchDefaultUserGroup();
+            return;
+        }
         if (mUserGroup == null) {
-            ArrayList<String> list = mPermissionDataProvider.getDefaultAllowUserGroupSize();
+             ArrayList<String> list = mPermissionDataProvider.getDefaultAllowUserGroupSize();
+            if (list == null || list.size() < 1) {
+                selectUserGroups();
+                return;
+            }
             for (String groupID : list) {
                 if (groupID.equals("1")) {
-                    userGroup = new UserGroup(getString(R.string.all_users), "1");
-                    Bundle bundle = new Bundle();
-                    bundle.putSerializable(UserGroup.TAG, userGroup);
-                    mScreenControl.addScreen(ScreenType.USER_MODIFY, bundle);
+                    launchDefaultUserGroup();
                     return;
                 }
             }
             if (list.size() == 1) {
                 mPopup.showWait(mCancelExitListener);
-                request(mUserDataProvider.getUserGroups( 0, 1, null, mUserGroupsListener));
+                request(mUserDataProvider.getUserGroups(0, 1, null, mUserGroupsListener));
                 return;
             }
-            mSelectUserGroupsPopup.show(SelectType.USER_GROUPS, new OnSelectResultListener<UserGroup>() {
-                @Override
-                public void OnResult(ArrayList<UserGroup> selectedItem, boolean isPositive) {
-                    if (isInValidCheck()) {
-                        return;
-                    }
-                    if (selectedItem == null) {
-                        return;
-                    }
-                    Bundle bundle = new Bundle();
-                    bundle.putSerializable(UserGroup.TAG, selectedItem.get(0));
-                    mScreenControl.addScreen(ScreenType.USER_MODIFY, bundle);
-                }
-            }, null, getString(R.string.select_user_group), false, true);
+            selectUserGroups();
         } else {
             try {
                 userGroup = mUserGroup.clone();
             } catch (CloneNotSupportedException e) {
-                Log.e(TAG, "selected user clone fail");
-                e.printStackTrace();
+                launchDefaultUserGroup();
+                return;
             }
             Bundle bundle = new Bundle();
             bundle.putSerializable(UserGroup.TAG, userGroup);

@@ -254,6 +254,9 @@ public class AlarmFragment extends BaseFragment {
         } else {
             mListData.clear();
         }
+        if (mDetailAdapter != null) {
+            mDetailAdapter.notifyDataSetChanged();
+        }
         if (mPushData == null || TextUtils.isEmpty(mPushData.code)) {
             return false;
         }

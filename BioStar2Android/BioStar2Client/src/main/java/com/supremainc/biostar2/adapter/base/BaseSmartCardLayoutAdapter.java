@@ -35,7 +35,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 
 public abstract class BaseSmartCardLayoutAdapter extends BaseListAdapter<SmartCardLayout> {
-    protected static final int FIRST_LIMIT = 5000;
+    protected static final int FIRST_LIMIT = 100;
     protected CardDataProvider mCardDataProvider;
     protected boolean mIsLastItemVisible = false;
     protected int mLimit = FIRST_LIMIT;

@@ -129,6 +129,11 @@ public abstract class BaseUserGroupAdapter extends BaseListAdapter<UserGroup> {
         mListView.removeCallbacks(mRunGetItems);
         clearRequest();
         showWait(SwipyRefreshLayoutDirection.TOP);
+
+        if (mItems != null) {
+            mItems.clear();
+            notifyDataSetChanged();
+        }
         mHandler.postDelayed(mRunGetItems, 100);
     }
 }
