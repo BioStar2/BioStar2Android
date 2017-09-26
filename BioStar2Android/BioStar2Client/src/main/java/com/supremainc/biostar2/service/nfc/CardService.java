@@ -7,7 +7,6 @@ import android.nfc.cardemulation.HostApduService;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.support.v4.content.LocalBroadcastManager;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -24,13 +23,13 @@ public class CardService extends HostApduService {
     private static Context mContext;
     private static Toast mToast;
     private Handler mHandler;
-    private Runnable mBleToastRunnable = new Runnable() {
+    private Runnable mRunnableGuide = new Runnable() {
         @Override
         public void run() {
             if (mToast == null) {
-                mToast = Toast.makeText(mContext, mContext.getString(R.string.ble_on_guide), Toast.LENGTH_LONG);
+                mToast = Toast.makeText(mContext, mContext.getString(R.string.nfc_on_guide), Toast.LENGTH_LONG);
             } else {
-                mToast.setText(mContext.getString(R.string.ble_on_guide));
+                mToast.setText(mContext.getString(R.string.nfc_on_guide));
             }
             mToast.show();
         }
@@ -77,25 +76,6 @@ public class CardService extends HostApduService {
         if (BuildConfig.DEBUG) {
             Log.e(TAG, "!!!! Received APDU: " + ByteArrayToHexString(commandApdu));
         }
-        KeyguardManager keyguardManager = (KeyguardManager) getSystemService(KEYGUARD_SERVICE);
-
-        if (keyguardManager.inKeyguardRestrictedInputMode()) {
-            if (BuildConfig.DEBUG) {
-                Log.e(TAG, "Screen Lock");
-            }
-            return UNKNOWN_CMD_SW;
-        }
-        if (!Setting.IS_AT_THE_SAME_BLE_NFC) {
-            if (!AppDataProvider.getInstance(getApplicationContext()).getBoolean(AppDataProvider.BooleanType.MOBILE_CARD_NFC)) {
-                if (mHandler == null) {
-                    mHandler = new Handler(Looper.getMainLooper());
-                }
-                if (mHandler != null) {
-                    mHandler.post(mBleToastRunnable);
-                }
-                return UNKNOWN_CMD_SW;
-            }
-        }
 
         if (mCardService == null) {
             mCardService = new MobileCardDataProvider();
@@ -103,9 +83,29 @@ public class CardService extends HostApduService {
         if (mContext == null) {
             mContext = getApplicationContext();
         }
+
+        if (!AppDataProvider.getInstance(getApplicationContext()).getBoolean(AppDataProvider.BooleanType.INDEPENDENT_SCREEN_LOCK,true)) {
+            KeyguardManager keyguardManager = (KeyguardManager) getSystemService(KEYGUARD_SERVICE);
+            if (keyguardManager.inKeyguardRestrictedInputMode()) {
+                if (BuildConfig.DEBUG) {
+                    Log.e(TAG, "Screen Lock");
+                }
+                return UNKNOWN_CMD_SW;
+            }
+        }
+        if (!AppDataProvider.getInstance(getApplicationContext()).getBoolean(AppDataProvider.BooleanType.MOBILE_CARD_NFC,true)) {
+            if (mHandler == null) {
+                mHandler = new Handler(Looper.getMainLooper());
+            }
+            if (mHandler != null) {
+                mHandler.post(mRunnableGuide);
+            }
+            return UNKNOWN_CMD_SW;
+        }
+
         if (commandApdu.length > 3 && commandApdu[0] == (byte)0x00 && commandApdu[1] ==  (byte)0x84 && commandApdu[2] ==  (byte)0x00 && commandApdu[3] ==  (byte)0x00) {
             Intent intent = new Intent(Setting.BROADCAST_NFC_CONNECT);
-            LocalBroadcastManager.getInstance(getApplicationContext()).sendBroadcast(intent);
+            getApplicationContext().sendBroadcast(intent);
         }
         byte[] ret = mCardService.processCommandApduNFC(commandApdu, mContext);
 

@@ -53,6 +53,7 @@ public class GooglePush {
     public void checkNotification() {
         String regID = getRegistrationId();
         if (TextUtils.isEmpty(regID)) {
+            registerInBackground();
             return;
         }
         mPushDataProvider.checkUpdateNotificationToken(regID);

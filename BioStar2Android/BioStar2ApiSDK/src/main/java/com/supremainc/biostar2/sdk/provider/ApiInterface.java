@@ -147,7 +147,7 @@ public interface ApiInterface {
     Call<Devices> get_devices(@Path("cloudVersion") String cloudVersion,@QueryMap Map<String, String> params);
     @GET("{cloudVersion}/devices/{id}")
     Call<Device> get_devices(@Path("cloudVersion") String cloudVersion, @Path("id") String id);
-    @GET("{cloudVersion}/device_types")
+    @GET("{cloudVersion}/devices/types")
     Call<DeviceTypes> get_devices_type(@Path("cloudVersion") String cloudVersion);
     @POST("{cloudVersion}/devices/{id}/scan_fingerprint")
     Call<ScanFingerprintTemplate> post_scan_fingerprint(@Path("cloudVersion") String cloudVersion, @Path("id") String id, @Body JsonObject body);

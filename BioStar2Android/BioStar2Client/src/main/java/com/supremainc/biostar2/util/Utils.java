@@ -43,7 +43,6 @@ public class Utils {
         for (int i = 0; i < buf.length; i++) {
             sb.append(Integer.toHexString(0x0100 + (buf[i] & 0x00FF)).substring(1));
         }
-        Log.e(TAG, index + " :" + sb.toString());
     }
 
     public static void toHexString(String index, byte buf[]) {
@@ -51,7 +50,6 @@ public class Utils {
         for (int i = 0; i < buf.length; i++) {
             sb.append(Integer.toHexString(0x0100 + (buf[i] & 0x00FF)).substring(1));
         }
-        Log.e(TAG, index + sb.toString());
     }
 
     public static void Log(String tt) {

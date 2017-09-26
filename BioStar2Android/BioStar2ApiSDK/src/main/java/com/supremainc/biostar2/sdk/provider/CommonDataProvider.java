@@ -22,6 +22,7 @@ import android.os.AsyncTask;
 import android.os.SystemClock;
 import android.util.Log;
 
+import com.supremainc.biostar2.sdk.BuildConfig;
 import com.supremainc.biostar2.sdk.models.enumtype.LocalStorage;
 import com.supremainc.biostar2.sdk.models.v1.permission.CloudPermission;
 import com.supremainc.biostar2.sdk.models.v2.common.BioStarSetting;
@@ -78,32 +79,16 @@ public class CommonDataProvider extends BaseDataProvider{
             @Override
             public void onResponse(Call<VersionData> call, Response<VersionData> response) {
                 VersionData versionData = response.body();
-                if (response.isSuccessful() && versionData != null) {
-                    if (!versionData.init(mContext)) {
-                        onFailure(call,new Throwable("BioStar Server Version String Invalid"));
-                        return;
-                    }
-                    if (callback != null) {
-                        callback.onResponse(call,response);
-                    }
-                } else {
-                    if (!call.isCanceled()) {
-                        removeCookie();
-                    }
-                    ResponseBody body = response.errorBody();
-                    if (body == null) {
-                        onFailure(call,new Throwable("Request Fail:"+response.code()));
-                    } else {
-                        String error = "";
-                        try {
-                            ResponseStatus responseClass = (ResponseStatus) mGson.fromJson(body.string(), ResponseStatus.class);
-                            error = responseClass.message;
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-                        //mGson.convert = 에러 변환 메세지 넣어서준다. 401이면 removeCookie
-                        onFailure(call,new Throwable(error+"\n"+"code: "+response.code()));
-                    }
+                if (!response.isSuccessful() || versionData == null) {
+                    versionData = new VersionData();
+                    versionData.biostar_ac_version = "2.3.0";
+                }
+                if (!versionData.init(mContext)) {
+                    onFailure(call,new Throwable("BioStar Server Version Invalid"));
+                    return;
+                }
+                if (callback != null) {
+                    callback.onResponse(call,response);
                 }
             }
 
@@ -130,13 +115,12 @@ public class CommonDataProvider extends BaseDataProvider{
             }
             return false;
         }
-        if (mApiInterface == null) {
-            init(mContext);
-        }
-        removeCookie();
+
         setLocalStorage(LocalStorage.DOMAIN,domain);
         setLocalStorage(LocalStorage.SUBDOMAIN,login.name);
         setLocalStorage(LocalStorage.USER_LOGIN_ID,login.user_id);
+        init(mContext);
+        removeCookie();
         Callback<VersionData> innerCallback = new Callback<VersionData>() {
             @Override
             public void onResponse(Call<VersionData> call, Response<VersionData> response) {
@@ -153,16 +137,22 @@ public class CommonDataProvider extends BaseDataProvider{
                         } else {
                             removeCookie();
                             ResponseBody body = response.errorBody();
-                            String error = "Login Failed";
-                            if (body != null) {
+                            if (body == null) {
+                                onFailure(call,new Throwable("\n\n\n\n\n\n\n\n\n\n"+"\nhcode:"+response.code()));
+                            } else {
+                                String error = "";
                                 try {
                                     ResponseStatus responseClass = (ResponseStatus) mGson.fromJson(body.string(), ResponseStatus.class);
-                                    error = responseClass.message;
+                                    error = responseClass.message + "\n\n\n\n\n\n\n\n\n\n"+"\n"+"scode: "+responseClass.status_code+"\nhcode:"+response.code();
                                 } catch (Exception e) {
-                                    e.printStackTrace();
+                                    if (BuildConfig.DEBUG) {
+                                        Log.e(TAG,"e:"+e.getMessage());
+                                    }
+                                    error = "\n\n\n\n\n\n\n\n\n\n"+"\nhcode:"+response.code();
                                 }
+                                //onFailure(call,new Throwable(error));
+                                onFailure(call,new Throwable(error));
                             }
-                            onFailure(call,new Throwable(error+"\n"+"code: "+response.code()));
                         }
                     }
 
@@ -217,17 +207,20 @@ public class CommonDataProvider extends BaseDataProvider{
                     }
                     ResponseBody body = response.errorBody();
                     if (body == null) {
-                        onFailure(call,new Throwable("\nhcode:"+response.code()));
+                        onFailure(call,new Throwable("\n\n\n\n\n\n\n\n\n\n"+"\nhcode:"+response.code()));
                     } else {
                         String error = "";
                         try {
                             ResponseStatus responseClass = (ResponseStatus) mGson.fromJson(body.string(), ResponseStatus.class);
-                            error = responseClass.message + "\n"+"scode: "+responseClass.status_code;
+                            error = responseClass.message + "\n\n\n\n\n\n\n\n\n\n"+"\n"+"scode: "+responseClass.status_code+"\nhcode:"+response.code();
                         } catch (Exception e) {
-                            e.printStackTrace();
+                           if (BuildConfig.DEBUG) {
+                               Log.e(TAG,"e:"+e.getMessage());
+                           }
+                            error = "\n\n\n\n\n\n\n\n\n\n"+"\nhcode:"+response.code();
                         }
-                        //mGson.convert = 에러 변환 메세지 넣어서준다. 401이면 removeCookie
-                        onFailure(call,new Throwable(error+"\n"+"hcode: "+response.code()));
+                        //onFailure(call,new Throwable(error));
+                        onFailure(call,new Throwable(error));
                     }
                 }
             }

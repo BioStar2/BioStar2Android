@@ -97,11 +97,14 @@ public class PermissionDataProvider extends BaseDataProvider {
     }
 
     public boolean isEnableModifyUser(ListUser user) {
-        if (user.user_id.equals("1")) {
+        if (user != null && user.user_id.equals("1")) {
             return false;
         }
         if (mUserInfo != null && mUserInfo.permission != null && mUserInfo.permission.id.equals("1")) {
             return true;
+        }
+        if (user == null) {
+            return false;
         }
         if (!getPermission(PermissionModule.USER, true)) {
             return false;

@@ -114,6 +114,18 @@ public abstract class BaseUserGroupAdapter extends BaseListAdapter<UserGroup> {
             if (rhs.name == null) {
                 return -1;
             }
+            if (lhs.id == null) {
+                return -1;
+            }
+            if (lhs.id.equals("1")) {
+                return 1;
+            }
+            if (rhs.id == null) {
+                return -1;
+            }
+            if (rhs.id.equals("1")) {
+                return 1;
+            }
             return lhs.name.compareToIgnoreCase(rhs.name);
         }
     };

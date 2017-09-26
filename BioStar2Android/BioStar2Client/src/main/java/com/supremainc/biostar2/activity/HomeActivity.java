@@ -18,6 +18,7 @@ package com.supremainc.biostar2.activity;
 import android.app.Activity;
 import android.app.SearchManager;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -26,6 +27,7 @@ import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.SystemClock;
 import android.provider.SearchRecentSuggestions;
 import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentManager;
@@ -61,6 +63,7 @@ import com.supremainc.biostar2.fragment.UserInquriyFragment;
 import com.supremainc.biostar2.fragment.UserListFragment;
 import com.supremainc.biostar2.fragment.UserModifyFragment;
 import com.supremainc.biostar2.meta.Setting;
+import com.supremainc.biostar2.provider.AppDataProvider;
 import com.supremainc.biostar2.sdk.models.v2.common.ResponseStatus;
 import com.supremainc.biostar2.sdk.models.v2.common.SupportFeature;
 import com.supremainc.biostar2.sdk.models.v2.common.VersionData;
@@ -95,6 +98,7 @@ public class HomeActivity extends BaseActivity {
     private SearchRecentSuggestions mSuggestions;
     private boolean mIsGoAlarmList = false;
     private ScreenType mScreen = ScreenType.INIT;
+    private long mMoveScreenTime = 0L;
 
     private Callback<Users> mUserCountCallback = new Callback<Users>() {
         @Override
@@ -189,6 +193,17 @@ public class HomeActivity extends BaseActivity {
             }
         }
     };
+    private long getMoveScreenDelayTime() {
+        long current = SystemClock.elapsedRealtime();
+        long delay = 10L;
+        long diff = current - mMoveScreenTime;
+        if (diff < 1000 && diff > -1 ) {
+            delay = 1000 - diff;
+        }
+        mMoveScreenTime = current;
+        return delay;
+    }
+
     private DrawLayerMenuView.OnSelectionListener mDrawMenuSelectionListener = new DrawLayerMenuView.OnSelectionListener() {
         @Override
         public void addScreen(final ScreenType type, final Bundle args) {
@@ -197,7 +212,7 @@ public class HomeActivity extends BaseActivity {
                 public void run() {
                     mActivity.addScreen(type, args, true);
                 }
-            }, 10);
+            }, getMoveScreenDelayTime());
 
         }
 
@@ -208,7 +223,7 @@ public class HomeActivity extends BaseActivity {
                 public void run() {
                     mActivity.addScreen(type, args, false);
                 }
-            }, 10);
+            }, getMoveScreenDelayTime());
         }
 
         @Override
@@ -427,7 +442,11 @@ public class HomeActivity extends BaseActivity {
             case FACE:
                 if (!VersionData.isSupportFeature(mContext, SupportFeature.FACE)) {
                     String info = getString(R.string.need_latest_server_version);
-                    info = info.replace("{0}", SupportFeature.FACE.version);
+                    if (info.contains("{0}")) {
+                        info = info.replace("{0}", SupportFeature.FACE.version);
+                    } else {
+                        info = SupportFeature.FACE.version + " " + info;
+                    }
                     mToastPopup.show(info, null);
                     return null;
                 }
@@ -448,7 +467,11 @@ public class HomeActivity extends BaseActivity {
             case MOBILE_CARD_LIST:
                 if (!VersionData.isSupportFeature(mContext, SupportFeature.MOBILE_CARD)) {
                     String info = getString(R.string.need_latest_server_version);
-                    info = info.replace("{0}", SupportFeature.MOBILE_CARD.version);
+                       if (info.contains("{0}")) {
+                        info = info.replace("{0}", SupportFeature.MOBILE_CARD.version);
+                    } else {
+                        info = SupportFeature.MOBILE_CARD.version + " " + info;
+                    }
                     mToastPopup.show(info, null);
                     return null;
                 }
@@ -709,11 +732,6 @@ public class HomeActivity extends BaseActivity {
         initValue();
         registerBroadcast();
 
-        if (!ConfigDataProvider.getDebugFlag().equals("") || !Setting.getDebugFlag().equals("")) {
-            String content = ConfigDataProvider.getDebugFlag() + Setting.getDebugFlag();
-            mPopup.show(PopupType.ALERT, getString(R.string.info), content, null, null, null, true);
-        }
-
         Intent intent = getIntent();
         if (intent != null) {
             String action = intent.getAction();
@@ -768,17 +786,24 @@ public class HomeActivity extends BaseActivity {
         if (mPermissionDataProvider.getPermission(PermissionModule.DOOR, false)) {
             mDoorDataProvider.getDoors(0, 10, null, mDoorCountCallback);
         }
-//        isUpdate();
-        //TODO 나중에 삭제.
-//        if (Build.VERSION.SDK_INT >= 23) {
-//            if ((ActivityCompat.checkSelfPermission(mContext, Manifest.permission.READ_EXTERNAL_STORAGE)
-//                    != PackageManager.PERMISSION_GRANTED) || (ActivityCompat.checkSelfPermission(mContext, Manifest.permission.WRITE_EXTERNAL_STORAGE)
-//                    != PackageManager.PERMISSION_GRANTED)) {
-//                ActivityCompat.requestPermissions(mContext, new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE, Manifest.permission.READ_EXTERNAL_STORAGE},
-//                        Setting.REQUEST_EXTERNAL_STORAGE);
-//                return;
-//            }
-//        }
+        if (mAppDataProvider.getBoolean(AppDataProvider.BooleanType.MOBILE_CARD_BLE,false) && VersionData.isSupportFeature(mActivity, SupportFeature.MOBILE_CARD)) {
+            Intent i = new Intent();
+            i.setClassName(Setting.APP_PACKAGE, Setting.BLE_SERVICE_RECO_PACKAGE);
+            ComponentName name = startService(i);
+            if (BuildConfig.DEBUG) {
+                Log.e(TAG, "name:" + name);
+            }
+        }
+
+        if (!ConfigDataProvider.getDebugFlag().equals("") || !Setting.getDebugFlag().equals("")) {
+            mHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    String content = ConfigDataProvider.getDebugFlag() + Setting.getDebugFlag();
+                    mPopup.show(PopupType.ALERT, getString(R.string.info), content, null, null, null, true);
+                }
+            },3000);
+        }
     }
 
     @Override
@@ -939,7 +964,7 @@ public class HomeActivity extends BaseActivity {
     @Override
     public void onBackPressed() {
         mHandler.removeCallbacks(mROnBack);
-        mHandler.postDelayed(mROnBack, 10);
+        mHandler.postDelayed(mROnBack, getMoveScreenDelayTime());
     }
 
 
