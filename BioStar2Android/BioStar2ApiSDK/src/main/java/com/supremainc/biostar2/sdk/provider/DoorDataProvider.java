@@ -144,11 +144,12 @@ public class DoorDataProvider extends BaseDataProvider {
         if (!checkParamAndAPI(callback,id)) {
             return null;
         }
-        JsonObject object = new JsonObject();
+        JsonObject object = null;
         if (phone != null) {
+            object = new JsonObject();
             object.addProperty("phone_number", phone);
         }
-        //TODO test ?�요
+        //TODO test 필요
         Call<ResponseStatus> call = mApiInterface.post_doors_request_open(getCloudVersionString(mContext), id,object);
         call.enqueue(callback);
         return call;

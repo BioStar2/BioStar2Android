@@ -154,19 +154,20 @@ public class BaseActivity extends ActionBarActivity {
     protected boolean isInvalidResponse(Response<?> response) {
         if (response.isSuccessful() && response.body() != null) {
             return false;
-        } else if (response.errorBody() != null) {
+        } else if (response.errorBody() == null) {
+            showErrorPopup(getString(R.string.fail) + "\nhcode:" + response.code());
+            return true;
+        } else {
+            String error = "";
             try {
                 ResponseStatus responseClass = (ResponseStatus) mGson.fromJson(response.errorBody().string(), ResponseStatus.class);
-                showErrorPopup(responseClass.message + Setting.ERROR_MESSAGE_SPLITE+"\n" + "scode: " + responseClass.status_code + "\n" + "hcode: " + response.code());
-                return true;
+                error = responseClass.message + "\n" + "scode: " + responseClass.status_code;
             } catch (Exception e) {
-                if (BuildConfig.DEBUG) {
-                    Log.e(TAG,"e:"+e.getMessage());
-                }
+                e.printStackTrace();
             }
+            showErrorPopup(error + "\n" + "hcode: " + response.code());
+            return true;
         }
-        showErrorPopup(getString(R.string.fail) + Setting.ERROR_MESSAGE_SPLITE+"\nhcode:" + response.code());
-        return true;
     }
 
     protected void showErrorPopup(String msg) {
@@ -308,6 +309,5 @@ public class BaseActivity extends ActionBarActivity {
         if (mCommonDataProvider == null || mUserDataProvider == null) {
             init();
         }
-        mCommonDataProvider.resetLocale();
     }
 }

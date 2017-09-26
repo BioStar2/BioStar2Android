@@ -80,6 +80,16 @@ public class MonitorFragment extends BaseFragment {
         return false;
     }
 
+    @Override
+    protected void onOptionItemHome() {
+        if (mMonitorAdapter != null && mQuery != null) {
+            mQuery = null;
+            mMonitorAdapter.getItems(mQuery);
+            return;
+        }
+        super.onOptionItemHome();
+    }
+
     private boolean initValue(Bundle savedInstanceState) {
         boolean clickEnable = true;
         if (mFilterView == null) {

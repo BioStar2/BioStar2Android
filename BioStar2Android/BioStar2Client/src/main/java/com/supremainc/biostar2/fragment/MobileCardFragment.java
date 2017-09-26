@@ -19,7 +19,6 @@ import android.Manifest;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -55,6 +54,7 @@ import com.supremainc.biostar2.sdk.models.v2.card.MobileCard;
 import com.supremainc.biostar2.sdk.models.v2.card.MobileCardRaw;
 import com.supremainc.biostar2.sdk.models.v2.card.MobileCards;
 import com.supremainc.biostar2.sdk.models.v2.user.User;
+import com.supremainc.biostar2.service.ble.BluetoothLeServiceManager;
 import com.supremainc.biostar2.view.MobileCardView;
 import com.supremainc.biostar2.view.StyledTextView;
 import com.supremainc.biostar2.widget.ScreenControl.ScreenType;
@@ -64,10 +64,10 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 
+import static com.supremainc.biostar2.R.string.invalid_card;
 import static com.supremainc.biostar2.meta.Setting.BROADCAST_BLE_ERROR_RESULT;
 
 public class MobileCardFragment extends BaseFragment {
-    private static boolean mIsRunningMobileCardFragment;
     private MobileCardView mMobileCardView;
     private User mUser;
     private BluetoothAdapter mBluetoothAdapter;
@@ -75,28 +75,12 @@ public class MobileCardFragment extends BaseFragment {
     private View mBackground;
     private StyledTextView mGuideText;
     private MobileCard mServerCard;
+    private boolean mIsExistCard;
     private LottieAnimationView mAnimationView;
     private ImageView mMobileCardImageView;
     private ImageView mResultView;
     private FrameLayout mBackGroundView;
-    private Runnable mRunAllow = new Runnable() {
-        @Override
-        public void run() {
-            if (mIsDestroy || mRootView == null) {
-                return;
-            }
-            bleScan(true);
-        }
-    };
-    private Runnable mRunStopAnim = new Runnable() {
-        @Override
-        public void run() {
-            if (mIsDestroy || mRootView == null) {
-                return;
-            }
-            animStop();
-        }
-    };
+
     private Callback<MobileCardRaw> mRegisterListener = new Callback<MobileCardRaw>() {
         @Override
         public void onFailure(Call<MobileCardRaw> call, Throwable t) {
@@ -114,24 +98,31 @@ public class MobileCardFragment extends BaseFragment {
             if (isInvalidResponse(response, true, true)) {
                 return;
             }
+            setExist(false);
             boolean result = mMobileCardDataProvider.setCard(response.body().smart_card_layout_primary_key, response.body().raw, mActivity);
             if (!result) {
                 showErrorPopup(getString(R.string.fail) + "\n" + getString(R.string.invalid_card), true);
                 return;
             }
             mServerCard.is_registered = true;
-            enableBackgorund();
+            mBackground.setOnClickListener(null);
+            mBackground.setBackgroundColor(getResources().getColor(R.color.transparent));
+            mGuideText.setVisibility(View.GONE);
             MobileCardDataProvider.CARD_VERIFY verify = mMobileCardDataProvider.Verify(mActivity);
+
             if (verify != MobileCardDataProvider.CARD_VERIFY.VALID) {
-                disableBackground(getString(R.string.invalid_card));
+                mBackground.setBackgroundColor(getResources().getColor(R.color.transparent80));
+                mGuideText.setVisibility(View.VISIBLE);
+                mGuideText.setText(getString(invalid_card));
                 showErrorPopup(getString(R.string.invalid_card), true);
-                bleScan(false);
                 return;
             }
-            bleScan(true);
+            setExist(true);
+            animBleScan();
             mPopup.show(Popup.PopupType.INFO, getString(R.string.info), getString(R.string.register_mobile_card), null, getString(R.string.ok), null, false);
         }
     };
+
     private OnSingleClickListener mOnSingleClickListener = new OnSingleClickListener() {
         @Override
         public void onSingleClick(View v) {
@@ -145,6 +136,7 @@ public class MobileCardFragment extends BaseFragment {
             mMobileCardDataProvider.registerMobileCard(mActivity, mServerCard.id, mRegisterListener);
         }
     };
+
     private Callback<MobileCards> mCardsListener = new Callback<MobileCards>() {
         @Override
         public void onFailure(Call<MobileCards> call, Throwable t) {
@@ -156,6 +148,7 @@ public class MobileCardFragment extends BaseFragment {
 
         @Override
         public void onResponse(Call<MobileCards> call, Response<MobileCards> response) {
+            setExist(false);
             if (isIgnoreCallback(call, response, true)) {
                 return;
             }
@@ -163,8 +156,7 @@ public class MobileCardFragment extends BaseFragment {
                 return;
             }
             if (response.body().records == null || response.body().records.size() < 1) {
-                bleScan(false);
-                showErrorPopup(getString(R.string.none_data), true);
+                mToastPopup.show(getString(R.string.none_data), null);
                 return;
             }
 
@@ -172,28 +164,63 @@ public class MobileCardFragment extends BaseFragment {
             mMobileCardView.setCard(mServerCard, mUser, mOnSingleClickListener, mMobileCardImageView);
 
             if (mServerCard.is_registered) {
-                enableBackgorund();
+                mBackground.setOnClickListener(null);
+                mBackground.setBackgroundColor(getResources().getColor(R.color.transparent));
+                mGuideText.setVisibility(View.GONE);
                 MobileCardDataProvider.CARD_VERIFY verify = mMobileCardDataProvider.Verify(mActivity);
                 if (verify == MobileCardDataProvider.CARD_VERIFY.NONE || verify == MobileCardDataProvider.CARD_VERIFY.INVALID) {
-//                    if (ConfigDataProvider.TEST_DELETE) {
-//                        if (mMobileCardDataProvider.setFakeCard(mActivity,mServerCard)) {
-//                            bleScan(true);
-//                        }
-//                    } else {
-//                        mBackground.setBackgroundColor(getResources().getColor(R.color.transparent80));
-//                        mGuideText.setVisibility(View.VISIBLE);
-//                        mGuideText.setText(getString(R.string.invalid_card));
-//                    }
-                    disableBackground(getString(R.string.invalid_card));
-                    bleScan(false);
+                    mBackground.setBackgroundColor(getResources().getColor(R.color.transparent80));
+                    mGuideText.setVisibility(View.VISIBLE);
+                    mGuideText.setText(getString(invalid_card));
                 } else {
-//                    bleScan(true);
+                    setExist(true);
+                    animBleScan();
                 }
             } else {
-                disableBackground(getString(R.string.guide_register_mobile_card3));
                 mBackground.setOnClickListener(mOnSingleClickListener);
+                mBackground.setBackgroundColor(getResources().getColor(R.color.transparent80));
+                mGuideText.setVisibility(View.VISIBLE);
+                mGuideText.setText(getString(R.string.guide_register_mobile_card3));
             }
             mIsDataReceived = true;
+        }
+    };
+
+    private Runnable mRunAllow = new Runnable() {
+        @Override
+        public void run() {
+            if (mBluetoothAdapter == null) {
+                try {
+                    BluetoothManager bm = (BluetoothManager) mActivity.getSystemService(Context.BLUETOOTH_SERVICE);
+                    if (bm != null) {
+                        mBluetoothAdapter = bm.getAdapter();
+                    }
+                } catch (Exception e) {
+                    if (BuildConfig.DEBUG) {
+                        Log.e(TAG,""+e.getMessage());
+                    }
+                }
+            }
+            setBleOnOff(true);
+            if (!mIsStoped) {
+                if (BluetoothLeServiceManager.scan(true) == false) {
+                    mHandler.removeCallbacks(mRunAllow);
+                    mHandler.postDelayed(mRunAllow, 1000);
+                } else {
+                    animBleScan();
+                }
+            }
+        }
+    };
+    private Runnable mRunRestart = new Runnable() {
+        @Override
+        public void run() {
+            if (mIsDestroy || mRootView == null) {
+                return;
+            }
+            BluetoothLeServiceManager.start(mActivity);
+            mHandler.removeCallbacks(mRunAllow);
+            mHandler.post(mRunAllow);
         }
     };
     private Runnable mRunDeny = new Runnable() {
@@ -223,6 +250,7 @@ public class MobileCardFragment extends BaseFragment {
                                 mActivity.startActivity(intent);
                             }
                         });
+                //snackbar.setActionTextColor(Color.MAGENTA);
                 View snackbarView = snackbar.getView();
                 TextView textView = (TextView) snackbarView.findViewById(android.support.design.R.id.snackbar_text);
                 textView.setMaxLines(5);
@@ -231,19 +259,48 @@ public class MobileCardFragment extends BaseFragment {
         }
     };
 
+    private Runnable mRunnableReScanAni = new Runnable() {
+        @Override
+        public void run() {
+            if (mIsDestroy || mRootView == null) {
+                return;
+            }
+            mResultView.setVisibility(View.INVISIBLE);
+            mBackGroundView.setBackgroundColor(getResources().getColor(R.color.main_bg));
+            animBleScan();
+        }
+    };
+    private Runnable mRunnable = new Runnable() {
+        @Override
+        public void run() {
+            if (mIsDestroy || mRootView == null) {
+                return;
+            }
+            animScan();
+        }
+    };
+    private Runnable mRunnableStop = new Runnable() {
+        @Override
+        public void run() {
+            if (mIsDestroy || mRootView == null) {
+                return;
+            }
+            animStop();
+        }
+    };
     public MobileCardFragment() {
         super();
         setType(ScreenType.MOBILE_CARD_LIST);
         TAG = getClass().getSimpleName() + String.valueOf(System.currentTimeMillis());
     }
 
-    public static boolean isRunningMobileCardFragment() {
-        return mIsRunningMobileCardFragment;
-    }
-
-    private void reStartScan() {
-        bleScan(false);
-        mHandler.post(mRunAllow);
+    private void setExist(boolean exist) {
+        if (isInValidCheck()) {
+            return;
+        }
+        mIsExistCard = exist;
+        mActivity.invalidateOptionsMenu();
+        BluetoothLeServiceManager.setExist(exist);
     }
 
     private void initValue() {
@@ -252,7 +309,7 @@ public class MobileCardFragment extends BaseFragment {
             mAnimationView = (LottieAnimationView) mRootView.findViewById(R.id.animation_view);
         }
         if (mBackGroundView == null) {
-            mBackGroundView = (FrameLayout) mRootView.findViewById(R.id.main_bg);
+            mBackGroundView = (FrameLayout)mRootView.findViewById(R.id.main_bg);
         }
         if (mResultView == null) {
             mResultView = (ImageView) mRootView.findViewById(R.id.result);
@@ -270,6 +327,7 @@ public class MobileCardFragment extends BaseFragment {
             mGuideText = (StyledTextView) mRootView.findViewById(R.id.guide);
         }
 
+
         if (mBluetoothAdapter == null) {
             try {
                 BluetoothManager bm = (BluetoothManager) mActivity.getSystemService(Context.BLUETOOTH_SERVICE);
@@ -286,6 +344,7 @@ public class MobileCardFragment extends BaseFragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         setResID(R.layout.fragment_mobilecard2);
         super.onCreateView(inflater, container, savedInstanceState);
+
         if (!mIsReUsed) {
             initValue();
             initActionbar(getString(R.string.mobile_card));
@@ -293,41 +352,12 @@ public class MobileCardFragment extends BaseFragment {
             mMobileCardDataProvider.getMobileCards(mActivity, mCardsListener);
             mRootView.invalidate();
         }
+        if (mAppDataProvider.getBoolean(AppDataProvider.BooleanType.MOBILE_CARD_NFC)) {
+            if (!mActivity.getPackageManager().hasSystemFeature(PackageManager.FEATURE_NFC_HOST_CARD_EMULATION)) {
+                mPopup.show(Popup.PopupType.CARD, getString(R.string.nfc_not_support), null, getString(R.string.ok), null);
+            }
+        }
         return mRootView;
-    }
-
-    private void bleScan(boolean start) {
-        if (BuildConfig.DEBUG) {
-            Log.e(TAG, "bleScan:" + start, new Throwable("stack dump"));
-        }
-
-        Intent i = new Intent();
-        if (start) {
-            setBleOnOff(true);
-        } else {
-            mHandler.removeCallbacks(mRunAllow);
-        }
-        i.setClassName(Setting.APP_PACKAGE, Setting.BLE_SERVICE_SCAN_PACKAGE);
-        if (start) {
-            if (!mAppDataProvider.getBoolean(AppDataProvider.BooleanType.MOBILE_CARD_BLE,false)) {
-                return;
-            }
-            if (mMobileCardDataProvider.Verify(mActivity) != MobileCardDataProvider.CARD_VERIFY.VALID) {
-                if (BuildConfig.DEBUG) {
-                    Log.e(TAG, "mobilecardinvliad:");
-                }
-                return;
-            }
-            ComponentName name = mActivity.startService(i);
-            if (BuildConfig.DEBUG) {
-                Log.e(TAG, "startService:" + name);
-            }
-        } else {
-            boolean result = mActivity.stopService(i);
-            if (BuildConfig.DEBUG) {
-                Log.e(TAG, "stopService:" + result);
-            }
-        }
     }
 
     @Override
@@ -338,44 +368,24 @@ public class MobileCardFragment extends BaseFragment {
         return false;
     }
 
-    private void enableBackgorund() {
-        mBackground.setOnClickListener(null);
-        mBackground.setBackgroundColor(getResources().getColor(R.color.transparent));
-        mGuideText.setVisibility(View.GONE);
-    }
-
-    private void disableBackground(String content) {
-        mBackground.setBackgroundColor(getResources().getColor(R.color.transparent80));
-        mGuideText.setVisibility(View.VISIBLE);
-        if (content != null) {
-            mGuideText.setText(content);
+    private void animBleScan() {
+        if (!mAppDataProvider.getBoolean(AppDataProvider.BooleanType.MOBILE_CARD_NFC) && mIsExistCard) {
+            if (!BluetoothLeServiceManager.isIdle()) {
+                animScan();
+            }
         }
     }
 
     private void setBleOnOff(boolean on) {
-        if (!mAppDataProvider.getBoolean(AppDataProvider.BooleanType.MOBILE_CARD_BLE,false)) {
-            return;
-        }
-
-        if (mBluetoothAdapter == null) {
-            try {
-                BluetoothManager bm = (BluetoothManager) mActivity.getSystemService(Context.BLUETOOTH_SERVICE);
-                if (bm != null) {
-                    mBluetoothAdapter = bm.getAdapter();
-                }
-            } catch (Exception e) {
-                if (BuildConfig.DEBUG) {
-                    Log.e(TAG, "" + e.getMessage());
-                }
-            }
-        }
         if (mBluetoothAdapter == null) {
             return;
         }
         if (mIsStoped && on) {
             return;
         }
-
+        if (mAppDataProvider.getBoolean(AppDataProvider.BooleanType.MOBILE_CARD_NFC) && on) {
+            return;
+        }
         int state = mBluetoothAdapter.getState();
         switch (state) {
             case BluetoothAdapter.STATE_ON:
@@ -420,29 +430,33 @@ public class MobileCardFragment extends BaseFragment {
 
     @Override
     public void onStart() {
-        mIsRunningMobileCardFragment = true;
         super.onStart();
         if (BuildConfig.DEBUG) {
             Log.e(TAG, "onStart");
         }
-        if (mAppDataProvider.getBoolean(AppDataProvider.BooleanType.MOBILE_CARD_BLE,false)) {
+        BluetoothLeServiceManager.setRange(mAppDataProvider.getBleRange());
+        mHandler.removeCallbacks(mRunRestart);
+        if (!mAppDataProvider.getBoolean(AppDataProvider.BooleanType.MOBILE_CARD_NFC)) {
             if (Build.VERSION.SDK_INT >= 23) {
                 if ((ActivityCompat.checkSelfPermission(mActivity, Manifest.permission.ACCESS_COARSE_LOCATION)
                         != PackageManager.PERMISSION_GRANTED) || (ActivityCompat.checkSelfPermission(mActivity, Manifest.permission.ACCESS_FINE_LOCATION)
                         != PackageManager.PERMISSION_GRANTED)) {
                     ActivityCompat.requestPermissions(mActivity, new String[]{Manifest.permission.ACCESS_COARSE_LOCATION, Manifest.permission.ACCESS_FINE_LOCATION},
                             Setting.REQUEST_LOCATION);
+                    BluetoothLeServiceManager.start(mActivity);
                     return;
                 }
             }
-            bleScan(true);
+            setBleOnOff(true);
+            mHandler.post(mRunRestart);
         }
     }
 
     @Override
     public void onStop() {
-        mIsRunningMobileCardFragment = false;
-        bleScan(false);
+        mHandler.removeCallbacks(mRunAllow);
+        mHandler.removeCallbacks(mRunRestart);
+        BluetoothLeServiceManager.stop(mActivity);
         animStop();
         super.onStop();
     }
@@ -471,13 +485,7 @@ public class MobileCardFragment extends BaseFragment {
     }
 
     private void animScan() {
-        if (mResultView.getVisibility() != View.INVISIBLE) {
-            mResultView.setVisibility(View.INVISIBLE);
-        }
-        mBackGroundView.setBackgroundColor(getResources().getColor(R.color.main_bg));
-        if (mAnimationView.getVisibility() != View.VISIBLE) {
-            mAnimationView.setVisibility(View.VISIBLE);
-        }
+        mAnimationView.setVisibility(View.VISIBLE);
         if (!mAnimationView.isAnimating()) {
             mAnimationView.cancelAnimation();
             mAnimationView.setAnimation("scan.json");
@@ -488,18 +496,13 @@ public class MobileCardFragment extends BaseFragment {
     }
 
     private void animStop() {
-        if (mAnimationView.isAnimating()) {
-            mAnimationView.cancelAnimation();
-        }
-        if (mAnimationView.getVisibility() != View.INVISIBLE) {
-            mAnimationView.setVisibility(View.INVISIBLE);
-        }
+        mAnimationView.cancelAnimation();
+        mAnimationView.setVisibility(View.INVISIBLE);
     }
 
     private void animResult(int resID) {
-        Log.e(TAG, "animResult:" + resID);
+        Log.e(TAG,"animResult:"+resID);
         animStop();
-        bleScan(false);
         mResultView.setImageResource(resID);
         mResultView.setVisibility(View.VISIBLE);
         if (R.drawable.ic_access_success == resID) {
@@ -507,6 +510,8 @@ public class MobileCardFragment extends BaseFragment {
         } else {
             mBackGroundView.setBackgroundResource(R.drawable.shape_backgorund_fail);
         }
+        mHandler.removeCallbacks(mRunnableReScanAni);
+        mHandler.postDelayed(mRunnableReScanAni, 3000);
     }
 
     protected void registerBroadcast() {
@@ -518,64 +523,62 @@ public class MobileCardFragment extends BaseFragment {
                         return;
                     }
                     String action = intent.getAction();
-                    Log.e(TAG, "BroadcastReceiver:" + action);
-
                     if (action.equals(Setting.BROADCAST_REROGIN)) {
                         mMobileCardDataProvider.getMobileCards(mActivity, mCardsListener);
                         return;
+                    }
+                    mHandler.removeCallbacks(mRunnableStop);
+                    mHandler.removeCallbacks(mRunnable);
+                    if (action.equals(Setting.BROADCAST_BLE_ERROR)) {
+                        if (BuildConfig.DEBUG) {
+                            Log.e(TAG, "BROADCAST_BLE_ERROR");
+                        }
+                        mHandler.removeCallbacks(mRunAllow);
+                        BluetoothLeServiceManager.stop(mActivity);
+                        animStop();
+                        mHandler.removeCallbacks(mRunRestart);
+                        mHandler.postDelayed(mRunRestart, 2000);
+                        return;
+                    }
+
+                    if (action.equals(Setting.BROADCAST_BLE_SUCESS)) {
+                        animResult(R.drawable.ic_access_success);
+                    } else if (action.equals(Setting.BROADCAST_BLE_ERROR_DEVICE)) {
+                        animResult(R.drawable.ic_access_fail2);
+                    } else if (action.equals(BROADCAST_BLE_ERROR_RESULT)) {
+                        animResult(R.drawable.ic_access_fail1);
+                    } else if (action.equals(Setting.BROADCAST_BLE_CONNECT) || action.equals(Setting.BROADCAST_BLE_ERROR_CONNECT)) {
+                        mHandler.removeCallbacks(mRunnableReScanAni);
+                        mHandler.post(mRunnableReScanAni);
+                    } else if (action.equals(Setting.BROADCAST_NFC_CONNECT)) {
+                        mHandler.postDelayed(mRunnableStop, 2000);
+                        animScan();
                     }
                 }
             };
             IntentFilter intentFilter = new IntentFilter();
             intentFilter.addAction(Setting.BROADCAST_REROGIN);
-
+            intentFilter.addAction(Setting.BROADCAST_BLE_ERROR);
+            intentFilter.addAction(Setting.BROADCAST_BLE_CONNECT);
+            intentFilter.addAction(Setting.BROADCAST_BLE_ERROR_DEVICE);
+            intentFilter.addAction(Setting.BROADCAST_BLE_ERROR_RESULT);
+            intentFilter.addAction(Setting.BROADCAST_BLE_ERROR_CONNECT);
+            intentFilter.addAction(Setting.BROADCAST_BLE_SUCESS);
+            intentFilter.addAction(Setting.BROADCAST_NFC_CONNECT);
             LocalBroadcastManager.getInstance(getActivity()).registerReceiver(mReceiver, intentFilter);
         }
         IntentFilter filter = new IntentFilter();
         filter.addAction(BluetoothAdapter.ACTION_STATE_CHANGED);
         filter.addAction(NfcAdapter.ACTION_ADAPTER_STATE_CHANGED);
-        filter.addAction(Setting.BROADCAST_BLE_STARTED_SCAN);
-        filter.addAction(Setting.BROADCAST_BLE_STOPED_SCAN);
-        filter.addAction(Setting.BROADCAST_BLE_ERROR_DEVICE);
-        filter.addAction(Setting.BROADCAST_BLE_ERROR_RESULT);
-        filter.addAction(Setting.BROADCAST_BLE_ERROR_CONNECT);
-        filter.addAction(Setting.BROADCAST_BLE_SUCESS);
-        filter.addAction(Setting.BROADCAST_NFC_CONNECT);
         if (mBleBroadcastReceiver == null) {
             mBleBroadcastReceiver = new BroadcastReceiver() {
                 @Override
                 public void onReceive(Context context, Intent intent) {
                     final String action = intent.getAction();
-                    if (mIsDestroy || action == null) {
+                    if (mIsDestroy || action == null || mIsStoped) {
                         return;
                     }
-                    if (BuildConfig.DEBUG) {
-                        Log.e(TAG, "action:" + action);
-                    }
-                    if (mIsStoped) {
-                        if (action.equals(Setting.BROADCAST_BLE_STOPED_SCAN)) {
-                            animStop();
-                        }
-                        return;
-                    }
-                    if (action.equals(Setting.BROADCAST_BLE_STARTED_SCAN)) {
-                        animScan();
-                    } else if (action.equals(Setting.BROADCAST_BLE_STOPED_SCAN)) {
-                        animStop();
-                        mHandler.removeCallbacks(mRunAllow);
-                        mHandler.postDelayed(mRunAllow, 7000);
-                    } else if (action.equals(Setting.BROADCAST_BLE_SUCESS)) {
-                        animResult(R.drawable.ic_access_success);
-                    } else if (action.equals(Setting.BROADCAST_BLE_ERROR_DEVICE)) {
-                        animResult(R.drawable.ic_access_fail2);
-                    } else if (action.equals(BROADCAST_BLE_ERROR_RESULT) || action.equals(Setting.BROADCAST_BLE_ERROR_CONNECT)) {
-                        animResult(R.drawable.ic_access_fail1);
-                        // restart?¥Ïïº?òÏ? ?äÏùÑÍπ?
-                    } else if (action.equals(Setting.BROADCAST_NFC_CONNECT)) {
-                        animScan();
-                        mHandler.removeCallbacks(mRunStopAnim);
-                        mHandler.postDelayed(mRunStopAnim, 3000);
-                    } else if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
+                    if (action.equals(BluetoothAdapter.ACTION_STATE_CHANGED)) {
                         final int state = intent.getIntExtra(BluetoothAdapter.EXTRA_STATE, BluetoothAdapter.ERROR);
 
                         switch (state) {

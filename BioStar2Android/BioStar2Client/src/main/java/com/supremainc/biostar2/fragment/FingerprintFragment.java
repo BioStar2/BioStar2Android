@@ -205,8 +205,7 @@ public class FingerprintFragment extends BaseFragment {
             showRetryPopup(t.getMessage(), new OnPopupClickListener() {
                 @Override
                 public void OnPositive() {
-                    reScan();
-                    //scanFinger();
+                    scanFinger();
                 }
 
                 @Override
@@ -222,33 +221,18 @@ public class FingerprintFragment extends BaseFragment {
                 return;
             }
             if (!response.isSuccessful() || response.body() == null) {
-//                if (response.errorBody() != null) {
-//                    try {
-//                        ResponseStatus responseClass = (ResponseStatus) mGson.fromJson(response.errorBody().string(), ResponseStatus.class);
-//                        if (Device.SCAN_QUALITY_IS_LOW.equals(responseClass.status_code)) {
-//                            showRetryPopup(getString(R.string.low_quality), new OnPopupClickListener() {
-//                                @Override
-//                                public void OnPositive() {
-//                                    reScan();
-//                                }
-//
-//                                @Override
-//                                public void OnNegative() {
-//                                    clearValue();
-//                                }
-//                            });
-//
-//                            return;
-//                        }
-//                    } catch (Exception e) {
-//
-//                    }
-//                }
-                String error = getResponseErrorMessage(response);
-                if (error.contains(Device.SCAN_QUALITY_IS_LOW)) {
-                    error = getString(R.string.low_quality);
+                if (response.errorBody() != null) {
+                    try {
+                        ResponseStatus responseClass = (ResponseStatus) mGson.fromJson(response.errorBody().string(), ResponseStatus.class);
+                        if (Device.SCAN_QUALITY_IS_LOW.equals(responseClass.status_code)) {
+                            reScan();
+                            return;
+                        }
+                    } catch (Exception e) {
+
+                    }
                 }
-                onFailure(call, new Throwable(error));
+                onFailure(call, new Throwable(getResponseErrorMessage(response)));
                 return;
             }
             int scanQuality = 0;
@@ -710,65 +694,28 @@ public class FingerprintFragment extends BaseFragment {
                                     mFingerprintTemplate.template0 = mBioMiniTemplate0.getTemplateString();
                                 }
                                 if (quality < mQuality) {
-                                    showRetryPopup(getString(R.string.low_quality), new OnPopupClickListener() {
-                                        @Override
-                                        public void OnPositive() {
-                                            reScan();
-                                        }
-
-                                        @Override
-                                        public void OnNegative() {
-                                            clearValue();
-                                        }
-                                    });
+                                    reScan();
                                     return;
                                 }
 
                                 if (mIsTwiceInput == true) {
                                     mIsTwiceInput = false;
-                                    //scanVerify();
-                                    mPopup.show(PopupType.FINGERPRINT_CONFIRM, mItemAdapter.getName(mReplacePosition), "1" + getString(R.string.st) + " " + getString(R.string.quality) + " " + mScanQuality1st + "\n" + "2" + getString(R
-                                                    .string.nd) + " " + getString(R.string.quality) + " " + mScanQuality2nd + "\n" + getString(R.string
-                                                    .verify_finger),
-                                            null,
-                                            null, null,
-                                            false);
-                                    mHandler.postDelayed(new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            if (mBioMiniDataProvider.verify(mBioMiniTemplate0,mBioMiniTemplate1) == UFA_OK) {
-                                                sucess();
-                                            } else {
-                                                mPopup.show(PopupType.ALERT, getString(R.string.info), getString(R.string.fail_verify_finger), new OnPopupClickListener() {
-                                                    @Override
-                                                    public void OnPositive() {
-                                                        clearValue();
-                                                    }
+                                    scanVerify();
 
-                                                    @Override
-                                                    public void OnNegative() {
-                                                        clearValue();
-                                                    }
-                                                }, getString(R.string.ok), null, false);
-                                            }
-                                        }
-                                    },1000);
                                 } else {
                                     mIsTwiceInput = true;
                                     scanBioMini();
                                 }
                             } else {
+                                //TODO 재시도 팝업
                                 mPopup.show(PopupType.ALERT, getString(R.string.portable), BioMiniDataProvider.getMessage(result), null, null, null);
                             }
                         }
                     }, 1000);
 
                 } else {
-                    clearValue();
-                    if (isInValidCheck()) {
-                        return;
-                    }
                     mToastPopup.show(ToastPopup.TYPE_DEFAULT, getString(R.string.portable), BioMiniDataProvider.getMessage(result));
+                    clearValue();
                     return;
                 }
             }
@@ -815,6 +762,7 @@ public class FingerprintFragment extends BaseFragment {
         if (isInValidCheck()) {
             return;
         }
+        //TODO 아이폰도 동일방식.
         mHandler.post(new Runnable() {
             @Override
             public void run() {
@@ -838,7 +786,7 @@ public class FingerprintFragment extends BaseFragment {
                             mSeekBarPopup.show(getString(R.string.rescan_change), mOnChangeQualityResult, mQuality);
                         }
                     }
-                }, linkType, getString(R.string.rescan), false);
+                }, linkType, getString(R.string.low_quality) + ". " + getString(R.string.rescan), false);
             }
         });
     }

@@ -122,7 +122,7 @@ public class MainFragment extends BaseFragment {
                 return;
             }
             View v = mMainMenuView.getItemView(MenuItemView.MenuItemType.MOBILE_CARD_ALERT);
-            if (v != null && mAppDataProvider.getBoolean(AppDataProvider.BooleanType.SHOW_GUIDE_MENU_CARD,true)) {
+            if (v != null && mAppDataProvider.getBoolean(AppDataProvider.BooleanType.SHOW_GUIDE_MENU_CARD)) {
                 if (mGuideView == null) {
                     int w = v.getWidth();
                     int h = v.getHeight();

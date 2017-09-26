@@ -481,20 +481,18 @@ public class BaseFragment extends Fragment {
     }
 
     protected String getResponseErrorMessage(Response<?> response) {
-        if (response == null) {
-            return getString(R.string.fail);
+        if (response == null || response.errorBody() == null) {
+            return getString(R.string.fail) + "\nhcode:" + response.code();
         }
-        if (response.errorBody() != null) {
-            try {
-                ResponseStatus responseClass = (ResponseStatus) mGson.fromJson(response.errorBody().string(), ResponseStatus.class);
-                return responseClass.message + Setting.ERROR_MESSAGE_SPLITE+"\n" + "scode: " + responseClass.status_code+ "\nhcode:"+response.code();
-            } catch (Exception e) {
-                if (BuildConfig.DEBUG) {
-                    Log.e(TAG,"e:"+e.getMessage());
-                }
-            }
+        String error = "";
+        try {
+            ResponseStatus responseClass = (ResponseStatus) mGson.fromJson(response.errorBody().string(), ResponseStatus.class);
+            error = responseClass.message + "\n" + "scode: " + responseClass.status_code;
+        } catch (Exception e) {
+
         }
-        return getString(R.string.fail) + Setting.ERROR_MESSAGE_SPLITE + "\nhcode:"+response.code();
+        error = error + "\n" + "hcode: " + response.code();
+        return error;
     }
 
     protected boolean isInvalidResponse(Response<?> response, boolean showError, boolean showErrorOnBack) {
@@ -652,9 +650,6 @@ public class BaseFragment extends Fragment {
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        if (mIsDestroy) {
-            return true;
-        }
         if (item == null) {
             onOptionItemHome();
             return true;

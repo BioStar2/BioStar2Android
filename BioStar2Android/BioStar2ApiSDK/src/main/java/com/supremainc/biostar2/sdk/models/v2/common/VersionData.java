@@ -94,14 +94,9 @@ public class VersionData {
         }
         if (intVerions[0] < supportFeature.major) {
             return false;
-        } else if (intVerions[0] >  supportFeature.major) {
-            return true;
         }
-
         if (intVerions[1] < supportFeature.minor) {
             return false;
-        } else if (intVerions[1] >  supportFeature.minor) {
-            return true;
         }
         if (intVerions[2] < supportFeature.detail) {
             return false;

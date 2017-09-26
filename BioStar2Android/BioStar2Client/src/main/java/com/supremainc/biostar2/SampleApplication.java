@@ -19,7 +19,6 @@ import android.app.Application;
 
 import com.facebook.stetho.Stetho;
 import com.facebook.stetho.okhttp3.StethoInterceptor;
-import com.supremainc.biostar2.meta.Setting;
 import com.supremainc.biostar2.sdk.provider.BaseDataProvider;
 
 import okhttp3.OkHttpClient;
@@ -39,7 +38,6 @@ public class SampleApplication extends Application {
     public void onCreate() {
         super.onCreate();
         if (BuildConfig.DEBUG) {
-            Setting.IS_TEST_DEBUG_NETWORK = true;
             Stetho.initializeWithDefaults(this);
             BaseDataProvider.setStehto(mSetStetho);
         }

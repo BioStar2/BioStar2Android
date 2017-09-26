@@ -31,7 +31,6 @@ import com.supremainc.biostar2.adapter.base.BaseListAdapter;
 import com.supremainc.biostar2.adapter.base.BaseUserAdapter;
 import com.supremainc.biostar2.datatype.GlidePhotoData;
 import com.supremainc.biostar2.meta.Setting;
-import com.supremainc.biostar2.sdk.models.enumtype.LocalStorage;
 import com.supremainc.biostar2.sdk.models.v2.user.ListUser;
 import com.supremainc.biostar2.sdk.provider.ConfigDataProvider;
 import com.supremainc.biostar2.sdk.provider.PermissionDataProvider;
@@ -53,7 +52,7 @@ public class PhotoUserAdapter extends BaseUserAdapter {
         super(context, items, listView, onItemClickListener, popup, onUsersListener);
         mPermissionDataProvider = PermissionDataProvider.getInstance(context);
 
-        mSubDomain = (String)ConfigDataProvider.getLocalStorage(LocalStorage.SUBDOMAIN);
+        mSubDomain = ConfigDataProvider.getLatestDomain(context);
         if (mFactory == null) {
             mFactory = new OkHttpUrlLoader.Factory(mUserDataProvider.getOkHttpClient());
             Glide.get(mActivity).register(GlideUrl.class, InputStream.class,

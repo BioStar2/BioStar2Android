@@ -31,11 +31,9 @@ import android.view.ViewGroup.LayoutParams;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
-import android.widget.Toast;
 
 import com.supremainc.biostar2.R;
 import com.supremainc.biostar2.impl.OnSingleClickListener;
-import com.supremainc.biostar2.meta.Setting;
 import com.supremainc.biostar2.view.StyledTextView;
 import com.supremainc.biostar2.widget.CustomDialog;
 
@@ -140,17 +138,6 @@ public class Popup {
         mDialog = new CustomDialog(mContext);
         LayoutInflater inflater = (LayoutInflater) mContext.getSystemService(Context.LAYOUT_INFLATER_SERVICE);
         ViewGroup layout = null;
-        String errrorCode = null;
-        if (content != null && !content.isEmpty()) {
-            if (content.contains(Setting.ERROR_MESSAGE_SPLITE)) {
-                String[] temp = content.split(Setting.ERROR_MESSAGE_SPLITE);
-                content= temp[0];
-                errrorCode = temp[1];
-                if (content.isEmpty() || content.equals("null")) {
-                    content= mContext.getString(R.string.fail);
-                }
-            }
-        }
 
         switch (type) {
             case CARD_CONFIRM:
@@ -183,11 +170,6 @@ public class Popup {
         final OnSingleClickListener onClickListener = new OnSingleClickListener() {
             @Override
             public void onSingleClick(View v) {
-                if (v.getId() == R.id.type) {
-                    String errorCode = (String)v.getTag();
-                    ToastPopup.makeText(mContext,errorCode,Toast.LENGTH_LONG).show();
-                    return;
-                }
                 if (mDialog != null) {
                     mDialog.dismiss();
                 }
@@ -205,10 +187,6 @@ public class Popup {
                 }
             }
         };
-        if (errrorCode != null) {
-            layout.findViewById(R.id.type).setOnClickListener(onClickListener);
-            layout.findViewById(R.id.type).setTag(errrorCode);
-        }
         StyledTextView positiveView = (StyledTextView) layout.findViewById(R.id.positive);
         positiveView.setOnClickListener(onClickListener);
         StyledTextView negativeView = (StyledTextView) layout.findViewById(R.id.negative);

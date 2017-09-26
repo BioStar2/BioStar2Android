@@ -113,8 +113,7 @@ public class DoorFragment extends BaseFragment {
     private SummaryDoorView.SummaryDoorViewListener mSummaryDoorViewListener = new SummaryDoorView.SummaryDoorViewListener() {
         @Override
         public void onDoorAction() {
-            if (mPermissionDataProvider.getPermission(PermissionModule.DOOR, true) || (mPermissionDataProvider.getPermission(PermissionModule.MONITORING, true) && mPermissionDataProvider
-                    .getPermission(PermissionModule.DOOR, false))) {
+            if (mPermissionDataProvider.getPermission(PermissionModule.DOOR, true) || mPermissionDataProvider.getPermission(PermissionModule.MONITORING, true)) {
                 openMenu();
             } else {
                 sendOpenRequest();

@@ -54,8 +54,6 @@ import com.supremainc.biostar2.sdk.models.v2.accesscontrol.ListAccessGroup;
 import com.supremainc.biostar2.sdk.models.v2.card.ListCard;
 import com.supremainc.biostar2.sdk.models.v2.card.SmartCardLayout;
 import com.supremainc.biostar2.sdk.models.v2.card.WiegandFormat;
-import com.supremainc.biostar2.sdk.models.v2.common.SupportFeature;
-import com.supremainc.biostar2.sdk.models.v2.common.VersionData;
 import com.supremainc.biostar2.sdk.models.v2.device.DeviceType;
 import com.supremainc.biostar2.sdk.models.v2.device.ListDevice;
 import com.supremainc.biostar2.sdk.models.v2.door.ListDoor;
@@ -187,7 +185,7 @@ public class SelectPopup<T> {
             break;
             case DEVICE_FINGERPRINT: {
                 SimpleDeviceAdapter deviceAdapter = new SimpleDeviceAdapter(mActivity, (ArrayList<ListDevice>) items, mListView, mOnItemClickListener, mPopup, mOnItemsListener);
-                deviceAdapter.setMasterOnly(!VersionData.isSupportFeature(mActivity, SupportFeature.SLAVE_SUPPORT));
+                deviceAdapter.setMasterOnly(true);
                 deviceAdapter.setDeviceSupport(DeviceType.SUPPORT_FINGERPRINT);
                 mListAdapter = deviceAdapter;
                 mSubToolbar.setVisibleSearch(true, mSearchClose);
@@ -196,7 +194,7 @@ public class SelectPopup<T> {
             }
             case DEVICE_FINGERPRINT_BIOMINI: {
                 SimpleDeviceAdapter deviceAdapter = new SimpleDeviceAdapter(mActivity, (ArrayList<ListDevice>) items, mListView, mOnItemClickListener, mPopup, mOnItemsListener);
-                deviceAdapter.setMasterOnly(!VersionData.isSupportFeature(mActivity, SupportFeature.SLAVE_SUPPORT));
+                deviceAdapter.setMasterOnly(true);
                 deviceAdapter.setDeviceSupport(DeviceType.SUPPORT_FINGERPRINT);
                 deviceAdapter.setShowType(BaseDeviceAdapter.ShowType.DEVICE_FINGERPRINT_BIOMINI);
                 mListAdapter = deviceAdapter;
@@ -246,7 +244,7 @@ public class SelectPopup<T> {
             }
             case DEVICE_FACE: {
                 SimpleDeviceAdapter deviceAdapter = new SimpleDeviceAdapter(mActivity, (ArrayList<ListDevice>) items, mListView, mOnItemClickListener, mPopup, mOnItemsListener);
-                deviceAdapter.setMasterOnly(!VersionData.isSupportFeature(mActivity, SupportFeature.SLAVE_SUPPORT));
+                deviceAdapter.setMasterOnly(true);
                 deviceAdapter.setDeviceSupport(DeviceType.SUPPORT_FACE);
                 mListAdapter = deviceAdapter;
                 mSubToolbar.setVisibleSearch(true, mSearchClose);

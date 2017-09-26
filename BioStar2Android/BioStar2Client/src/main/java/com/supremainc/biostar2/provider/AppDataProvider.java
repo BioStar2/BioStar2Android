@@ -17,7 +17,6 @@ package com.supremainc.biostar2.provider;
 
 import android.app.Activity;
 import android.content.Context;
-import android.content.pm.PackageManager;
 
 import com.supremainc.biostar2.R;
 import com.supremainc.biostar2.sdk.utils.PreferenceUtil;
@@ -33,7 +32,6 @@ public class AppDataProvider {
     protected static Context mContext;
     protected static Activity mContext2;
     private static AppDataProvider mSelf = null;
-    private static final int mVersion = 1;
 
     private AppDataProvider(Context context) {
         mContext = context;
@@ -77,20 +75,24 @@ public class AppDataProvider {
         if (result == -1) {
             return 300;
         }
-        if (result < 100) {
+        if (result < 101) {
             return 100;
-        } else if (result > 1000) {
-            return 1000;
+        } else if (result < 301) {
+            return 300;
+        } else {
+            return 500;
         }
-        return result;
+
         //      return result;
     }
 
     public void setBleRange(int total) {
-        if (total < 100) {
+        if (total < 101) {
             total = 100;
-        } else if (total > 1000) {
-            total = 1000;
+        } else if (total < 301) {
+            total = 300;
+        } else {
+            total = 500;
         }
         PreferenceUtil.putSharedPreference(mContext, BLE_RANGE, total);
     }
@@ -99,27 +101,12 @@ public class AppDataProvider {
         PreferenceUtil.putSharedPreference(mContext, type.mName, set);
     }
 
-    public boolean getBoolean(BooleanType type,boolean defaultValue) {
-        return PreferenceUtil.getBooleanSharedPreference(mContext, type.mName, defaultValue);
-    }
-
-    public void setInitValue() {
-        if (PreferenceUtil.getIntSharedPreference(mContext,"init_value") >= mVersion) {
-            return;
-        }
-        if (mContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_NFC_HOST_CARD_EMULATION)) {
-            setBoolean(AppDataProvider.BooleanType.MOBILE_CARD_NFC, true);
-        } else if (mContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
-            setBoolean(BooleanType.MOBILE_CARD_BLE, true);
-        }
-        setBoolean(AppDataProvider.BooleanType.KNOCK_KNOCK,true);
-        setBoolean(AppDataProvider.BooleanType.INDEPENDENT_SCREEN_LOCK,true);
-        PreferenceUtil.putSharedPreference(mContext,"init_value",mVersion);
+    public boolean getBoolean(BooleanType type) {
+        return PreferenceUtil.getBooleanSharedPreference(mContext, type.mName, true);
     }
 
     public enum BooleanType {
-        SHOW_GUIDE_MENU_CARD("SHOW_GUIDE_MENU_CARD"), SHOW_GUIDE_DETAIL_CARD("SHOW_GUIDE_DETAIL_CARD"), MOBILE_CARD_NFC("MOBILE_CARD_NFC"),NEED_UPDATE_TOKEN("NEED_UPDATE_TOKEN"),
-        INDEPENDENT_SCREEN_LOCK("INDEPENDENT_SCREEN_LOCK"),MOBILE_CARD_BLE("MOBILE_CARD_BLE"),KNOCK_KNOCK("KNOCK_KNOCK");
+        SHOW_GUIDE_MENU_CARD("SHOW_GUIDE_MENU_CARD"), SHOW_GUIDE_DETAIL_CARD("SHOW_GUIDE_DETAIL_CARD"), MOBILE_CARD_NFC("MOBILE_CARD_NFC");
         public final String mName;
 
         private BooleanType(String name) {

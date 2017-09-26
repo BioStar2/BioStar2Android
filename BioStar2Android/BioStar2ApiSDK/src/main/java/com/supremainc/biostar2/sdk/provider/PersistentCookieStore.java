@@ -198,7 +198,7 @@ public class PersistentCookieStore implements CookieStore {
                 Cipher inputCipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
                 inputCipher.init(Cipher.ENCRYPT_MODE, privateKeyEntry.getCertificate().getPublicKey());
                 byte[] encdoed = inputCipher.doFinal(data.getBytes("UTF-8"));
-                return Base64.encodeToString(encdoed, Base64.URL_SAFE);
+                return Base64.encodeToString(encdoed, Base64.DEFAULT);
             } catch (Exception e) {
                 if (ConfigDataProvider.DEBUG) {
                     Log.e(TAG, "e:" + e.getMessage());
@@ -216,7 +216,7 @@ public class PersistentCookieStore implements CookieStore {
                 KeyStore.PrivateKeyEntry privateKeyEntry = (KeyStore.PrivateKeyEntry)keyStore.getEntry("master", null);
                 Cipher output = Cipher.getInstance("RSA/ECB/PKCS1Padding");
                 output.init(Cipher.DECRYPT_MODE, privateKeyEntry.getPrivateKey());
-                byte[] result = output.doFinal(Base64.decode(data, Base64.URL_SAFE));
+                byte[] result = output.doFinal(Base64.decode(data, Base64.DEFAULT));
                 return new String(result);
             } catch (Exception e) {
                 if (ConfigDataProvider.DEBUG) {
