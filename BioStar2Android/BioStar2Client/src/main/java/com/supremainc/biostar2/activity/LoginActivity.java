@@ -35,12 +35,15 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.LinearLayout;
 
+import com.crittercism.app.Crittercism;
+import com.crittercism.app.CrittercismConfig;
 import com.supremainc.biostar2.BuildConfig;
 import com.supremainc.biostar2.R;
 import com.supremainc.biostar2.impl.OnSingleClickListener;
 import com.supremainc.biostar2.meta.Setting;
 import com.supremainc.biostar2.provider.AppDataProvider;
 import com.supremainc.biostar2.provider.MobileCardDataProvider;
+import com.supremainc.biostar2.sdk.models.enumtype.LocalStorage;
 import com.supremainc.biostar2.sdk.models.v2.common.UpdateData;
 import com.supremainc.biostar2.sdk.models.v2.login.Login;
 import com.supremainc.biostar2.sdk.models.v2.user.User;
@@ -54,6 +57,7 @@ import com.supremainc.biostar2.widget.popup.Popup;
 import com.supremainc.biostar2.widget.popup.Popup.OnPopupClickListener;
 import com.supremainc.biostar2.widget.popup.Popup.PopupType;
 
+import okhttp3.HttpUrl;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -205,7 +209,7 @@ public class LoginActivity extends Activity {
 
         @Override
         public void onFailure(Call<UpdateData> call, Throwable t) {
-            onLoginFailure(t);
+            nextProcess();
         }
     };
 
@@ -213,6 +217,11 @@ public class LoginActivity extends Activity {
         @Override
         public void onClickLogin(String url, String subDomain, String id, String pw) {
             if (mInvalidChecker.isEmptyString(getString(R.string.info), getString(R.string.login_empty), subDomain, id, pw)) {
+                return;
+            }
+            HttpUrl httpUrl = HttpUrl.parse(url);
+            if (httpUrl == null) {
+                mPopup.show(PopupType.ALERT, getString(R.string.info), getString(R.string.invalid_input_data), null, null, null);
                 return;
             }
             while (url.endsWith(" ")) {
@@ -225,11 +234,17 @@ public class LoginActivity extends Activity {
             mID = id;
             mPw = pw;
             mSubDomain = subDomain;
-            ConfigDataProvider.setLatestDomain(mContext, mSubDomain);
-            ConfigDataProvider.setLatestURL(mContext, mURL);
+//            ConfigDataProvider.setLatestUserID(mContext, mID);
+//            ConfigDataProvider.setLatestDomain(mContext, mSubDomain);
+//            ConfigDataProvider.setLatestURL(mContext, mURL);
+            ConfigDataProvider.setLocalStorage(LocalStorage.SUBDOMAIN,mSubDomain);
+            ConfigDataProvider.setLocalStorage(LocalStorage.DOMAIN,mURL);
+            ConfigDataProvider.setLocalStorage(LocalStorage.USER_LOGIN_ID,mID);
             mPopup.showWait(mCancelListener);
             mIsLoginClick = true;
-            mCommonDataProvider.getAppVersion(mUpdateCheckCallback);
+            mCommonDataProvider.init(mContext);
+            nextProcess();
+//            mCommonDataProvider.getAppVersion(mUpdateCheckCallback);
         }
     };
 
@@ -248,6 +263,13 @@ public class LoginActivity extends Activity {
             }
         }
         changeScreen();
+
+        if (error.contains(Setting.ERROR_MESSAGE_SPLITE)) {
+            String[] temp = error.split(Setting.ERROR_MESSAGE_SPLITE);
+            if (temp[0].isEmpty() || temp[0].equals("null")) {
+                error= mContext.getString(R.string.error_network2)+Setting.ERROR_MESSAGE_SPLITE+temp[1];
+            }
+        }
         mPopup.show(PopupType.ALERT, getString(R.string.fail), error, null, getString(R.string.ok), null);
     }
 
@@ -289,7 +311,15 @@ public class LoginActivity extends Activity {
     }
 
     private void initCrashReport() {
-
+        if (!BuildConfig.DEBUG && Setting.IS_CRASH_REPORT && !Setting.CRITTERISM.isEmpty()) {
+            CrittercismConfig config = new CrittercismConfig();
+            config.setCustomVersionName(getString(R.string.app_version));
+            config.setVersionCodeToBeIncludedInVersionString(true);
+            if (Build.VERSION.SDK_INT >= 16) {
+                config.setLogcatReportingEnabled(true);
+            }
+            Crittercism.initialize(getApplicationContext(), Setting.CRITTERISM, config);
+        }
     }
 
     private void initValue() {
@@ -302,9 +332,9 @@ public class LoginActivity extends Activity {
         mAppDataProvider.set(mActivity);
         mLoginView = (LoginView) findViewById(R.id.login_view);
         mLoginView.setListener(mLoginViewListener);
-        mLoginView.setAddress(ConfigDataProvider.getLatestURL(mContext));
-        mLoginView.setSubDomain(ConfigDataProvider.getLatestDomain(mContext));
-        mLoginView.setID(ConfigDataProvider.getLatestUserID(mContext));
+        mLoginView.setAddress((String)mCommonDataProvider.getLocalStorage(LocalStorage.DOMAIN));
+        mLoginView.setSubDomain((String)mCommonDataProvider.getLocalStorage(LocalStorage.SUBDOMAIN));
+        mLoginView.setID((String)mCommonDataProvider.getLocalStorage(LocalStorage.USER_LOGIN_ID));
         findViewById(R.id.quick_guide).setOnClickListener(mClickListener);
     }
 
@@ -334,17 +364,26 @@ public class LoginActivity extends Activity {
         if (splash != null) {
             changeScreen();
         }
-        if (mContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
-            if (!mContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_NFC_HOST_CARD_EMULATION)) {
-                mAppDataProvider.setBoolean(AppDataProvider.BooleanType.MOBILE_CARD_NFC, false);
-            }
+//        if (mContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
+//            if (!mContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_NFC_HOST_CARD_EMULATION)) {
+   //             mAppDataProvider.setBoolean(AppDataProvider.BooleanType.MOBILE_CARD_NFC, false);
+  //          }
+  //      }
+        mAppDataProvider.setInitValue();
+
+        String url = (String) mCommonDataProvider.getLocalStorage(LocalStorage.DOMAIN);
+        if ((url == null || url.isEmpty())) {
+            mCommonDataProvider.getAppVersion(mUpdateCheckCallback);
+        } else if (((url.contains(":") && !url.contains("biostar2")))) {
+            mHandler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    nextProcess();
+                }
+            },1000);
+        } else {
+            mCommonDataProvider.getAppVersion(mUpdateCheckCallback);
         }
-        if (mContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_NFC_HOST_CARD_EMULATION)) {
-            if (!mContext.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
-                mAppDataProvider.setBoolean(AppDataProvider.BooleanType.MOBILE_CARD_NFC, true);
-            }
-        }
-        mCommonDataProvider.getAppVersion(mUpdateCheckCallback);
     }
 
     @Override
@@ -361,6 +400,9 @@ public class LoginActivity extends Activity {
         }
         if (mHandler == null) {
             mHandler = new Handler();
+        }
+        if (mCommonDataProvider !=null) {
+            mCommonDataProvider.resetLocale();
         }
     }
 

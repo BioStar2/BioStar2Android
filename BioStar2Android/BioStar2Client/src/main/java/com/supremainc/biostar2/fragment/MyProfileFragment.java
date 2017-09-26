@@ -303,35 +303,36 @@ public class MyProfileFragment extends BaseFragment {
         @Override
         public void run() {
             if (Build.VERSION.SDK_INT >= 23) {
-                String permissionLabel = "";
                 try {
+                    String permissionLabel = "";
                     PackageManager pm = mActivity.getPackageManager();
                     PermissionGroupInfo pg = pm.getPermissionGroupInfo(Manifest.permission_group.STORAGE, PackageManager.GET_META_DATA);
                     permissionLabel = pg.loadLabel(pm).toString();
+
+                    if (!permissionLabel.isEmpty()) {
+                        permissionLabel = "(" + permissionLabel + ")";
+
+                    }
+                    permissionLabel = getString(R.string.guide_feature_permission) + " " + getString(R.string.allow_permission) + permissionLabel;
+                    Snackbar snackbar = Snackbar
+                            .make(mRootView, permissionLabel, Snackbar.LENGTH_LONG)
+                            .setAction(getString(R.string.permission_setting), new View.OnClickListener() {
+                                @Override
+                                public void onClick(View view) {
+                                    Intent intent = new Intent();
+                                    intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
+                                    intent.setData(Uri.parse("package:" + mActivity.getPackageName()));
+                                    mActivity.startActivity(intent);
+                                }
+                            });
+                    //snackbar.setActionTextColor(Color.MAGENTA);
+                    View snackbarView = snackbar.getView();
+                    TextView textView = (TextView) snackbarView.findViewById(android.support.design.R.id.snackbar_text);
+                    textView.setMaxLines(5);
+                    snackbar.show();
                 } catch (Exception e) {
 
                 }
-                if (!permissionLabel.isEmpty()) {
-                    permissionLabel = "(" + permissionLabel + ")";
-
-                }
-                permissionLabel = getString(R.string.guide_feature_permission) + " " + getString(R.string.allow_permission) + permissionLabel;
-                Snackbar snackbar = Snackbar
-                        .make(mRootView, permissionLabel, Snackbar.LENGTH_LONG)
-                        .setAction(getString(R.string.permission_setting), new View.OnClickListener() {
-                            @Override
-                            public void onClick(View view) {
-                                Intent intent = new Intent();
-                                intent.setAction(Settings.ACTION_APPLICATION_DETAILS_SETTINGS);
-                                intent.setData(Uri.parse("package:" + mActivity.getPackageName()));
-                                mActivity.startActivity(intent);
-                            }
-                        });
-                //snackbar.setActionTextColor(Color.MAGENTA);
-                View snackbarView = snackbar.getView();
-                TextView textView = (TextView) snackbarView.findViewById(android.support.design.R.id.snackbar_text);
-                textView.setMaxLines(5);
-                snackbar.show();
             }
         }
     };
@@ -604,7 +605,7 @@ public class MyProfileFragment extends BaseFragment {
         mUserNameView = (DetailEditItemView) mRootView.findViewById(R.id.user_name);
         mTextInputFilter.setFilter(mUserNameView.content, TextInputFilter.EDIT_TYPE.USER_NAME);
         mEmailView = (DetailEditItemView) mRootView.findViewById(R.id.email);
-//        mTextInputFilter.setFilter( mEmailView.content, TextInputFilter.EDIT_TYPE.EMAIL);
+        mTextInputFilter.setFilter( mEmailView.content, TextInputFilter.EDIT_TYPE.EMAIL);
         mTelephoneView = (DetailEditItemView) mRootView.findViewById(R.id.telephone);
         mTextInputFilter.setFilter(mTelephoneView.content, TextInputFilter.EDIT_TYPE.TELEPHONE);
         mOperatorView = (DetailTextItemView) mRootView.findViewById(R.id.operator);

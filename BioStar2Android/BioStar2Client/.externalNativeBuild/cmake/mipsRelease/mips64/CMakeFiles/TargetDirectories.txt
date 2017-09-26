@@ -1,0 +1,3 @@
+D:/00_gitgub_suprema/BioStar2Android/BioStar2Android/BioStar2Client/.externalNativeBuild/cmake/mipsRelease/mips64/CMakeFiles/native-lib.dir
+D:/00_gitgub_suprema/BioStar2Android/BioStar2Android/BioStar2Client/.externalNativeBuild/cmake/mipsRelease/mips64/CMakeFiles/edit_cache.dir
+D:/00_gitgub_suprema/BioStar2Android/BioStar2Android/BioStar2Client/.externalNativeBuild/cmake/mipsRelease/mips64/CMakeFiles/rebuild_cache.dir

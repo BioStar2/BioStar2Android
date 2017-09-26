@@ -18,8 +18,10 @@ package com.supremainc.biostar2.sdk.provider;
 import android.content.Context;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 
 import com.google.gson.Gson;
+import com.supremainc.biostar2.sdk.BuildConfig;
 import com.supremainc.biostar2.sdk.models.enumtype.LocalStorage;
 import com.supremainc.biostar2.sdk.models.v2.common.VersionData;
 import com.supremainc.biostar2.sdk.models.v2.user.User;
@@ -35,6 +37,7 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
+import okhttp3.HttpUrl;
 import okhttp3.Interceptor;
 import okhttp3.JavaNetCookieJar;
 import okhttp3.OkHttpClient;
@@ -86,15 +89,20 @@ public class BaseDataProvider {
         if (mPermissionMap == null) {
             mPermissionMap = new HashMap<String, Boolean>();
         }
-        mContext = context;
-        mFileUtil = FileUtil.getInstance();
+        if (mFileUtil == null) {
+            mFileUtil = FileUtil.getInstance();
+        }
         String url = (String) getLocalStorage(LocalStorage.DOMAIN);
-        if (url == null || url.isEmpty()) {
+        if (url == null || url.isEmpty() || HttpUrl.parse(url) == null) {
             removeCookie();
             createApiInterface("https://api.biostar2.com/");
         } else {
             createApiInterface(url);
         }
+    }
+
+    public void resetLocale() {
+        mLocale = mContext.getResources().getConfiguration().locale;
     }
 
     private void createClient() {
@@ -113,7 +121,7 @@ public class BaseDataProvider {
                     Request original = chain.request();
                     Request.Builder requestBuilder = original.newBuilder();
                     if (mLocale != null) {
-                        requestBuilder.header("Content-Language", mLocale.getISO3Language());
+                          requestBuilder.header("Content-Language", mLocale.getISO3Language());
                     }
                     if (ConfigDataProvider.DEBUG) {
                         Calendar cal = Calendar.getInstance();
@@ -172,7 +180,13 @@ public class BaseDataProvider {
     public Object getLocalStorage(LocalStorage type) {
         switch (type.type) {
             case STRING:
-                return PreferenceUtil.getSharedPreference(mContext, type.name);
+                String result = PreferenceUtil.getSharedPreference(mContext, type.name);
+                if (LocalStorage.DOMAIN.name.equals(type.name)) {
+                    if (result == null || result.isEmpty()) {
+                        result = ConfigDataProvider.URL;
+                    }
+                }
+                return result;
             default:
                 break;
         }
@@ -250,11 +264,17 @@ public class BaseDataProvider {
     protected boolean checkObject(Object... args) {
         for (Object obj : args) {
             if (obj == null) {
+                if (BuildConfig.DEBUG) {
+                    Log.e(TAG, "checkObject:", new Throwable("stack dump"));
+                }
                 return false;
             }
             String target = obj.toString();
             if (target != null) {
                 if (target.isEmpty()) {
+                    if (BuildConfig.DEBUG) {
+                        Log.e(TAG, "checkObject:" , new Throwable("stack dump"));
+                    }
                     return false;
                 }
             }

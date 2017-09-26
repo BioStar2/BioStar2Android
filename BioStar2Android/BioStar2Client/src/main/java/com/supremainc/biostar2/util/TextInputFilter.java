@@ -115,6 +115,9 @@ public class TextInputFilter {
             case USER_NAME:
                 et.setFilters(new InputFilter[]{mInputFilter48});
                 break;
+            case EMAIL:
+                et.setFilters(new InputFilter[]{mInputFilter128});
+                break;
             case NONE:
                 et.setFilters(new InputFilter[]{});
                 break;
@@ -126,7 +129,7 @@ public class TextInputFilter {
 
 
     public enum EDIT_TYPE {
-        LOGIN_ID, TELEPHONE, USER_ID, USER_NAME, PIN, PASSWORD, NONE
+        LOGIN_ID, TELEPHONE, USER_ID, USER_NAME, PIN, PASSWORD, NONE,EMAIL
     }
 
     private static class TextFilter implements InputFilter {

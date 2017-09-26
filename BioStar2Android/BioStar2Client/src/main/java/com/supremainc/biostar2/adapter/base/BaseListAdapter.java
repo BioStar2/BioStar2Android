@@ -305,18 +305,20 @@ public abstract class BaseListAdapter<T> extends BaseAdapter implements OnItemCl
     }
 
     protected String getResponseErrorMessage(Response<?> response) {
-        if (response == null || response.errorBody() == null) {
-            return mActivity.getString(R.string.fail) + "\nhcode:" + response.code();
+        if (response == null) {
+            return mActivity.getString(R.string.fail);
         }
-        String error = "";
-        try {
-            ResponseStatus responseClass = (ResponseStatus) mGson.fromJson(response.errorBody().string(), ResponseStatus.class);
-            error = responseClass.message + "\n" + "scode: " + responseClass.status_code;
-        } catch (Exception e) {
-
+        if (response.errorBody() != null) {
+            try {
+                ResponseStatus responseClass = (ResponseStatus) mGson.fromJson(response.errorBody().string(), ResponseStatus.class);
+                return responseClass.message + Setting.ERROR_MESSAGE_SPLITE+"\n" + "scode: " + responseClass.status_code+ "\nhcode:"+response.code();
+            } catch (Exception e) {
+              if (BuildConfig.DEBUG) {
+                  Log.e(TAG,"e:"+e.getMessage());
+              }
+            }
         }
-        error = error + "\n" + "hcode: " + response.code();
-        return error;
+        return mActivity.getString(R.string.fail) + Setting.ERROR_MESSAGE_SPLITE + "\nhcode:"+response.code();
     }
 
     protected void showRetryPopup(String msg, OnPopupClickListener listener) {

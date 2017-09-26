@@ -17,7 +17,7 @@ package com.supremainc.biostar2.sdk.models.v2.common;
 
 
 public enum SupportFeature {
-    MOBILE_CARD(2,4,1),FACE(2,4,1);
+    MOBILE_CARD(2,4,1),FACE(2,4,1),SLAVE_SUPPORT(2,5,0);
     public final int major;
     public final int minor;
     public final int detail;

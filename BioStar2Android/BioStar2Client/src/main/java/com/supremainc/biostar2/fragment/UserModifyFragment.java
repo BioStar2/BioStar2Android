@@ -181,7 +181,8 @@ public class UserModifyFragment extends BaseFragment {
             }
             if (year > 2030) {
                 mPopup.show(PopupType.ALERT, getString(R.string.info), getString(R.string.error_set_end_date), null, null, null);
-                year = 2030;
+                return;
+//                year = 2030;
             }
             mEndYear = year;
             mEndMonth = monthOfYear;
@@ -557,6 +558,9 @@ public class UserModifyFragment extends BaseFragment {
                 resetUserIDFilter();
                 return;
             }
+        } else if ( mUserIDView.content.toString2().equals("0")){
+            mPopup.show(PopupType.ALERT, getString(R.string.info), getString(R.string.invalid_input_data), null, null, null);
+            return;
         }
         if (mLoginIDView.getVisibility() == View.VISIBLE) {
             if (mInvalidChecker.isEmptyString(getString(R.string.info), getString(R.string.user_create_empty_idpassword), mLoginIDView.content.toString2())) {
@@ -984,7 +988,7 @@ public class UserModifyFragment extends BaseFragment {
         mUserNameView = (DetailEditItemView) mRootView.findViewById(R.id.user_name);
         mTextInputFilter.setFilter(mUserNameView.content, TextInputFilter.EDIT_TYPE.USER_NAME);
         mEmailView = (DetailEditItemView) mRootView.findViewById(R.id.email);
-//        mTextInputFilter.setFilter( mEmailView.content, TextInputFilter.EDIT_TYPE.EMAIL);
+        mTextInputFilter.setFilter( mEmailView.content, TextInputFilter.EDIT_TYPE.EMAIL);
         mTelephoneView = (DetailEditItemView) mRootView.findViewById(R.id.telephone);
         mTextInputFilter.setFilter(mTelephoneView.content, TextInputFilter.EDIT_TYPE.TELEPHONE);
         mOperatorView = (DetailTextItemView) mRootView.findViewById(R.id.operator);

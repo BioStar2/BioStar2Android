@@ -1,0 +1,41 @@
+
+{
+	"buildFiles" : 
+	[
+		"D:/00_gitgub_suprema/BioStar2Android/BioStar2Android/BioStar2Client/CMakeLists.txt"
+	],
+	"cleanCommands" : 
+	[
+		"D:\\00_as_233\\sdk\\cmake\\3.6.3155560\\bin\\cmake.exe --build D:\\00_gitgub_suprema\\BioStar2Android\\BioStar2Android\\BioStar2Client\\.externalNativeBuild\\cmake\\arm8Debug\\arm64-v8a --target clean"
+	],
+	"cppFileExtensions" : [ "cpp" ],
+	"libraries" : 
+	{
+		"native-lib-Debug-arm64-v8a" : 
+		{
+			"abi" : "arm64-v8a",
+			"artifactName" : "native-lib",
+			"buildCommand" : "D:\\00_as_233\\sdk\\cmake\\3.6.3155560\\bin\\cmake.exe --build D:\\00_gitgub_suprema\\BioStar2Android\\BioStar2Android\\BioStar2Client\\.externalNativeBuild\\cmake\\arm8Debug\\arm64-v8a --target native-lib",
+			"buildType" : "debug",
+			"files" : 
+			[
+				
+				{
+					"flags" : "  -target aarch64-none-linux-android -gcc-toolchain D:/android-ndk-r12b/toolchains/aarch64-linux-android-4.9/prebuilt/windows-x86_64 --sysroot=D:/android-ndk-r12b/platforms/android-21/arch-arm64  -Dnative_lib_EXPORTS -isystem D:\\android-ndk-r12b\\sources\\cxx-stl\\gnu-libstdc++\\4.9\\include -isystem D:\\android-ndk-r12b\\sources\\cxx-stl\\gnu-libstdc++\\4.9\\libs\\arm64-v8a\\include -isystem D:\\android-ndk-r12b\\sources\\cxx-stl\\gnu-libstdc++\\4.9\\include\\backward  -g -DANDROID -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -Wa,--noexecstack -Wformat -Werror=format-security -fno-exceptions -fno-rtti -g -DANDROID -ffunction-sections -funwind-tables -fstack-protector-strong -no-canonical-prefixes -Wa,--noexecstack -Wformat -Werror=format-security -fno-exceptions -fno-rtti  -O0 -fno-limit-debug-info -O0 -fno-limit-debug-info  -fPIC    -c ",
+					"src" : "D:/00_gitgub_suprema/BioStar2Android/BioStar2Android/BioStar2Client/src/main/cpp/hello.cpp",
+					"workingDirectory" : "D:/00_gitgub_suprema/BioStar2Android/BioStar2Android/BioStar2Client/.externalNativeBuild/cmake/arm8Debug/arm64-v8a"
+				}
+			],
+			"output" : "D:/00_gitgub_suprema/BioStar2Android/BioStar2Android/BioStar2Client/build/intermediates/cmake/arm8/debug/obj/arm64-v8a/libnative-lib.so",
+			"toolchain" : "1995973877"
+		}
+	},
+	"toolchains" : 
+	{
+		"1995973877" : 
+		{
+			"cCompilerExecutable" : "D:/android-ndk-r12b/toolchains/llvm/prebuilt/windows-x86_64/bin/clang.exe",
+			"cppCompilerExecutable" : "D:/android-ndk-r12b/toolchains/llvm/prebuilt/windows-x86_64/bin/clang++.exe"
+		}
+	}
+}

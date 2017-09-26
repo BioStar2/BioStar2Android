@@ -18,8 +18,11 @@ package com.supremainc.biostar2.sdk.provider;
 import android.content.Context;
 
 import com.supremainc.biostar2.sdk.BuildConfig;
+import com.supremainc.biostar2.sdk.models.enumtype.LocalStorage;
 import com.supremainc.biostar2.sdk.models.v2.common.VersionData;
 import com.supremainc.biostar2.sdk.utils.PreferenceUtil;
+
+import static com.supremainc.biostar2.sdk.provider.BaseDataProvider.mContext;
 
 public class ConfigDataProvider  {
     private final String TAG = getClass().getSimpleName();
@@ -33,14 +36,6 @@ public class ConfigDataProvider  {
     public static final String URL = "https://api.biostar2.com/";
     public static final String V1 = "v1/";
     public static final String V2 = "v2/";
-    private static final String LATEST_DOMAIN = "save_domain";
-    private static final String LATEST_URL = "save_url";
-    private static final String LATEST_USERID = "save_userid";
-
-
-    private static String mSubDomain;
-    private static String mURL;
-    private static String mUserID;
     private static int mComplie = 2;
 
     public static String getDebugFlag() {
@@ -68,60 +63,81 @@ public class ConfigDataProvider  {
         HURL, HTTP_CLIENT, OK_HTTP
     }
 
-    public static  String getLatestDomain(Context context) {
-        if (mSubDomain == null || mSubDomain.isEmpty()) {
-             mSubDomain = PreferenceUtil.getSharedPreference(context, LATEST_DOMAIN);
-            if (mSubDomain == null) {
-                return null;
-            }
-            setLatestDomain(context,mSubDomain);
-        }
-        return mSubDomain;
-    }
+//    public static  String getLatestDomain(Context context) {
+//        if (mSubDomain == null || mSubDomain.isEmpty()) {
+//             mSubDomain = PreferenceUtil.getSharedPreference(context, LATEST_DOMAIN);
+//            if (mSubDomain == null) {
+//                return null;
+//            }
+//            setLatestDomain(context,mSubDomain);
+//        }
+//        return mSubDomain;
+//    }
 
-    public static void setLatestDomain(Context context,String subDomain) {
-        mSubDomain = subDomain;
-        PreferenceUtil.putSharedPreference(context, LATEST_DOMAIN, subDomain);
-    }
+//    public static void setLatestDomain(Context context,String subDomain) {
+//        mSubDomain = subDomain;
+//        PreferenceUtil.putSharedPreference(context, LATEST_DOMAIN, subDomain);
+//    }
 
-    public static String getLatestUserID(Context context) {
-        if (mUserID == null) {
-            mUserID = PreferenceUtil.getSharedPreference(context, LATEST_USERID);
-            if (mUserID == null) {
-                return null;
-            }
-            setLatestUserID(context,mUserID);
-        }
-        return mUserID;
-    }
+//    public static String getLatestUserID(Context context) {
+//        if (mUserID == null) {
+//            mUserID = PreferenceUtil.getSharedPreference(context, LATEST_USERID);
+//            if (mUserID == null) {
+//                return null;
+//            }
+//            setLatestUserID(context,mUserID);
+//        }
+//        return mUserID;
+//    }
 
-    public static void setLatestUserID(Context context,String id) {
-        mUserID = id;
-        PreferenceUtil.putSharedPreference(context, LATEST_USERID, mUserID);
-    }
+//    public static void setLatestUserID(Context context,String id) {
+//        mUserID = id;
+//        PreferenceUtil.putSharedPreference(context, LATEST_USERID, mUserID);
+//    }
 
-    public static String getLatestURL(Context context) {
-        String url = PreferenceUtil.getSharedPreference(context, LATEST_URL);
-        if (url == null || url.isEmpty()) {
-            return ConfigDataProvider.URL;
-        }
-        return url;
-    }
+//    public static String getLatestURL(Context context) {
+//        String url = PreferenceUtil.getSharedPreference(context, LATEST_URL);
+//        if (url == null || url.isEmpty()) {
+//            return ConfigDataProvider.URL;
+//        }
+//        return url;
+//    }
 
-    public static void setLatestURL(Context context,String url) {
-        PreferenceUtil.putSharedPreference(context,LATEST_URL,url);
-    }
+////    public static void setLatestURL(Context context,String url) {
+//        PreferenceUtil.putSharedPreference(context,LATEST_URL,url);
+//    }
 
     public static String getFullURL(Context context) {
-        if (getLatestURL(context) == null || VersionData.getCloudVersionString(context) == null) {
+        String url = (String) getLocalStorage(LocalStorage.DOMAIN);
+        if (url == null || VersionData.getCloudVersionString(context) == null) {
             return null;
         }
-        String url = getLatestURL(context);
+
 
         if (url.endsWith("/")) {
            return  url +VersionData.getCloudVersionString(context);
         } else {
            return  url +"/"+VersionData.getCloudVersionString(context);
         }
+    }
+
+    public static void setLocalStorage(LocalStorage type, String content) {
+        switch (type.type) {
+            case STRING:
+                PreferenceUtil.putSharedPreference(mContext, type.name, content);
+                break;
+            default:
+                break;
+        }
+    }
+
+    public static Object getLocalStorage(LocalStorage type) {
+        switch (type.type) {
+            case STRING:
+                return PreferenceUtil.getSharedPreference(mContext, type.name);
+            default:
+                break;
+        }
+        return null;
     }
 }

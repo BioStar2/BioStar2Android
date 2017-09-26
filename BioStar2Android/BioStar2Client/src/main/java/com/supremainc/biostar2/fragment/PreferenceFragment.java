@@ -17,6 +17,7 @@ package com.supremainc.biostar2.fragment;
 
 import android.annotation.SuppressLint;
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
@@ -77,6 +78,10 @@ public class PreferenceFragment extends BaseFragment {
     private StyledTextView mTimeFormat;
     private RangeBar mRangeBar;
     private SwitchView mBLESwtich;
+//    private SwitchView mLockSwitch;
+    private SwitchView mNFCSwitch;
+    private SwitchView mTurnOnSwitch;
+    private SwitchView mIndependentScreenLockSwitch;
 
     private Callback<UpdateData> mUpdateCheckCallback = new Callback<UpdateData>() {
         @Override
@@ -198,9 +203,20 @@ public class PreferenceFragment extends BaseFragment {
     }
 
     private void applied() {
-        mAppDataProvider.setBoolean(AppDataProvider.BooleanType.MOBILE_CARD_NFC, !mBLESwtich.getOn());
-        mAppDataProvider.setBleRange(Integer.valueOf(mRangeBar.getRightPinValue()));
+//        mAppDataProvider.setBoolean(AppDataProvider.BooleanType.INDEPENDENT_SCREEN_LOCK, mLockSwitch.getOn());
+        mAppDataProvider.setBoolean(AppDataProvider.BooleanType.MOBILE_CARD_NFC, mNFCSwitch.getOn());
+        mAppDataProvider.setBoolean(AppDataProvider.BooleanType.MOBILE_CARD_BLE, mBLESwtich.getOn());
+        mAppDataProvider.setBoolean(AppDataProvider.BooleanType.KNOCK_KNOCK, mTurnOnSwitch.getOn());
+        mAppDataProvider.setBoolean(AppDataProvider.BooleanType.INDEPENDENT_SCREEN_LOCK, mIndependentScreenLockSwitch.getOn());
 
+        mAppDataProvider.setBleRange(Integer.valueOf(mRangeBar.getRightPinValue()));
+        Intent i = new Intent();
+        i.setClassName(Setting.APP_PACKAGE, Setting.BLE_SERVICE_RECO_PACKAGE);
+        if (mAppDataProvider.getBoolean(AppDataProvider.BooleanType.MOBILE_CARD_BLE,false) && VersionData.isSupportFeature(mActivity, SupportFeature.MOBILE_CARD)) {
+            ComponentName name = mActivity.startService(i);
+        } else {
+            boolean result = mActivity.stopService(i);
+        }
         mPopup.dismissWiat();
         mPopup.show(PopupType.CONFIRM, getString(R.string.info), getString(R.string.success), new OnPopupClickListener() {
             @Override
@@ -233,14 +249,82 @@ public class PreferenceFragment extends BaseFragment {
         mRootView.findViewById(R.id.go_version_mobile).setOnClickListener(mClickListener);
         mRootView.findViewById(R.id.go_date).setOnClickListener(mClickListener);
         mRootView.findViewById(R.id.go_time).setOnClickListener(mClickListener);
-        mRootView.findViewById(R.id.ble_card).setVisibility(View.GONE);
+        mRootView.findViewById(R.id.smart_card).setVisibility(View.GONE);
         if (VersionData.getCloudVersion(mActivity) > 1 && VersionData.isSupportFeature(mActivity, SupportFeature.MOBILE_CARD) && Build.VERSION.SDK_INT >= 21) {
-            if (mActivity.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
-                mRootView.findViewById(R.id.ble_card).setVisibility(View.VISIBLE);
+            if (mActivity.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE) || mActivity.getPackageManager().hasSystemFeature(PackageManager.FEATURE_NFC_HOST_CARD_EMULATION)) {
+                mRootView.findViewById(R.id.smart_card).setVisibility(View.VISIBLE);
+                if (!mActivity.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
+                    mRootView.findViewById(R.id.ble_option).setVisibility(View.GONE);
+                }
+                if (!mActivity.getPackageManager().hasSystemFeature(PackageManager.FEATURE_NFC_HOST_CARD_EMULATION)) {
+                    mRootView.findViewById(R.id.nfc_option).setVisibility(View.GONE);
+                }
             }
         }
-
-
+//        if (mLockSwitch == null) {
+//            mLockSwitch = (SwitchView) mRootView.findViewById(R.id.screen_lock_on_switch);
+//            mLockSwitch.init(mActivity, null, mAppDataProvider.getBoolean(AppDataProvider.BooleanType.INDEPENDENT_SCREEN_LOCK,true));
+//        }
+        if (mRangeBar == null) {
+            mRangeBar = (RangeBar) mRootView.findViewById(R.id.rangebar);
+            mRangeBar.setSeekPinByValue(mAppDataProvider.getBleRange());
+            mRangeBar.setOnRangeBarChangeListener(new RangeBar.OnRangeBarChangeListener() {
+                @Override
+                public void onRangeChangeListener(RangeBar rangeBar, int leftPinIndex,
+                                                  int rightPinIndex,
+                                                  String leftPinValue, String rightPinValue) {
+//                    mAppDataProvider.setBleRange(Integer.valueOf(rightPinValue));
+                }
+            });
+            mRangeBar.setFormatter(new IRangeBarFormatter() {
+                @Override
+                public String format(String value) {
+                    int range = Integer.valueOf(value);
+                    if (range < 100) {
+                        range = 100;
+                    }
+                    if (range > 1000) {
+                        range = 1000;
+                    }
+                    int modifyRange = (range - range%10)/10;
+                    return String.valueOf(modifyRange)+"cm";
+                }
+            });
+        }
+        if (mNFCSwitch == null) {
+            mNFCSwitch = (SwitchView) mRootView.findViewById(R.id.nfc_on_switch);
+            mNFCSwitch.init(mActivity, new SwitchView.OnChangeListener() {
+                @Override
+                public boolean onChange(boolean on) {
+                    if (on) {
+                        mRootView.findViewById(R.id.independent_screen_lock_container).setVisibility(View.VISIBLE);
+                    } else {
+                        mRootView.findViewById(R.id.independent_screen_lock_container).setVisibility(View.GONE);
+                    }
+                    return true;
+                }
+            }, mAppDataProvider.getBoolean(AppDataProvider.BooleanType.MOBILE_CARD_NFC,true));
+        }
+        if (mTurnOnSwitch == null) {
+            mTurnOnSwitch = (SwitchView) mRootView.findViewById(R.id.just_turn_on_switch);
+            mTurnOnSwitch.init(mActivity, null, mAppDataProvider.getBoolean(AppDataProvider.BooleanType.KNOCK_KNOCK,true));
+        }
+        if (mIndependentScreenLockSwitch == null) {
+            mIndependentScreenLockSwitch = (SwitchView) mRootView.findViewById(R.id.independent_screen_lock);
+            mIndependentScreenLockSwitch.init(mActivity, null, mAppDataProvider.getBoolean(AppDataProvider.BooleanType.INDEPENDENT_SCREEN_LOCK,true));
+        }
+        if (!mAppDataProvider.getBoolean(AppDataProvider.BooleanType.MOBILE_CARD_NFC,true)) {
+            mRootView.findViewById(R.id.independent_screen_lock_container).setVisibility(View.GONE);
+        } else {
+            mRootView.findViewById(R.id.independent_screen_lock_container).setVisibility(View.VISIBLE);
+        }
+        if (mAppDataProvider.getBoolean(AppDataProvider.BooleanType.MOBILE_CARD_BLE,false)) {
+            mRootView.findViewById(R.id.just_turn_on).setVisibility(View.VISIBLE);
+            mRangeBar.setVisibility(View.VISIBLE);
+        } else {
+            mRootView.findViewById(R.id.just_turn_on).setVisibility(View.GONE);
+            mRangeBar.setVisibility(View.GONE);
+        }
         if (mBLESwtich == null) {
             mBLESwtich = (SwitchView) mRootView.findViewById(R.id.ble_switch);
             mBLESwtich.init(mActivity, new SwitchView.OnChangeListener() {
@@ -252,10 +336,15 @@ public class PreferenceFragment extends BaseFragment {
                         } else {
                             mToastPopup.show(getString(R.string.ble_on_guide), getString(R.string.ble_on_guide2));
                         }
+                        mRootView.findViewById(R.id.just_turn_on).setVisibility(View.VISIBLE);
+                        mRangeBar.setVisibility(View.VISIBLE);
+                    } else {
+                        mRootView.findViewById(R.id.just_turn_on).setVisibility(View.GONE);
+                        mRangeBar.setVisibility(View.GONE);
                     }
                     return true;
                 }
-            }, !mAppDataProvider.getBoolean(AppDataProvider.BooleanType.MOBILE_CARD_NFC));
+            }, mAppDataProvider.getBoolean(AppDataProvider.BooleanType.MOBILE_CARD_BLE,false));
         }
         mUpdateData = (UpdateData) FileUtil.loadFileObj(mActivity.getFilesDir() + "/up.dat");
         if (mUpdateData == null) {
@@ -273,31 +362,7 @@ public class PreferenceFragment extends BaseFragment {
                 Log.e(TAG, " " + e.getMessage());
             }
         }
-        if (mRangeBar == null) {
-            mRangeBar = (RangeBar) mRootView.findViewById(R.id.rangebar);
-            mRangeBar.setSeekPinByValue(mAppDataProvider.getBleRange());
-            mRangeBar.setOnRangeBarChangeListener(new RangeBar.OnRangeBarChangeListener() {
-                @Override
-                public void onRangeChangeListener(RangeBar rangeBar, int leftPinIndex,
-                                                  int rightPinIndex,
-                                                  String leftPinValue, String rightPinValue) {
-//                    mAppDataProvider.setBleRange(Integer.valueOf(rightPinValue));
-                }
-            });
-            mRangeBar.setFormatter(new IRangeBarFormatter() {
-                @Override
-                public String format(String value) {
-                    int range = Integer.valueOf(value);
-                    if (range < 101) {
-                        return getString(R.string.distance_immediate);
-                    } else if (range < 301) {
-                        return getString(R.string.distance_close);
-                    } else {
-                        return getString(R.string.distance_near);
-                    }
-                }
-            });
-        }
+
         setView();
         mPopup.showWait(true);
         request(mCommonDataProvider.getPreference(mPreferenceListener));
